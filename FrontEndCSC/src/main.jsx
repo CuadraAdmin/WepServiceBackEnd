@@ -10,7 +10,7 @@ createRoot(document.getElementById("root")).render(
       {/*className="flex flex-col items-center text-center p-6 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-200 min-h-screen transition-colors" */}
 
       {/*<Navbar />*/}
-      {<Login />}
+      {<App />}
       {/*<App />*/}
     </>
   </StrictMode>
