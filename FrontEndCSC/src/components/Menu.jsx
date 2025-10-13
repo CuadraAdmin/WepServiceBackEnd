@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User, Home, Users, Shield, BarChart3, Layout } from "lucide-react";
-import Navbar from "./navbar";
+import Navbar from "./Navbar";
 
 function Menu({ userData, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
