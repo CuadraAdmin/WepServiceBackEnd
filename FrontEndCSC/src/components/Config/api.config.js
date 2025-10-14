@@ -1,6 +1,6 @@
 class ApiConfig {
   // URL base de la API
-  static BASE_URL = "http://localhost:5283";
+  static BASE_URL = "https://localhost:7096";
 
   // Endpoints
   static ENDPOINTSUSUARIOS = {
@@ -18,8 +18,12 @@ class ApiConfig {
 
   // Permisos
   static ENDPOINTSPERMISOS = {
-    PERMISOS: "/api/Permisos",
-    PERMISO_POR_ID: (id) => `/api/Permisos/${id}`,
+    LISTAR: "/api/Permisos/listar",
+    FILTRAR: "/api/Permisos/filtrar",
+    OBTENER: (id) => `/api/Permisos/obtener/${id}`,
+    CREAR: "/api/Permisos/crear",
+    ACTUALIZAR: (id) => `/api/Permisos/actualizar/${id}`,
+    ELIMINAR: (id) => `/api/Permisos/eliminar/${id}`,
   };
 
   static ENDPOINTSMARCA = {
