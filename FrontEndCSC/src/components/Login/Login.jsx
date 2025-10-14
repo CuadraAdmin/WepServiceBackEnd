@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
 import Menu from "../Menu";
 import ApiConfig from "../Config/api.config";
+import { useAuth } from "../../hooks/useAuth";
 
 function Login() {
+  const { isAuthenticated, userData, login, logout, isLoading } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -12,8 +15,6 @@ function Login() {
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userData, setUserData] = useState(null);
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -29,35 +30,32 @@ function Login() {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.LOGIN),
-        {
-          method: "POST",
-          headers: ApiConfig.getHeaders(),
-          body: JSON.stringify({
-            usuario: formData.username,
-            contrasena: formData.password,
-          }),
-        }
-      );
+      const url = ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.LOGIN);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: ApiConfig.getHeaders(),
+        body: JSON.stringify({
+          usuario: formData.username,
+          contrasena: formData.password,
+        }),
+      });
 
       const data = await response.json();
 
       if (response.ok && data.exito) {
-        console.log("Login exitoso:", data);
-
-        setUserData({
+        login({
           token: data.token,
           usuario: data.usuario,
           mensaje: data.mensaje,
         });
 
-        setIsAuthenticated(true);
+        console.log("✅ Login exitoso");
       } else {
         setError(data.mensaje || "Credenciales incorrectas");
       }
     } catch (err) {
-      console.error("Error al hacer login:", err);
+      console.error(" Error al hacer login:", err);
       setError(
         "Error al conectar con el servidor. Verifica que la API esté corriendo."
       );
@@ -74,16 +72,28 @@ function Login() {
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserData(null);
+    logout();
     setFormData({ username: "", password: "" });
     setError("");
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-stone-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-stone-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-stone-600 font-medium">Cargando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Si está autenticado, mostrar el menú
   if (isAuthenticated && userData) {
     return <Menu userData={userData} onLogout={handleLogout} />;
   }
 
+  // 🔐 Mostrar formulario de login
   return (
     <div className="min-h-screen w-full flex bg-stone-100">
       {/* Parte izquierda */}
