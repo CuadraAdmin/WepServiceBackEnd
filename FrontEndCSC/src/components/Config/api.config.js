@@ -2,21 +2,39 @@ class ApiConfig {
   // URL base de la API
   static BASE_URL = "https://localhost:7096";
 
-  // Endpoints
+  // Endpoints de Usuarios
   static ENDPOINTSUSUARIOS = {
-    // Usuarios
     LOGIN: "/api/Usuarios/Login",
-    USUARIOS: "/api/Usuarios",
-    USUARIO_POR_ID: (id) => `/api/Usuarios/${id}`,
+    LISTAR: "/api/Usuarios/Listar",
+    OBTENER: (id) => `/api/Usuarios/Obtener/${id}`,
+    CREAR: "/api/Usuarios/Agregar",
+    ACTUALIZAR: (id) => `/api/Usuarios/actualizar/${id}`,
+    ELIMINAR: (id) => `/api/Usuarios/eliminar/${id}`,
+    PERFILES: (id) => `/api/Usuarios/obtener/${id}/perfilesUsuario`,
+    PERMISOS: (id) => `/api/Usuarios/obtener/${id}/permisos`,
+    ASIGNAR_PERFIL: (usuarioId, perfilId) =>
+      `/api/Usuarios/asignar/${usuarioId}/perfiles/${perfilId}`,
+    QUITAR_PERFIL: (usuarioId, perfilId) =>
+      `/api/Usuarios/quitar/${usuarioId}/perfiles/${perfilId}`,
+    FILTROS: "/api/Usuarios/ListarConFiltros",
   };
 
-  // Perfiles
+  // Endpoints de Perfiles
   static ENDPOINTSPERFILES = {
-    PERFILES: "/api/Perfiles",
-    PERFIL_POR_ID: (id) => `/api/Perfiles/${id}`,
+    LISTAR: "/api/Perfiles/listar",
+    OBTENER: (id) => `/api/Perfiles/obtener/${id}`,
+    CREAR: "/api/Perfiles/crear",
+    ACTUALIZAR: (id) => `/api/Perfiles/actualizar/${id}`,
+    ELIMINAR: (id) => `/api/Perfiles/eliminar/${id}`,
+    PERMISOS: (id) => `/api/Perfiles/obtener/${id}/permisosPerfil`,
+    ASIGNAR_PERMISO: (perfilId, permisoId) =>
+      `/api/Perfiles/asignar/${perfilId}/permisos/${permisoId}`,
+    QUITAR_PERMISO: (perfilId, permisoId) =>
+      `/api/Perfiles/quitar/${perfilId}/permisos/${permisoId}`,
+    FILTROS: "/api/Perfiles/filtro",
   };
 
-  // Permisos
+  // Endpoints de Permisos
   static ENDPOINTSPERMISOS = {
     LISTAR: "/api/Permisos/listar",
     FILTRAR: "/api/Permisos/filtrar",
@@ -26,6 +44,7 @@ class ApiConfig {
     ELIMINAR: (id) => `/api/Permisos/eliminar/${id}`,
   };
 
+  // Endpoints de Marcas
   static ENDPOINTSMARCA = {
     MARCAS: "/api/Marca",
   };

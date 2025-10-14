@@ -5,6 +5,7 @@ import Permisos from "./CU/Permisos";
 import Usuario from "./CU/Usuario";
 import Perfil from "./CU/Perfil";
 import Marcas from "./CM/Marcas";
+import { usePermissions } from "../hooks/usePermissions";
 
 function Menu({ userData, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,13 +14,51 @@ function Menu({ userData, onLogout }) {
   const usuario = userData?.usuario || {};
   const perfiles = usuario.perfiles || [];
 
+  // Hook de permisos
+  const {
+    hasPermission,
+    hasAnyPermission,
+    loading: loadingPermisos,
+  } = usePermissions(userData?.token, usuario.usua_Id);
+
+  // ============================================
+  // 🔥 DEFINIR ELEMENTOS DEL MENÚ
+  // Si visible = false, el ícono NO aparece
+  // ============================================
   const menuItems = [
-    { icon: Home, label: "Inicio", path: "inicio" },
-    { icon: Users, label: "Usuarios", path: "usuarios" },
-    { icon: User, label: "Perfiles", path: "perfiles" },
-    { icon: Shield, label: "Permisos", path: "permisos" },
-    { icon: Tag, label: "Marcas", path: "marcas" },
+    {
+      icon: Home,
+      label: "Inicio",
+      path: "inicio",
+      visible: true, // Siempre visible
+    },
+    {
+      icon: Users,
+      label: "Usuarios",
+      path: "usuarios",
+      visible: hasPermission("Usuarios.Ver"),
+    },
+    {
+      icon: User,
+      label: "Perfiles",
+      path: "perfiles",
+      visible: hasPermission("Perfiles.Ver"),
+    },
+    {
+      icon: Shield,
+      label: "Permisos",
+      path: "permisos",
+      visible: hasPermission("Permisos.Ver"),
+    },
+    {
+      icon: Tag,
+      label: "Marcas",
+      path: "marcas",
+      visible: hasPermission("Marcas.Ver"),
+    },
   ];
+
+  const visibleMenuItems = menuItems.filter((item) => item.visible);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -27,20 +66,24 @@ function Menu({ userData, onLogout }) {
 
   const renderContent = () => {
     console.log("🎯 Vista actual:", currentView);
-    console.log(
-      "🔐 Token disponible:",
-      userData?.token ? "Sí (longitud: " + userData.token.length + ")" : "No"
-    );
 
     switch (currentView) {
       case "permisos":
-        return <Permisos token={userData?.token} />;
+        // Ya validó el permiso en menuItems
+        return <Permisos token={userData?.token} userData={userData} />;
+
       case "usuarios":
-        return <Usuario token={userData?.token} />;
+        // Ya validó el permiso en menuItems
+        return <Usuario token={userData?.token} userData={userData} />;
+
       case "perfiles":
-        return <Perfil token={userData?.token} />;
+        // Ya validó el permiso en menuItems
+        return <Perfil token={userData?.token} userData={userData} />;
+
       case "marcas":
-        return <Marcas token={userData?.token} />;
+        // Ya validó el permiso en menuItems
+        return <Marcas token={userData?.token} userData={userData} />;
+
       case "inicio":
       default:
         return (
@@ -164,27 +207,44 @@ function Menu({ userData, onLogout }) {
               </div>
             </div>
 
-            {/* Accesos rápidos */}
+            {/* Accesos Rápidos */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
               <h2 className="text-xl font-bold text-stone-900 mb-4">
                 Accesos Rápidos
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {menuItems.slice(1).map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentView(item.path)}
-                    className="p-4 rounded-xl hover:scale-105 transition-transform text-white"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    }}
-                  >
-                    <item.icon className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm font-semibold">{item.label}</p>
-                  </button>
-                ))}
-              </div>
+              {loadingPermisos ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 border-4 border-stone-200 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-stone-600">Cargando permisos...</p>
+                </div>
+              ) : visibleMenuItems.slice(1).length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {visibleMenuItems.slice(1).map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentView(item.path)}
+                      className="p-4 rounded-xl hover:scale-105 transition-transform text-white"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                      }}
+                    >
+                      <item.icon className="w-8 h-8 mx-auto mb-2" />
+                      <p className="text-sm font-semibold">{item.label}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Shield className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-600">
+                    No tienes acceso a ningún módulo adicional.
+                  </p>
+                  <p className="text-sm text-stone-500 mt-2">
+                    Contacta al administrador para solicitar permisos.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -208,29 +268,35 @@ function Menu({ userData, onLogout }) {
         }`}
       >
         <div className="p-4 space-y-2">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentView(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
-                currentView === item.path ? "text-white" : "hover:bg-stone-50"
-              }`}
-              style={
-                currentView === item.path
-                  ? {
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                      color: "white",
-                    }
-                  : { color: "#6b5345" }
-              }
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {isSidebarOpen && (
-                <span className="text-sm font-medium">{item.label}</span>
-              )}
-            </button>
-          ))}
+          {loadingPermisos ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-8 h-8 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            visibleMenuItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentView(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
+                  currentView === item.path ? "text-white" : "hover:bg-stone-50"
+                }`}
+                style={
+                  currentView === item.path
+                    ? {
+                        background:
+                          "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                        color: "white",
+                      }
+                    : { color: "#6b5345" }
+                }
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {isSidebarOpen && (
+                  <span className="text-sm font-medium">{item.label}</span>
+                )}
+              </button>
+            ))
+          )}
         </div>
       </aside>
 
