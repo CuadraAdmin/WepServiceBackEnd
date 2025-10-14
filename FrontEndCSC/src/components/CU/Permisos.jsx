@@ -12,11 +12,10 @@ import {
   Filter,
   LayoutGrid,
   List,
-  Sparkles,
 } from "lucide-react";
 import ApiConfig from "../Config/api.config";
+import { usePermissions } from "../../hooks/usePermissions";
 
-// Componente de Badge reutilizable
 const Badge = ({ active, children }) => (
   <span
     className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${
@@ -35,7 +34,7 @@ const Badge = ({ active, children }) => (
 );
 
 // Componente de Card para vista móvil
-const PermisoCard = ({ permiso, onEdit, onDelete }) => (
+const PermisoCard = ({ permiso, onEdit, onDelete, hasPermission }) => (
   <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-stone-200 hover:border-stone-300 transform hover:-translate-y-1">
     <div className="flex justify-between items-start mb-4">
       <div className="flex-1">
@@ -71,26 +70,30 @@ const PermisoCard = ({ permiso, onEdit, onDelete }) => (
       </Badge>
 
       <div className="flex gap-2">
-        <button
-          onClick={() => onEdit(permiso)}
-          className="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
-          title="Editar"
-        >
-          <Edit2 className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDelete(permiso)}
-          className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
-          title="Eliminar"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {hasPermission("Permisos.Editar") && (
+          <button
+            onClick={() => onEdit(permiso)}
+            className="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
+            title="Editar"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+        )}
+        {hasPermission("Permisos.Eliminar") && (
+          <button
+            onClick={() => onDelete(permiso)}
+            className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
+            title="Eliminar"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   </div>
 );
 
-// Componente de Alert reutilizable
+// Componente Alerta reutilizable
 const Alert = ({ type, message, onClose }) => {
   const styles = {
     success: {
@@ -130,8 +133,16 @@ const Alert = ({ type, message, onClose }) => {
 };
 
 // Componente principal
-function Permisos({ token }) {
+function Permisos({ token, userData }) {
   const [permisos, setPermisos] = useState([]);
+
+  // Extraer información del usuario logueado
+  const usuario = userData?.usuario || {};
+  const nombreUsuario = usuario.usua_Usuario || "Sistema";
+  const userId = usuario.usua_Id;
+
+  const { hasPermission } = usePermissions(token, userId);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -140,19 +151,19 @@ function Permisos({ token }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingPermiso, setEditingPermiso] = useState(null);
   const [permisoToDelete, setPermisoToDelete] = useState(null);
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' o 'table'
-  const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'active', 'inactive'
+  const [viewMode, setViewMode] = useState("grid");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const [formData, setFormData] = useState({
     perm_Nombre: "",
     perm_Actividad: "",
     perm_Descripcion: "",
     perm_Estatus: true,
-    perm_CreadoPor: "Admin",
   });
 
   useEffect(() => {
     console.log("🔑 Token recibido en Permisos:", token);
+    console.log("👤 Usuario logueado:", nombreUsuario);
     if (token) {
       cargarPermisos();
     } else {
@@ -164,30 +175,19 @@ function Permisos({ token }) {
     setLoading(true);
     setError("");
     try {
-      const headers = ApiConfig.getHeaders(token);
-      console.log("📤 Headers enviados:", headers);
-      console.log(
-        "🌐 URL:",
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR)
-      );
-
       const response = await fetch(
         ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR),
         {
           method: "GET",
-          headers: headers,
+          headers: ApiConfig.getHeaders(token),
         }
       );
-
-      console.log("📥 Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
         console.log("✅ Datos recibidos:", data);
         setPermisos(data);
       } else {
-        const errorData = await response.text();
-        console.error("❌ Error response:", errorData);
         setError(`Error al cargar permisos (${response.status})`);
       }
     } catch (err) {
@@ -220,9 +220,14 @@ function Permisos({ token }) {
             perm_Actividad: formData.perm_Actividad,
             perm_Descripcion: formData.perm_Descripcion,
             perm_Estatus: formData.perm_Estatus,
-            perm_ModificadoPor: "Admin",
+            perm_ModificadoPor: nombreUsuario,
           }
-        : formData;
+        : {
+            ...formData,
+            perm_CreadoPor: nombreUsuario,
+          };
+
+      console.log("📝 Datos a enviar:", body);
 
       const response = await fetch(url, {
         method: method,
@@ -235,8 +240,8 @@ function Permisos({ token }) {
       if (response.ok) {
         setSuccess(
           editingPermiso
-            ? "Permiso actualizado exitosamente"
-            : "Permiso creado exitosamente"
+            ? `Permiso actualizado por ${nombreUsuario}`
+            : `Permiso creado por ${nombreUsuario}`
         );
         setShowModal(false);
         resetForm();
@@ -260,6 +265,8 @@ function Permisos({ token }) {
     setError("");
 
     try {
+      console.log("🗑️ Eliminación realizada por:", nombreUsuario);
+
       const response = await fetch(
         ApiConfig.getUrl(
           ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id)
@@ -271,7 +278,7 @@ function Permisos({ token }) {
       );
 
       if (response.ok) {
-        setSuccess("Permiso eliminado exitosamente");
+        setSuccess(`Permiso eliminado por ${nombreUsuario}`);
         setShowDeleteModal(false);
         setPermisoToDelete(null);
         cargarPermisos();
@@ -310,7 +317,6 @@ function Permisos({ token }) {
       perm_Actividad: "",
       perm_Descripcion: "",
       perm_Estatus: true,
-      perm_CreadoPor: "Admin",
     });
     setEditingPermiso(null);
   };
@@ -321,7 +327,6 @@ function Permisos({ token }) {
     setError("");
   };
 
-  // Filtrado mejorado
   const filteredPermisos = permisos.filter((permiso) => {
     const matchesSearch =
       permiso.Perm_Nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -337,8 +342,8 @@ function Permisos({ token }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 p-4 md:p-8">
-      {/* Header con diseño mejorado */}
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-6 border border-stone-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -352,7 +357,7 @@ function Permisos({ token }) {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-stone-900 flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-stone-900">
                   Gestión de Permisos
                 </h1>
                 <p className="text-stone-600 mt-1">
@@ -363,26 +368,30 @@ function Permisos({ token }) {
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                resetForm();
-                setShowModal(true);
-              }}
-              className="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl"
-              style={{
-                background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-              }}
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Nuevo Permiso</span>
-              <span className="sm:hidden">Agregar</span>
-            </button>
+            {/* ✅ CORREGIDO: "Permisos.Crear" en lugar de "Permisos.Credar" */}
+            {hasPermission("Permisos.Crear") && (
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowModal(true);
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                }}
+              >
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Nuevo Permiso</span>
+                <span className="sm:hidden">Agregar</span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mensajes */}
         {success && (
-          <div className="max-w-7xl mx-auto mb-6">
+          <div className="mb-6">
             <Alert
               type="success"
               message={success}
@@ -392,15 +401,14 @@ function Permisos({ token }) {
         )}
 
         {error && (
-          <div className="max-w-7xl mx-auto mb-6">
+          <div className="mb-6">
             <Alert type="error" message={error} onClose={() => setError("")} />
           </div>
         )}
 
-        {/* Barra de búsqueda y filtros mejorada */}
+        {/* Barra de búsqueda y filtros */}
         <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6 border border-stone-200">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Búsqueda */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
@@ -412,7 +420,6 @@ function Permisos({ token }) {
               />
             </div>
 
-            {/* Filtros */}
             <div className="flex gap-2">
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -427,7 +434,6 @@ function Permisos({ token }) {
                 </select>
               </div>
 
-              {/* Toggle de vista (solo visible en desktop) */}
               <div className="hidden md:flex gap-1 bg-stone-100 p-1 rounded-xl">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -489,27 +495,29 @@ function Permisos({ token }) {
                     : "Comienza creando tu primer permiso"}
                 </p>
               </div>
-              {!searchTerm && filterStatus === "all" && (
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowModal(true);
-                  }}
-                  className="mt-4 flex items-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                  }}
-                >
-                  <Plus className="w-5 h-5" />
-                  Crear Permiso
-                </button>
-              )}
+              {!searchTerm &&
+                filterStatus === "all" &&
+                hasPermission("Permisos.Crear") && (
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowModal(true);
+                    }}
+                    className="mt-4 flex items-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    }}
+                  >
+                    <Plus className="w-5 h-5" />
+                    Crear Permiso
+                  </button>
+                )}
             </div>
           </div>
         ) : (
           <>
-            {/* Vista de Grid (móvil y desktop cuando está seleccionado) */}
+            {/* Vista de Grid */}
             {(viewMode === "grid" || window.innerWidth < 768) && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPermisos.map((permiso) => (
@@ -518,12 +526,13 @@ function Permisos({ token }) {
                     permiso={permiso}
                     onEdit={openEditModal}
                     onDelete={openDeleteModal}
+                    hasPermission={hasPermission}
                   />
                 ))}
               </div>
             )}
 
-            {/* Vista de Tabla (solo desktop cuando está seleccionado) */}
+            {/* ✅ VISTA DE TABLA CORREGIDA - Usa strings directos */}
             {viewMode === "table" && window.innerWidth >= 768 && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
                 <div className="overflow-x-auto">
@@ -581,20 +590,26 @@ function Permisos({ token }) {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => openEditModal(permiso)}
-                                className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
-                                title="Editar"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => openDeleteModal(permiso)}
-                                className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              {/* ✅ CORREGIDO: Usa strings directos */}
+                              {hasPermission("Permisos.Editar") && (
+                                <button
+                                  onClick={() => openEditModal(permiso)}
+                                  className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
+                                  title="Editar"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              )}
+                              {/* ✅ CORREGIDO: Usa strings directos */}
+                              {hasPermission("Permisos.Eliminar") && (
+                                <button
+                                  onClick={() => openDeleteModal(permiso)}
+                                  className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -607,10 +622,10 @@ function Permisos({ token }) {
           </>
         )}
 
-        {/* Modal de formulario mejorado */}
+        {/* Modal de formulario */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in duration-200">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
               <div
                 className="p-6 md:p-8 text-white flex justify-between items-center"
                 style={{
@@ -624,8 +639,8 @@ function Permisos({ token }) {
                   </h2>
                   <p className="text-white/80 mt-1 text-sm">
                     {editingPermiso
-                      ? "Actualiza la información del permiso"
-                      : "Completa los datos del nuevo permiso"}
+                      ? `Modificando como: ${nombreUsuario}`
+                      : `Creando como: ${nombreUsuario}`}
                   </p>
                 </div>
                 <button
@@ -754,10 +769,10 @@ function Permisos({ token }) {
           </div>
         )}
 
-        {/* Modal de confirmación de eliminación mejorado */}
+        {/* Modal de confirmación de eliminación */}
         {showDeleteModal && permisoToDelete && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl animate-in zoom-in duration-200">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
               <div className="p-8 bg-gradient-to-br from-red-50 to-rose-50 rounded-t-3xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <AlertCircle className="w-8 h-8 text-red-600" />
@@ -766,7 +781,7 @@ function Permisos({ token }) {
                   ¿Eliminar Permiso?
                 </h2>
                 <p className="text-center text-stone-600 mt-2 text-sm">
-                  Esta acción es permanente
+                  Operación realizada por: {nombreUsuario}
                 </p>
               </div>
 
