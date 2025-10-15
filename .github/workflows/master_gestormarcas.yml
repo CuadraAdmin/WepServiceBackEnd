@@ -27,7 +27,7 @@ jobs:
         run: dotnet build BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
 
       - name: Upload artifact for deployment job
@@ -65,4 +65,5 @@ jobs:
           package: .
 
           
+
 
