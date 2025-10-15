@@ -1,6 +1,7 @@
 class ApiConfig {
   // URL base de la API
-  static BASE_URL = "https://localhost:7096";
+  static BASE_URL =
+    "https://gestormarcas-cqdtaeawc5g4fdg4.canadacentral-01.azurewebsites.net";
 
   // Endpoints de Usuarios
   static ENDPOINTSUSUARIOS = {
