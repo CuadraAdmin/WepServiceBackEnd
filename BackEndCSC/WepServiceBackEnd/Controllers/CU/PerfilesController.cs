@@ -177,10 +177,10 @@ namespace WebServiceBackEnd.Controllers.CU
             {
                 return BadRequest(new { mensaje = ex.Message });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = ex.Message });
-            }
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, new { mensaje = ex.Message });
+            //}
         }
 
         [HttpPost("filtro")]
@@ -194,7 +194,6 @@ namespace WebServiceBackEnd.Controllers.CU
             catch (Exception ex)
             {
                 return StatusCode(500, new { mensaje = ex.Message });
-
             }
         }
     }
