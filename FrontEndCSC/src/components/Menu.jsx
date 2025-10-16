@@ -21,16 +21,12 @@ function Menu({ userData, onLogout }) {
     loading: loadingPermisos,
   } = usePermissions(userData?.token, usuario.usua_Id);
 
-  // ============================================
-  // 🔥 DEFINIR ELEMENTOS DEL MENÚ
-  // Si visible = false, el ícono NO aparece
-  // ============================================
   const menuItems = [
     {
       icon: Home,
       label: "Inicio",
       path: "inicio",
-      visible: true, // Siempre visible
+      visible: true,
     },
     {
       icon: Users,
@@ -65,7 +61,7 @@ function Menu({ userData, onLogout }) {
   };
 
   const renderContent = () => {
-    console.log("🎯 Vista actual:", currentView);
+    console.log("Vista actual:", currentView);
 
     switch (currentView) {
       case "permisos":
