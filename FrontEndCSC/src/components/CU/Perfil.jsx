@@ -233,7 +233,6 @@ function Perfil({ token, userData }) {
 
       const method = editingPerfil ? "PUT" : "POST";
 
-      // ✅ Normalizar datos: TRIM + UPPERCASE en todos los campos
       const body = editingPerfil
         ? {
             perf_Id: editingPerfil.perf_Id,
@@ -268,7 +267,20 @@ function Perfil({ token, userData }) {
         cargarPerfiles();
         setTimeout(() => setSuccess(""), 4000);
       } else {
-        setError(data.mensaje || "Error al guardar el perfil");
+        // ⭐ Detectar errores de duplicados ⭐
+        const mensaje = data.mensaje || "Error al guardar el perfil";
+        const mensajeLower = mensaje.toLowerCase();
+
+        // Detectar si es un error de duplicado
+        if (
+          (mensajeLower.includes("ya existe") ||
+            mensajeLower.includes("ya está registrado")) &&
+          (mensajeLower.includes("nombre") || mensajeLower.includes("perfil"))
+        ) {
+          setError("Ya existe un perfil con ese nombre");
+        } else {
+          setError(mensaje);
+        }
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
@@ -295,7 +307,7 @@ function Perfil({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`Perfil desactivado por ${nombreUsuario}`);
+        setSuccess(`PERFIL DESACTIVADO EXITOSAMENTE`);
         setShowDeleteModal(false);
         setPerfilToDelete(null);
         cargarPerfiles();
@@ -329,7 +341,7 @@ function Perfil({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`Perfil activado por ${nombreUsuario}`);
+        setSuccess(`PERFIL ACTIVADO EXITOSAMENTE`);
         setShowActivateModal(false);
         setPerfilToActivate(null);
         cargarPerfiles();
@@ -744,7 +756,7 @@ function Perfil({ token, userData }) {
                     }
                     required
                     className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Ej: ADMINISTRADOR"
+                    placeholder="NOMBRE DEL PERFIL"
                   />
                 </div>
 

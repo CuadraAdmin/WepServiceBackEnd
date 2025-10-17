@@ -226,7 +226,6 @@ function Permisos({ token, userData }) {
 
       const method = editingPermiso ? "PUT" : "POST";
 
-      // ✅ Normalizar datos: TRIM + UPPERCASE en todos los campos
       const body = editingPermiso
         ? {
             perm_Id: editingPermiso.Perm_Id,
@@ -263,7 +262,16 @@ function Permisos({ token, userData }) {
         cargarPermisos();
         setTimeout(() => setSuccess(""), 4000);
       } else {
-        setError(data.mensaje || "Error al guardar el permiso");
+        // ⭐ AQUÍ VA EL CAMBIO ⭐
+        const mensaje = data.mensaje || "Error al guardar el permiso";
+        if (
+          mensaje.toLowerCase().includes("ya existe") &&
+          mensaje.toLowerCase().includes("mismo nombre")
+        ) {
+          setError("Ya existe un permiso con ese nombre");
+        } else {
+          setError(mensaje);
+        }
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
@@ -290,7 +298,7 @@ function Permisos({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`Permiso desactivado por ${nombreUsuario}`);
+        setSuccess(`PERMISO DESACTIVADO EXITOSAMENTE`);
         setShowDeleteModal(false);
         setPermisoToDelete(null);
         cargarPermisos();
@@ -324,7 +332,7 @@ function Permisos({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`Permiso activado por ${nombreUsuario}`);
+        setSuccess(`PERMISO ACTIVADO EXITOSAMENTE`);
         setShowActivateModal(false);
         setPermisoToActivate(null);
         cargarPermisos();
