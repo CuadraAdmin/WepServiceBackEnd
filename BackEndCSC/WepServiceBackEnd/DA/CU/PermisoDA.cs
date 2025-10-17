@@ -177,6 +177,29 @@ namespace WebServiceBackEnd.DA.CU
                 throw new Exception($"Error al eliminar permiso: {ex.Message}");
             }
         }
+        public async Task<bool> Activar(int id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    using (SqlCommand cmd = new SqlCommand("cu.usp_Permiso_Activar", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@Perm_Id", id);
+
+                        await cmd.ExecuteNonQueryAsync();
+                        return true;
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception($"Error al activar permiso: {ex.Message}");
+            }
+        }
 
         public async Task<List<dynamic>> ListarConFiltros(PermisoBE filtros)
         {

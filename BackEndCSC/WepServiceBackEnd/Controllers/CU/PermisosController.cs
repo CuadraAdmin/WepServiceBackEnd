@@ -160,5 +160,25 @@ namespace WebServiceBackEnd.Controllers.CU
                 return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
             }
         }
+        [HttpPatch("activar/{id}")]
+        public async Task<IActionResult> Activar(int id)
+        {
+            try
+            {
+                var resultado = await _permisoBP.ActivarPermiso(id);
+                if (!resultado)
+                    return NotFound(new { mensaje = "Permiso no encontrado" });
+
+                return Ok(new { mensaje = "Permiso activado exitosamente" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = ex.Message });
+            }
+        }
     }
 }

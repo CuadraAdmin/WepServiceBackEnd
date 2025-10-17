@@ -98,6 +98,13 @@ namespace WebServiceBackEnd.BP.CU
                 throw new Exception($"Error al eliminar perfil: {ex.Message}");
             }
         }
+        public async Task<bool> ActivarPerfil(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del perfil es inválido");
+
+            return await _perfilDA.Activar(id);
+        }
 
         public async Task<bool> AsignarPermisoAPerfil(int perfilId, int permisoId, string creadoPor)
         {

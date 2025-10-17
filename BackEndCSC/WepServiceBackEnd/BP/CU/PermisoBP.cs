@@ -106,6 +106,13 @@ namespace WebServiceBackEnd.BP.CU
 
             return await _permisoDA.Eliminar(id);
         }
+        public async Task<bool> ActivarPermiso(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del permiso es inválido");
+
+            return await _permisoDA.Activar(id);
+        }
 
         /// <summary>
         /// Lista permisos con filtros personalizados
