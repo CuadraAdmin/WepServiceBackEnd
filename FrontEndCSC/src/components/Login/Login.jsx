@@ -326,7 +326,7 @@ function Login() {
                   <Instagram className="w-6 h-6 text-white" />
                 </a>
                 <a
-                  href="https://www.instagram.com/cuadralifestyle?igsh=MmcwZWZydWZtenVj"
+                  href="https://gcuadra.sharepoint.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
