@@ -1,7 +1,8 @@
+import BASEURL from "./BASEURL";
+
 class ApiConfig {
-  // URL base de la API
-  static BASE_URL =
-    "https://gestormarcas-cqdtaeawc5g4fdg4.canadacentral-01.azurewebsites.net";
+  // URL base de la API que se obtiene de BASEURL.js
+  static BASE_URL = BASEURL.getBaseUrl();
 
   // Endpoints de Usuarios
   static ENDPOINTSUSUARIOS = {
@@ -27,6 +28,7 @@ class ApiConfig {
     CREAR: "/api/Perfiles/crear",
     ACTUALIZAR: (id) => `/api/Perfiles/actualizar/${id}`,
     ELIMINAR: (id) => `/api/Perfiles/eliminar/${id}`,
+    ACTIVAR: (id) => `/api/Perfiles/activar/${id}`,
     PERMISOS: (id) => `/api/Perfiles/obtener/${id}/permisosPerfil`,
     ASIGNAR_PERMISO: (perfilId, permisoId) =>
       `/api/Perfiles/asignar/${perfilId}/permisos/${permisoId}`,
@@ -43,6 +45,7 @@ class ApiConfig {
     CREAR: "/api/Permisos/crear",
     ACTUALIZAR: (id) => `/api/Permisos/actualizar/${id}`,
     ELIMINAR: (id) => `/api/Permisos/eliminar/${id}`,
+    ACTIVAR: (id) => `/api/Permisos/activar/${id}`,
   };
 
   // Endpoints de Marcas

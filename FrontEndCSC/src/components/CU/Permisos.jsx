@@ -12,6 +12,7 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Check,
 } from "lucide-react";
 import ApiConfig from "../Config/api.config";
 import { usePermissions } from "../../hooks/usePermissions";
@@ -34,7 +35,13 @@ const Badge = ({ active, children }) => (
 );
 
 // Componente de Card para vista móvil
-const PermisoCard = ({ permiso, onEdit, onDelete, hasPermission }) => (
+const PermisoCard = ({
+  permiso,
+  onEdit,
+  onDelete,
+  onActivate,
+  hasPermission,
+}) => (
   <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-stone-200 hover:border-stone-300 transform hover:-translate-y-1">
     <div className="flex justify-between items-start mb-4">
       <div className="flex-1">
@@ -79,13 +86,22 @@ const PermisoCard = ({ permiso, onEdit, onDelete, hasPermission }) => (
             <Edit2 className="w-4 h-4" />
           </button>
         )}
-        {hasPermission("Permisos.Eliminar") && (
+        {hasPermission("Permisos.Eliminar") && permiso.Perm_Estatus && (
           <button
             onClick={() => onDelete(permiso)}
             className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
-            title="Eliminar"
+            title="Desactivar"
           >
             <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+        {hasPermission("Permisos.Activar") && !permiso.Perm_Estatus && (
+          <button
+            onClick={() => onActivate(permiso)}
+            className="p-2.5 rounded-xl bg-green-50 hover:bg-green-100 text-green-600 transition-all hover:scale-110"
+            title="Activar"
+          >
+            <Check className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -136,7 +152,6 @@ const Alert = ({ type, message, onClose }) => {
 function Permisos({ token, userData }) {
   const [permisos, setPermisos] = useState([]);
 
-  // Extraer información del usuario logueado
   const usuario = userData?.usuario || {};
   const nombreUsuario = usuario.usua_Usuario || "Sistema";
   const userId = usuario.usua_Id;
@@ -149,9 +164,11 @@ function Permisos({ token, userData }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showActivateModal, setShowActivateModal] = useState(false);
   const [editingPermiso, setEditingPermiso] = useState(null);
   const [permisoToDelete, setPermisoToDelete] = useState(null);
-  const [viewMode, setViewMode] = useState("grid");
+  const [permisoToActivate, setPermisoToActivate] = useState(null);
+  const [viewMode, setViewMode] = useState("table");
   const [filterStatus, setFilterStatus] = useState("all");
 
   const [formData, setFormData] = useState({
@@ -162,8 +179,6 @@ function Permisos({ token, userData }) {
   });
 
   useEffect(() => {
-    console.log("🔑 Token recibido en Permisos:", token);
-    console.log("👤 Usuario logueado:", nombreUsuario);
     if (token) {
       cargarPermisos();
     } else {
@@ -185,14 +200,12 @@ function Permisos({ token, userData }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Datos recibidos:", data);
         setPermisos(data);
       } else {
         setError(`Error al cargar permisos (${response.status})`);
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
-      console.error("💥 Error completo:", err);
     } finally {
       setLoading(false);
     }
@@ -213,21 +226,23 @@ function Permisos({ token, userData }) {
 
       const method = editingPermiso ? "PUT" : "POST";
 
+      // ✅ Normalizar datos: TRIM + UPPERCASE en todos los campos
       const body = editingPermiso
         ? {
             perm_Id: editingPermiso.Perm_Id,
-            perm_Nombre: formData.perm_Nombre,
-            perm_Actividad: formData.perm_Actividad,
-            perm_Descripcion: formData.perm_Descripcion,
+            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
+            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
+            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
             perm_Estatus: formData.perm_Estatus,
             perm_ModificadoPor: nombreUsuario,
           }
         : {
-            ...formData,
+            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
+            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
+            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
+            perm_Estatus: formData.perm_Estatus,
             perm_CreadoPor: nombreUsuario,
           };
-
-      console.log("📝 Datos a enviar:", body);
 
       const response = await fetch(url, {
         method: method,
@@ -240,8 +255,8 @@ function Permisos({ token, userData }) {
       if (response.ok) {
         setSuccess(
           editingPermiso
-            ? `Permiso actualizado por ${nombreUsuario}`
-            : `Permiso creado por ${nombreUsuario}`
+            ? `PERMISO ACTUALIZADO EXITOSAMENTE`
+            : `PERMISO CREADO EXITOSAMENTE`
         );
         setShowModal(false);
         resetForm();
@@ -252,7 +267,6 @@ function Permisos({ token, userData }) {
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -265,8 +279,6 @@ function Permisos({ token, userData }) {
     setError("");
 
     try {
-      console.log("🗑️ Eliminación realizada por:", nombreUsuario);
-
       const response = await fetch(
         ApiConfig.getUrl(
           ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id)
@@ -278,18 +290,51 @@ function Permisos({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`Permiso eliminado por ${nombreUsuario}`);
+        setSuccess(`Permiso desactivado por ${nombreUsuario}`);
         setShowDeleteModal(false);
         setPermisoToDelete(null);
         cargarPermisos();
         setTimeout(() => setSuccess(""), 4000);
       } else {
         const data = await response.json();
-        setError(data.mensaje || "Error al eliminar el permiso");
+        setError(data.mensaje || "Error al desactivar el permiso");
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
-      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleActivate = async () => {
+    if (!permisoToActivate) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        ApiConfig.getUrl(
+          ApiConfig.ENDPOINTSPERMISOS.ACTIVAR(permisoToActivate.Perm_Id)
+        ),
+        {
+          method: "PATCH",
+          headers: ApiConfig.getHeaders(token),
+        }
+      );
+
+      if (response.ok) {
+        setSuccess(`Permiso activado por ${nombreUsuario}`);
+        setShowActivateModal(false);
+        setPermisoToActivate(null);
+        cargarPermisos();
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        const data = await response.json();
+        setError(data.mensaje || "Error al activar el permiso");
+      }
+    } catch (err) {
+      setError("Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -309,6 +354,11 @@ function Permisos({ token, userData }) {
   const openDeleteModal = (permiso) => {
     setPermisoToDelete(permiso);
     setShowDeleteModal(true);
+  };
+
+  const openActivateModal = (permiso) => {
+    setPermisoToActivate(permiso);
+    setShowActivateModal(true);
   };
 
   const resetForm = () => {
@@ -368,7 +418,6 @@ function Permisos({ token, userData }) {
               </div>
             </div>
 
-            {/* ✅ CORREGIDO: "Permisos.Crear" en lugar de "Permisos.Credar" */}
             {hasPermission("Permisos.Crear") && (
               <button
                 onClick={() => {
@@ -526,13 +575,13 @@ function Permisos({ token, userData }) {
                     permiso={permiso}
                     onEdit={openEditModal}
                     onDelete={openDeleteModal}
+                    onActivate={openActivateModal}
                     hasPermission={hasPermission}
                   />
                 ))}
               </div>
             )}
-
-            {/* ✅ VISTA DE TABLA CORREGIDA - Usa strings directos */}
+            {/* Vista de Tabla */}
             {viewMode === "table" && window.innerWidth >= 768 && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
                 <div className="overflow-x-auto">
@@ -545,9 +594,6 @@ function Permisos({ token, userData }) {
                       }}
                     >
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold">
-                          ID
-                        </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold">
                           Nombre
                         </th>
@@ -571,9 +617,6 @@ function Permisos({ token, userData }) {
                           key={permiso.Perm_Id}
                           className="hover:bg-stone-50 transition-colors"
                         >
-                          <td className="px-6 py-4 text-sm font-semibold text-stone-900">
-                            #{permiso.Perm_Id}
-                          </td>
                           <td className="px-6 py-4 text-sm font-bold text-stone-900">
                             {permiso.Perm_Nombre}
                           </td>
@@ -590,7 +633,6 @@ function Permisos({ token, userData }) {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
-                              {/* ✅ CORREGIDO: Usa strings directos */}
                               {hasPermission("Permisos.Editar") && (
                                 <button
                                   onClick={() => openEditModal(permiso)}
@@ -600,16 +642,26 @@ function Permisos({ token, userData }) {
                                   <Edit2 className="w-4 h-4" />
                                 </button>
                               )}
-                              {/* ✅ CORREGIDO: Usa strings directos */}
-                              {hasPermission("Permisos.Eliminar") && (
-                                <button
-                                  onClick={() => openDeleteModal(permiso)}
-                                  className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
+                              {hasPermission("Permisos.Eliminar") &&
+                                permiso.Perm_Estatus && (
+                                  <button
+                                    onClick={() => openDeleteModal(permiso)}
+                                    className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
+                                    title="Desactivar"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              {hasPermission("PERMISOS.ACTIVAR") &&
+                                !permiso.Perm_Estatus && (
+                                  <button
+                                    onClick={() => openActivateModal(permiso)}
+                                    className="p-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-all hover:scale-110"
+                                    title="Activar"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                )}
                             </div>
                           </td>
                         </tr>
@@ -666,11 +718,14 @@ function Permisos({ token, userData }) {
                     type="text"
                     value={formData.perm_Nombre}
                     onChange={(e) =>
-                      setFormData({ ...formData, perm_Nombre: e.target.value })
+                      setFormData({
+                        ...formData,
+                        perm_Nombre: e.target.value.toUpperCase(),
+                      })
                     }
                     required
                     className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Ej: Usuarios.Crear"
+                    placeholder="NOMBRE"
                   />
                 </div>
 
@@ -685,30 +740,32 @@ function Permisos({ token, userData }) {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        perm_Actividad: e.target.value,
+                        perm_Actividad: e.target.value.toUpperCase(),
                       })
                     }
                     required
                     className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Ej: Crear"
+                    placeholder="ACTIVIDAD"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
+                  <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
                     Descripción
+                    <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={formData.perm_Descripcion}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        perm_Descripcion: e.target.value,
+                        perm_Descripcion: e.target.value.toUpperCase(),
                       })
                     }
+                    required
                     rows={4}
                     className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all resize-none bg-stone-50 focus:bg-white"
-                    placeholder="Descripción detallada del permiso (opcional)"
+                    placeholder="DESCRIPCIÓN DEL PERMISO"
                   />
                 </div>
 
@@ -769,7 +826,7 @@ function Permisos({ token, userData }) {
           </div>
         )}
 
-        {/* Modal de confirmación de eliminación */}
+        {/* Modal de confirmación de desactivación */}
         {showDeleteModal && permisoToDelete && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
@@ -778,7 +835,7 @@ function Permisos({ token, userData }) {
                   <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-center text-stone-900">
-                  ¿Eliminar Permiso?
+                  ¿Desactivar Permiso?
                 </h2>
                 <p className="text-center text-stone-600 mt-2 text-sm">
                   Operación realizada por: {nombreUsuario}
@@ -787,7 +844,7 @@ function Permisos({ token, userData }) {
 
               <div className="p-8">
                 <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                  ¿Estás seguro de que deseas eliminar el permiso{" "}
+                  ¿Estás seguro de que deseas desactivar el permiso{" "}
                   <span className="font-bold text-stone-900 block mt-2 text-lg">
                     "{permisoToDelete.Perm_Nombre}"
                   </span>
@@ -812,12 +869,70 @@ function Permisos({ token, userData }) {
                     {loading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Eliminando...
+                        Desactivando...
                       </>
                     ) : (
                       <>
                         <Trash2 className="w-5 h-5" />
-                        Eliminar
+                        Desactivar
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de confirmación de activación */}
+        {showActivateModal && permisoToActivate && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
+              <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-t-3xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-center text-stone-900">
+                  ¿Activar Permiso?
+                </h2>
+                <p className="text-center text-stone-600 mt-2 text-sm">
+                  Operación realizada por: {nombreUsuario}
+                </p>
+              </div>
+
+              <div className="p-8">
+                <p className="text-center text-stone-600 mb-6 leading-relaxed">
+                  ¿Estás seguro de que deseas activar el permiso{" "}
+                  <span className="font-bold text-stone-900 block mt-2 text-lg">
+                    "{permisoToActivate.Perm_Nombre}"
+                  </span>
+                  ?
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      setShowActivateModal(false);
+                      setPermisoToActivate(null);
+                    }}
+                    className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleActivate}
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Activando...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5" />
+                        Activar
                       </>
                     )}
                   </button>
