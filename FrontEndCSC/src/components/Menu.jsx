@@ -14,7 +14,6 @@ function Menu({ userData, onLogout }) {
   const usuario = userData?.usuario || {};
   const perfiles = usuario.perfiles || [];
 
-  // Hook de permisos
   const {
     hasPermission,
     hasAnyPermission,
@@ -61,30 +60,23 @@ function Menu({ userData, onLogout }) {
   };
 
   const renderContent = () => {
-    console.log("Vista actual:", currentView);
-
     switch (currentView) {
       case "permisos":
-        // Ya validó el permiso en menuItems
         return <Permisos token={userData?.token} userData={userData} />;
 
       case "usuarios":
-        // Ya validó el permiso en menuItems
         return <Usuario token={userData?.token} userData={userData} />;
 
       case "perfiles":
-        // Ya validó el permiso en menuItems
         return <Perfil token={userData?.token} userData={userData} />;
 
       case "marcas":
-        // Ya validó el permiso en menuItems
         return <Marcas token={userData?.token} userData={userData} />;
 
       case "inicio":
       default:
         return (
           <div className="p-8">
-            {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-stone-900 mb-2">
                 Bienvenido, {usuario.usua_Nombre?.split(" ")[0]}
@@ -94,9 +86,7 @@ function Menu({ userData, onLogout }) {
               </p>
             </div>
 
-            {/* Dashboard Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {/* Card 1 - Info del Usuario */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
                 <div className="flex items-center gap-4 mb-4">
                   <div
@@ -127,7 +117,6 @@ function Menu({ userData, onLogout }) {
                 </div>
               </div>
 
-              {/* Card 2 - Perfiles */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
                 <div className="flex items-center gap-4 mb-4">
                   <div
@@ -167,7 +156,6 @@ function Menu({ userData, onLogout }) {
                 </div>
               </div>
 
-              {/* Card 3 - Estado */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
                 <div className="flex items-center gap-4 mb-4">
                   <div
@@ -203,7 +191,6 @@ function Menu({ userData, onLogout }) {
               </div>
             </div>
 
-            {/* Accesos Rápidos */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200">
               <h2 className="text-xl font-bold text-stone-900 mb-4">
                 Accesos Rápidos
@@ -249,7 +236,6 @@ function Menu({ userData, onLogout }) {
 
   return (
     <div className="min-h-screen bg-stone-100">
-      {/* Navbar Component */}
       <Navbar
         userData={userData}
         onLogout={onLogout}
@@ -257,7 +243,6 @@ function Menu({ userData, onLogout }) {
         toggleSidebar={toggleSidebar}
       />
 
-      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-16 bottom-0 bg-white border-r border-stone-200 transition-all duration-300 z-40 ${
           isSidebarOpen ? "w-64" : "w-20"
@@ -296,7 +281,6 @@ function Menu({ userData, onLogout }) {
         </div>
       </aside>
 
-      {/* Main content */}
       <main
         className={`pt-16 transition-all duration-300 ${
           isSidebarOpen ? "ml-64" : "ml-20"
