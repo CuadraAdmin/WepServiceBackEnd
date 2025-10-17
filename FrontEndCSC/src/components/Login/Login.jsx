@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Lock, User, Eye, EyeOff } from "lucide-react";
+import {
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  Facebook,
+  Instagram,
+  ChartColumnStacked,
+} from "lucide-react";
 import Menu from "../Menu";
 import ApiConfig from "../Config/api.config";
 import { useAuth } from "../../hooks/useAuth";
@@ -49,8 +57,6 @@ function Login() {
           usuario: data.usuario,
           mensaje: data.mensaje,
         });
-
-        console.log("✅ Login exitoso");
       } else {
         setError(data.mensaje || "Credenciales incorrectas");
       }
@@ -272,6 +278,76 @@ function Login() {
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               )}
             </button>
+
+            {/* sociales*/}
+            <div className="pt-4">
+              <div className="flex justify-center gap-4 mt-6">
+                <a
+                  href="https://www.facebook.com/share/1GdksZysJU/?mibextid=wwXIfr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    boxShadow: "0 4px 12px rgba(107, 83, 69, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 20px rgba(107, 83, 69, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(107, 83, 69, 0.3)";
+                  }}
+                >
+                  <Facebook className="w-6 h-6 text-white" />
+                </a>
+
+                <a
+                  href="https://www.instagram.com/cuadralifestyle?igsh=MmcwZWZydWZtenVj"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    boxShadow: "0 4px 12px rgba(107, 83, 69, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 20px rgba(107, 83, 69, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(107, 83, 69, 0.3)";
+                  }}
+                >
+                  <Instagram className="w-6 h-6 text-white" />
+                </a>
+                <a
+                  href="https://www.instagram.com/cuadralifestyle?igsh=MmcwZWZydWZtenVj"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    boxShadow: "0 4px 12px rgba(107, 83, 69, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 20px rgba(107, 83, 69, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(107, 83, 69, 0.3)";
+                  }}
+                >
+                  <ChartColumnStacked className="w-6 h-6 text-white" />
+                </a>
+              </div>
+            </div>
           </form>
         </div>
       </div>
