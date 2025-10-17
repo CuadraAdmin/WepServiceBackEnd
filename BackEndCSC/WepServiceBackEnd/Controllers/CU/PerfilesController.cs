@@ -138,6 +138,26 @@ namespace WebServiceBackEnd.Controllers.CU
                 return StatusCode(500, new { mensaje = ex.Message });
             }
         }
+        [HttpPatch("activar/{id}")]
+        public async Task<IActionResult> Activar(int id)
+        {
+            try
+            {
+                var resultado = await _perfilBP.ActivarPerfil(id);
+                if (!resultado)
+                    return NotFound(new { mensaje = "Perfil no encontrado" });
+
+                return Ok(new { mensaje = "Perfil activado exitosamente" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = ex.Message });
+            }
+        }
 
         [HttpPost("asignar/{perfilId}/permisos/{permisoId}")]
         public async Task<IActionResult> AsignarPermiso(int perfilId, int permisoId)
