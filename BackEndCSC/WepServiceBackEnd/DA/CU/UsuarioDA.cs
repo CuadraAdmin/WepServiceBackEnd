@@ -329,6 +329,36 @@ namespace WebServiceBackEnd.DA.CU
             }
         }
 
+        public async Task<bool> Activar(int id)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    SqlCommand cmd = new SqlCommand("cu.usp_Usuario_Activar", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Usua_Id", id);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            int filasAfectadas = reader.GetInt32(reader.GetOrdinal("FilasAfectadas"));
+                            return filasAfectadas > 0;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al activar usuario: {ex.Message}");
+            }
+        }
+
         public async Task<bool> AsignarPerfilAUsuario(int usuarioId, int perfilId, string creadoPor)
         {
             try

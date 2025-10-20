@@ -176,6 +176,13 @@ namespace WebServiceBackEnd.BP.CU
             return await _usuarioDA.Eliminar(id);
         }
 
+        public async Task<bool> ActivarUsuario(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("El ID del usuario es inválido");
+
+            return await _usuarioDA.Activar(id);
+        }
         public async Task<bool> AsignarPerfil(int usuarioId, int perfilId, string creadoPor)
         {
             return await _usuarioDA.AsignarPerfilAUsuario(usuarioId, perfilId, creadoPor);
