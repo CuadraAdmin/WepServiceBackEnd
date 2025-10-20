@@ -39,6 +39,32 @@ namespace WebServiceBackEnd.Controllers.CU
             }
         }
 
+        [HttpPut("cambiar-contrasena/{usuarioId}")]
+        [Authorize]
+        public async Task<IActionResult> CambiarContrasena(int usuarioId, [FromBody] CambiarContrasenaRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.ContrasenaActual) || string.IsNullOrEmpty(request.ContrasenaNueva))
+                {
+                    return BadRequest(new { mensaje = "Las contraseñas son requeridas" });
+                }
+
+                var resultado = await _usuarioBP.CambiarContrasena(usuarioId, request.ContrasenaActual, request.ContrasenaNueva);
+
+                if (!resultado)
+                {
+                    return BadRequest(new { mensaje = "No se pudo cambiar la contraseña" });
+                }
+
+                return Ok(new { mensaje = "Contraseña actualizada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+        }
+
         [HttpGet("Listar")]
         [Authorize]
         public async Task<IActionResult> Listar()
@@ -238,5 +264,10 @@ namespace WebServiceBackEnd.Controllers.CU
                 return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
             }
         }
+    }
+    public class CambiarContrasenaRequest
+    {
+        public string ContrasenaActual { get; set; }
+        public string ContrasenaNueva { get; set; }
     }
 }
