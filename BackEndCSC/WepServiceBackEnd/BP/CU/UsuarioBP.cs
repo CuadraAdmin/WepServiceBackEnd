@@ -170,7 +170,18 @@ namespace WebServiceBackEnd.BP.CU
 
             return await _usuarioDA.ActualizarContrasena(usuarioId, nuevaContrasenaHash);
         }
+        public async Task<bool> CambiarContrasenaSinValidar(int usuarioId, string contrasenaNueva)
+        {
+            var usuario = await _usuarioDA.ObtenerPorId(usuarioId);
+            if (usuario == null)
+            {
+                throw new Exception("Usuario no encontrado");
+            }
 
+            string nuevaContrasenaHash = PasswordHelper.HashPassword(contrasenaNueva);
+
+            return await _usuarioDA.ActualizarContrasena(usuarioId, nuevaContrasenaHash);
+        }
         public async Task<bool> Eliminar(int id)
         {
             return await _usuarioDA.Eliminar(id);
