@@ -45,12 +45,12 @@ namespace WebServiceBackEnd.Controllers.CU
         {
             try
             {
-                if (string.IsNullOrEmpty(request.ContrasenaActual) || string.IsNullOrEmpty(request.ContrasenaNueva))
+                if (string.IsNullOrEmpty(request.ContrasenaNueva))
                 {
-                    return BadRequest(new { mensaje = "Las contraseñas son requeridas" });
+                    return BadRequest(new { mensaje = "La nueva contraseña es requerida" });
                 }
 
-                var resultado = await _usuarioBP.CambiarContrasena(usuarioId, request.ContrasenaActual, request.ContrasenaNueva);
+                var resultado = await _usuarioBP.CambiarContrasenaSinValidar(usuarioId, request.ContrasenaNueva);
 
                 if (!resultado)
                 {
@@ -267,7 +267,6 @@ namespace WebServiceBackEnd.Controllers.CU
     }
     public class CambiarContrasenaRequest
     {
-        public string ContrasenaActual { get; set; }
         public string ContrasenaNueva { get; set; }
     }
 }
