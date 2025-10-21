@@ -76,9 +76,9 @@ function Menu({ userData, onLogout }) {
       case "inicio":
       default:
         return (
-          <div className="p-8">
+          <div className="p-4 md:p-8">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-stone-900 mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-stone-900 mb-2">
                 Bienvenido, {usuario.usua_Nombre?.split(" ")[0]}
               </h1>
               <p className="text-stone-600">
@@ -248,7 +248,7 @@ function Menu({ userData, onLogout }) {
           isSidebarOpen ? "w-64" : "w-20"
         }`}
       >
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 overflow-y-auto h-full">
           {loadingPermisos ? (
             <div className="flex items-center justify-center py-4">
               <div className="w-8 h-8 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
@@ -273,7 +273,9 @@ function Menu({ userData, onLogout }) {
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {isSidebarOpen && (
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <span className="text-sm font-medium truncate">
+                    {item.label}
+                  </span>
                 )}
               </button>
             ))
