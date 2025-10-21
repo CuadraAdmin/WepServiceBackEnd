@@ -138,6 +138,7 @@ namespace WebServiceBackEnd.Controllers.CU
                 return StatusCode(500, new { mensaje = ex.Message });
             }
         }
+
         [HttpPatch("activar/{id}")]
         public async Task<IActionResult> Activar(int id)
         {
