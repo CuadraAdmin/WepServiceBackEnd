@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
-  Shield,
+  Users,
+  User,
   Plus,
   Edit2,
   Trash2,
@@ -12,10 +13,12 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Shield,
   Check,
 } from "lucide-react";
-import ApiConfig from "../Config/api.config";
-import { usePermissions } from "../../hooks/usePermissions";
+import { usePermissions } from "../../../hooks/usePermissions";
+import AsignarPermisos from "./AsignarPermisos";
+import ApiConfig from "../../Config/api.config";
 
 const Badge = ({ active, children }) => (
   <span
@@ -34,12 +37,12 @@ const Badge = ({ active, children }) => (
   </span>
 );
 
-// Componente de Card para vista móvil
-const PermisoCard = ({
-  permiso,
+const PerfilCard = ({
+  perfil,
   onEdit,
   onDelete,
   onActivate,
+  onAsignarPermisos,
   hasPermission,
 }) => (
   <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-stone-200 hover:border-stone-300 transform hover:-translate-y-1">
@@ -52,52 +55,57 @@ const PermisoCard = ({
               background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
             }}
           >
-            <Shield className="w-5 h-5 text-white" />
+            <User className="w-5 h-5 text-white" />
           </div>
           <span className="text-xs font-semibold text-stone-400">
-            #{permiso.Perm_Id}
+            #{perfil.perf_Id}
           </span>
         </div>
         <h3 className="text-lg font-bold text-stone-900 mb-1">
-          {permiso.Perm_Nombre}
+          {perfil.perf_Nombre}
         </h3>
-        <p className="text-sm text-stone-600 mb-3">
-          <span className="font-semibold">Actividad:</span>{" "}
-          {permiso.Perm_Actividad}
-        </p>
         <p className="text-sm text-stone-500 leading-relaxed">
-          {permiso.Perm_Descripcion || "Sin descripción"}
+          {perfil.perf_Descripcion || "Sin descripción"}
         </p>
       </div>
     </div>
 
     <div className="flex items-center justify-between pt-4 border-t border-stone-100">
-      <Badge active={permiso.Perm_Estatus}>
-        {permiso.Perm_Estatus ? "Activo" : "Inactivo"}
+      <Badge active={perfil.perf_Estatus}>
+        {perfil.perf_Estatus ? "Activo" : "Inactivo"}
       </Badge>
 
       <div className="flex gap-2">
-        {hasPermission("Permisos.Editar") && (
+        {hasPermission("Perfiles.AsignarPermisos") && (
           <button
-            onClick={() => onEdit(permiso)}
+            onClick={() => onAsignarPermisos(perfil)}
+            className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-600 transition-all hover:scale-110"
+            title="Asignar Permisos"
+          >
+            <Shield className="w-4 h-4" />
+          </button>
+        )}
+        {hasPermission("Perfiles.Editar") && (
+          <button
+            onClick={() => onEdit(perfil)}
             className="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
             title="Editar"
           >
             <Edit2 className="w-4 h-4" />
           </button>
         )}
-        {hasPermission("Permisos.Eliminar") && permiso.Perm_Estatus && (
+        {hasPermission("Perfiles.Eliminar") && perfil.perf_Estatus && (
           <button
-            onClick={() => onDelete(permiso)}
+            onClick={() => onDelete(perfil)}
             className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
             title="Desactivar"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         )}
-        {hasPermission("Permisos.Activar") && !permiso.Perm_Estatus && (
+        {hasPermission("Perfiles.Activar") && !perfil.perf_Estatus && (
           <button
-            onClick={() => onActivate(permiso)}
+            onClick={() => onActivate(perfil)}
             className="p-2.5 rounded-xl bg-green-50 hover:bg-green-100 text-green-600 transition-all hover:scale-110"
             title="Activar"
           >
@@ -109,7 +117,6 @@ const PermisoCard = ({
   </div>
 );
 
-// Componente Alerta reutilizable
 const Alert = ({ type, message, onClose }) => {
   const styles = {
     success: {
@@ -148,9 +155,8 @@ const Alert = ({ type, message, onClose }) => {
   );
 };
 
-// Componente principal
-function Permisos({ token, userData }) {
-  const [permisos, setPermisos] = useState([]);
+function Perfil({ token, userData }) {
+  const [perfiles, setPerfiles] = useState([]);
 
   const usuario = userData?.usuario || {};
   const nombreUsuario = usuario.usua_Usuario || "Sistema";
@@ -165,33 +171,34 @@ function Permisos({ token, userData }) {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showActivateModal, setShowActivateModal] = useState(false);
-  const [editingPermiso, setEditingPermiso] = useState(null);
-  const [permisoToDelete, setPermisoToDelete] = useState(null);
-  const [permisoToActivate, setPermisoToActivate] = useState(null);
+  const [showPermisosModal, setShowPermisosModal] = useState(false);
+  const [editingPerfil, setEditingPerfil] = useState(null);
+  const [perfilToDelete, setPerfilToDelete] = useState(null);
+  const [perfilToActivate, setPerfilToActivate] = useState(null);
+  const [perfilForPermisos, setPerfilForPermisos] = useState(null);
   const [viewMode, setViewMode] = useState("table");
   const [filterStatus, setFilterStatus] = useState("all");
 
   const [formData, setFormData] = useState({
-    perm_Nombre: "",
-    perm_Actividad: "",
-    perm_Descripcion: "",
-    perm_Estatus: true,
+    perf_Nombre: "",
+    perf_Descripcion: "",
+    perf_Estatus: true,
   });
 
   useEffect(() => {
     if (token) {
-      cargarPermisos();
+      cargarPerfiles();
     } else {
       setError("No hay token de autenticación");
     }
   }, [token]);
 
-  const cargarPermisos = async () => {
+  const cargarPerfiles = async () => {
     setLoading(true);
     setError("");
     try {
       const response = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR),
+        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.LISTAR),
         {
           method: "GET",
           headers: ApiConfig.getHeaders(token),
@@ -200,9 +207,9 @@ function Permisos({ token, userData }) {
 
       if (response.ok) {
         const data = await response.json();
-        setPermisos(data);
+        setPerfiles(data);
       } else {
-        setError(`Error al cargar permisos (${response.status})`);
+        setError(`Error al cargar perfiles (${response.status})`);
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
@@ -218,29 +225,27 @@ function Permisos({ token, userData }) {
     setSuccess("");
 
     try {
-      const url = editingPermiso
+      const url = editingPerfil
         ? ApiConfig.getUrl(
-            ApiConfig.ENDPOINTSPERMISOS.ACTUALIZAR(editingPermiso.Perm_Id)
+            ApiConfig.ENDPOINTSPERFILES.ACTUALIZAR(editingPerfil.perf_Id)
           )
-        : ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.CREAR);
+        : ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.CREAR);
 
-      const method = editingPermiso ? "PUT" : "POST";
+      const method = editingPerfil ? "PUT" : "POST";
 
-      const body = editingPermiso
+      const body = editingPerfil
         ? {
-            perm_Id: editingPermiso.Perm_Id,
-            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
-            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
-            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
-            perm_Estatus: formData.perm_Estatus,
-            perm_ModificadoPor: nombreUsuario,
+            perf_Id: editingPerfil.perf_Id,
+            perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
+            perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
+            perf_Estatus: formData.perf_Estatus,
+            perf_ModificadoPor: nombreUsuario,
           }
         : {
-            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
-            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
-            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
-            perm_Estatus: formData.perm_Estatus,
-            perm_CreadoPor: nombreUsuario,
+            perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
+            perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
+            perf_Estatus: formData.perf_Estatus,
+            perf_CreadoPor: nombreUsuario,
           };
 
       const response = await fetch(url, {
@@ -253,22 +258,26 @@ function Permisos({ token, userData }) {
 
       if (response.ok) {
         setSuccess(
-          editingPermiso
-            ? `PERMISO ACTUALIZADO EXITOSAMENTE`
-            : `PERMISO CREADO EXITOSAMENTE`
+          editingPerfil
+            ? "PERFIL ACTUALIZADO EXITOSAMENTE"
+            : "PERFIL CREADO EXITOSAMENTE"
         );
         setShowModal(false);
         resetForm();
-        cargarPermisos();
+        cargarPerfiles();
         setTimeout(() => setSuccess(""), 4000);
       } else {
-        // ⭐ AQUÍ VA EL CAMBIO ⭐
-        const mensaje = data.mensaje || "Error al guardar el permiso";
+        // ⭐ Detectar errores de duplicados ⭐
+        const mensaje = data.mensaje || "Error al guardar el perfil";
+        const mensajeLower = mensaje.toLowerCase();
+
+        // Detectar si es un error de duplicado
         if (
-          mensaje.toLowerCase().includes("ya existe") &&
-          mensaje.toLowerCase().includes("mismo nombre")
+          (mensajeLower.includes("ya existe") ||
+            mensajeLower.includes("ya está registrado")) &&
+          (mensajeLower.includes("nombre") || mensajeLower.includes("perfil"))
         ) {
-          setError("Ya existe un permiso con ese nombre");
+          setError("Ya existe un perfil con ese nombre");
         } else {
           setError(mensaje);
         }
@@ -281,7 +290,7 @@ function Permisos({ token, userData }) {
   };
 
   const handleDelete = async () => {
-    if (!permisoToDelete) return;
+    if (!perfilToDelete) return;
 
     setLoading(true);
     setError("");
@@ -289,7 +298,7 @@ function Permisos({ token, userData }) {
     try {
       const response = await fetch(
         ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id)
+          ApiConfig.ENDPOINTSPERFILES.ELIMINAR(perfilToDelete.perf_Id)
         ),
         {
           method: "DELETE",
@@ -298,14 +307,14 @@ function Permisos({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`PERMISO DESACTIVADO EXITOSAMENTE`);
+        setSuccess(`PERFIL DESACTIVADO EXITOSAMENTE`);
         setShowDeleteModal(false);
-        setPermisoToDelete(null);
-        cargarPermisos();
+        setPerfilToDelete(null);
+        cargarPerfiles();
         setTimeout(() => setSuccess(""), 4000);
       } else {
         const data = await response.json();
-        setError(data.mensaje || "Error al desactivar el permiso");
+        setError(data.mensaje || "Error al desactivar el perfil");
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
@@ -315,7 +324,7 @@ function Permisos({ token, userData }) {
   };
 
   const handleActivate = async () => {
-    if (!permisoToActivate) return;
+    if (!perfilToActivate) return;
 
     setLoading(true);
     setError("");
@@ -323,7 +332,7 @@ function Permisos({ token, userData }) {
     try {
       const response = await fetch(
         ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERMISOS.ACTIVAR(permisoToActivate.Perm_Id)
+          ApiConfig.ENDPOINTSPERFILES.ACTIVAR(perfilToActivate.perf_Id)
         ),
         {
           method: "PATCH",
@@ -332,14 +341,14 @@ function Permisos({ token, userData }) {
       );
 
       if (response.ok) {
-        setSuccess(`PERMISO ACTIVADO EXITOSAMENTE`);
+        setSuccess(`PERFIL ACTIVADO EXITOSAMENTE`);
         setShowActivateModal(false);
-        setPermisoToActivate(null);
-        cargarPermisos();
+        setPerfilToActivate(null);
+        cargarPerfiles();
         setTimeout(() => setSuccess(""), 4000);
       } else {
         const data = await response.json();
-        setError(data.mensaje || "Error al activar el permiso");
+        setError(data.mensaje || "Error al activar el perfil");
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
@@ -348,35 +357,38 @@ function Permisos({ token, userData }) {
     }
   };
 
-  const openEditModal = (permiso) => {
-    setEditingPermiso(permiso);
+  const openEditModal = (perfil) => {
+    setEditingPerfil(perfil);
     setFormData({
-      perm_Nombre: permiso.Perm_Nombre,
-      perm_Actividad: permiso.Perm_Actividad,
-      perm_Descripcion: permiso.Perm_Descripcion || "",
-      perm_Estatus: permiso.Perm_Estatus,
+      perf_Nombre: perfil.perf_Nombre,
+      perf_Descripcion: perfil.perf_Descripcion || "",
+      perf_Estatus: perfil.perf_Estatus,
     });
     setShowModal(true);
   };
 
-  const openDeleteModal = (permiso) => {
-    setPermisoToDelete(permiso);
+  const openDeleteModal = (perfil) => {
+    setPerfilToDelete(perfil);
     setShowDeleteModal(true);
   };
 
-  const openActivateModal = (permiso) => {
-    setPermisoToActivate(permiso);
+  const openActivateModal = (perfil) => {
+    setPerfilToActivate(perfil);
     setShowActivateModal(true);
+  };
+
+  const openPermisosModal = (perfil) => {
+    setPerfilForPermisos(perfil);
+    setShowPermisosModal(true);
   };
 
   const resetForm = () => {
     setFormData({
-      perm_Nombre: "",
-      perm_Actividad: "",
-      perm_Descripcion: "",
-      perm_Estatus: true,
+      perf_Nombre: "",
+      perf_Descripcion: "",
+      perf_Estatus: true,
     });
-    setEditingPermiso(null);
+    setEditingPerfil(null);
   };
 
   const handleCloseModal = () => {
@@ -385,15 +397,21 @@ function Permisos({ token, userData }) {
     setError("");
   };
 
-  const filteredPermisos = permisos.filter((permiso) => {
-    const matchesSearch =
-      permiso.Perm_Nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permiso.Perm_Actividad?.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleClosePermisosModal = () => {
+    setShowPermisosModal(false);
+    setPerfilForPermisos(null);
+    cargarPerfiles();
+  };
+
+  const filteredPerfiles = perfiles.filter((perfil) => {
+    const matchesSearch = perfil.perf_Nombre
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       filterStatus === "all" ||
-      (filterStatus === "active" && permiso.Perm_Estatus) ||
-      (filterStatus === "inactive" && !permiso.Perm_Estatus);
+      (filterStatus === "active" && perfil.perf_Estatus) ||
+      (filterStatus === "inactive" && !perfil.perf_Estatus);
 
     return matchesSearch && matchesStatus;
   });
@@ -412,21 +430,21 @@ function Permisos({ token, userData }) {
                     "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
                 }}
               >
-                <Shield className="w-8 h-8 text-white" />
+                <Users className="w-8 h-8 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-stone-900">
-                  Gestión de Permisos
+                  Gestión de Perfiles
                 </h1>
                 <p className="text-stone-600 mt-1">
-                  {filteredPermisos.length} permiso
-                  {filteredPermisos.length !== 1 ? "s" : ""} encontrado
-                  {filteredPermisos.length !== 1 ? "s" : ""}
+                  {filteredPerfiles.length} perfil
+                  {filteredPerfiles.length !== 1 ? "es" : ""} encontrado
+                  {filteredPerfiles.length !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
 
-            {hasPermission("Permisos.Crear") && (
+            {hasPermission("Perfiles.Crear") && (
               <button
                 onClick={() => {
                   resetForm();
@@ -439,7 +457,7 @@ function Permisos({ token, userData }) {
                 }}
               >
                 <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Nuevo Permiso</span>
+                <span className="hidden sm:inline">Nuevo Perfil</span>
                 <span className="sm:hidden">Agregar</span>
               </button>
             )}
@@ -470,7 +488,7 @@ function Permisos({ token, userData }) {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
                 type="text"
-                placeholder="Buscar por nombre o actividad..."
+                placeholder="Buscar por nombre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
@@ -525,12 +543,12 @@ function Permisos({ token, userData }) {
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <div className="w-16 h-16 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
-                <Shield className="w-8 h-8 text-stone-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <Users className="w-8 h-8 text-stone-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-stone-600 font-medium">Cargando permisos...</p>
+              <p className="text-stone-600 font-medium">Cargando perfiles...</p>
             </div>
           </div>
-        ) : filteredPermisos.length === 0 ? (
+        ) : filteredPerfiles.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
             <div className="flex flex-col items-center gap-4">
               <div
@@ -540,21 +558,21 @@ function Permisos({ token, userData }) {
                     "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.1) 100%)",
                 }}
               >
-                <Shield className="w-10 h-10 text-stone-400" />
+                <Users className="w-10 h-10 text-stone-400" />
               </div>
               <div>
                 <p className="text-stone-900 text-lg font-semibold mb-1">
-                  No se encontraron permisos
+                  No se encontraron perfiles
                 </p>
                 <p className="text-stone-500 text-sm">
                   {searchTerm || filterStatus !== "all"
                     ? "Intenta ajustar los filtros de búsqueda"
-                    : "Comienza creando tu primer permiso"}
+                    : "Comienza creando tu primer perfil"}
                 </p>
               </div>
               {!searchTerm &&
                 filterStatus === "all" &&
-                hasPermission("Permisos.Crear") && (
+                hasPermission("Perfiles.Crear") && (
                   <button
                     onClick={() => {
                       resetForm();
@@ -567,29 +585,31 @@ function Permisos({ token, userData }) {
                     }}
                   >
                     <Plus className="w-5 h-5" />
-                    Crear Permiso
+                    Crear Perfil
                   </button>
                 )}
             </div>
           </div>
         ) : (
           <>
-            {/* Vista de Grid */}
+            {/* Vista Grid */}
             {(viewMode === "grid" || window.innerWidth < 768) && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPermisos.map((permiso) => (
-                  <PermisoCard
-                    key={permiso.Perm_Id}
-                    permiso={permiso}
+                {filteredPerfiles.map((perfil) => (
+                  <PerfilCard
+                    key={perfil.perf_Id}
+                    perfil={perfil}
                     onEdit={openEditModal}
                     onDelete={openDeleteModal}
                     onActivate={openActivateModal}
+                    onAsignarPermisos={openPermisosModal}
                     hasPermission={hasPermission}
                   />
                 ))}
               </div>
             )}
-            {/* Vista de Tabla */}
+
+            {/* Vista Tabla */}
             {viewMode === "table" && window.innerWidth >= 768 && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
                 <div className="overflow-x-auto">
@@ -606,9 +626,6 @@ function Permisos({ token, userData }) {
                           Nombre
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold">
-                          Actividad
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold">
                           Descripción
                         </th>
                         <th className="px-6 py-4 text-center text-sm font-semibold">
@@ -620,50 +637,56 @@ function Permisos({ token, userData }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-200">
-                      {filteredPermisos.map((permiso) => (
+                      {filteredPerfiles.map((perfil) => (
                         <tr
-                          key={permiso.Perm_Id}
+                          key={perfil.perf_Id}
                           className="hover:bg-stone-50 transition-colors"
                         >
                           <td className="px-6 py-4 text-sm font-bold text-stone-900">
-                            {permiso.Perm_Nombre}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-stone-600">
-                            {permiso.Perm_Actividad}
+                            {perfil.perf_Nombre}
                           </td>
                           <td className="px-6 py-4 text-sm text-stone-500 max-w-xs truncate">
-                            {permiso.Perm_Descripcion || "Sin descripción"}
+                            {perfil.perf_Descripcion || "Sin descripción"}
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <Badge active={permiso.Perm_Estatus}>
-                              {permiso.Perm_Estatus ? "Activo" : "Inactivo"}
+                            <Badge active={perfil.perf_Estatus}>
+                              {perfil.perf_Estatus ? "Activo" : "Inactivo"}
                             </Badge>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
-                              {hasPermission("Permisos.Editar") && (
+                              {hasPermission("Perfiles.AsignarPermisos") && (
                                 <button
-                                  onClick={() => openEditModal(permiso)}
+                                  onClick={() => openPermisosModal(perfil)}
+                                  className="p-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-600 transition-all hover:scale-110"
+                                  title="Asignar Permisos"
+                                >
+                                  <Shield className="w-4 h-4" />
+                                </button>
+                              )}
+                              {hasPermission("Perfiles.Editar") && (
+                                <button
+                                  onClick={() => openEditModal(perfil)}
                                   className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
                                   title="Editar"
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
                               )}
-                              {hasPermission("Permisos.Eliminar") &&
-                                permiso.Perm_Estatus && (
+                              {hasPermission("Perfiles.Eliminar") &&
+                                perfil.perf_Estatus && (
                                   <button
-                                    onClick={() => openDeleteModal(permiso)}
+                                    onClick={() => openDeleteModal(perfil)}
                                     className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
                                     title="Desactivar"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 )}
-                              {hasPermission("PERMISOS.ACTIVAR") &&
-                                !permiso.Perm_Estatus && (
+                              {hasPermission("Perfiles.Activar") &&
+                                !perfil.perf_Estatus && (
                                   <button
-                                    onClick={() => openActivateModal(permiso)}
+                                    onClick={() => openActivateModal(perfil)}
                                     className="p-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-all hover:scale-110"
                                     title="Activar"
                                   >
@@ -695,10 +718,10 @@ function Permisos({ token, userData }) {
               >
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold">
-                    {editingPermiso ? "Editar Permiso" : "Nuevo Permiso"}
+                    {editingPerfil ? "Editar Perfil" : "Nuevo Perfil"}
                   </h2>
                   <p className="text-white/80 mt-1 text-sm">
-                    {editingPermiso
+                    {editingPerfil
                       ? `Modificando como: ${nombreUsuario}`
                       : `Creando como: ${nombreUsuario}`}
                   </p>
@@ -719,41 +742,21 @@ function Permisos({ token, userData }) {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                    Nombre del Permiso
+                    Nombre del Perfil
                     <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.perm_Nombre}
+                    value={formData.perf_Nombre}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        perm_Nombre: e.target.value.toUpperCase(),
+                        perf_Nombre: e.target.value,
                       })
                     }
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="NOMBRE"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                    Actividad
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.perm_Actividad}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        perm_Actividad: e.target.value.toUpperCase(),
-                      })
-                    }
-                    required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="ACTIVIDAD"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white uppercase"
+                    placeholder="NOMBRE DEL PERFIL"
                   />
                 </div>
 
@@ -763,17 +766,17 @@ function Permisos({ token, userData }) {
                     <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={formData.perm_Descripcion}
+                    value={formData.perf_Descripcion}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        perm_Descripcion: e.target.value.toUpperCase(),
+                        perf_Descripcion: e.target.value,
                       })
                     }
                     required
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all resize-none bg-stone-50 focus:bg-white"
-                    placeholder="DESCRIPCIÓN DEL PERMISO"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all resize-none bg-stone-50 focus:bg-white uppercase"
+                    placeholder="DESCRIPCIÓN DETALLADA DEL PERFIL"
                   />
                 </div>
 
@@ -781,11 +784,11 @@ function Permisos({ token, userData }) {
                   <input
                     type="checkbox"
                     id="estatus"
-                    checked={formData.perm_Estatus}
+                    checked={formData.perf_Estatus}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        perm_Estatus: e.target.checked,
+                        perf_Estatus: e.target.checked,
                       })
                     }
                     className="w-5 h-5 rounded border-2 border-stone-300 cursor-pointer"
@@ -795,7 +798,7 @@ function Permisos({ token, userData }) {
                     htmlFor="estatus"
                     className="text-sm font-semibold text-stone-700 cursor-pointer"
                   >
-                    Permiso activo
+                    Perfil activo
                   </label>
                 </div>
 
@@ -824,7 +827,7 @@ function Permisos({ token, userData }) {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        {editingPermiso ? "Actualizar" : "Crear"} Permiso
+                        {editingPerfil ? "Actualizar" : "Crear"} Perfil
                       </>
                     )}
                   </button>
@@ -835,7 +838,7 @@ function Permisos({ token, userData }) {
         )}
 
         {/* Modal de confirmación de desactivación */}
-        {showDeleteModal && permisoToDelete && (
+        {showDeleteModal && perfilToDelete && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
               <div className="p-8 bg-gradient-to-br from-red-50 to-rose-50 rounded-t-3xl">
@@ -843,7 +846,7 @@ function Permisos({ token, userData }) {
                   <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-center text-stone-900">
-                  ¿Desactivar Permiso?
+                  ¿Desactivar Perfil?
                 </h2>
                 <p className="text-center text-stone-600 mt-2 text-sm">
                   Operación realizada por: {nombreUsuario}
@@ -852,9 +855,9 @@ function Permisos({ token, userData }) {
 
               <div className="p-8">
                 <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                  ¿Estás seguro de que deseas desactivar el permiso{" "}
+                  ¿Estás seguro de que deseas desactivar el perfil{" "}
                   <span className="font-bold text-stone-900 block mt-2 text-lg">
-                    "{permisoToDelete.Perm_Nombre}"
+                    "{perfilToDelete.perf_Nombre}"
                   </span>
                   ?
                 </p>
@@ -863,7 +866,7 @@ function Permisos({ token, userData }) {
                   <button
                     onClick={() => {
                       setShowDeleteModal(false);
-                      setPermisoToDelete(null);
+                      setPerfilToDelete(null);
                     }}
                     className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
                   >
@@ -892,8 +895,8 @@ function Permisos({ token, userData }) {
           </div>
         )}
 
-        {/* Modal de confirmación de activación */}
-        {showActivateModal && permisoToActivate && (
+        {/* Modal de confirmación de activacion */}
+        {showActivateModal && perfilToActivate && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
               <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-t-3xl">
@@ -901,7 +904,7 @@ function Permisos({ token, userData }) {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-center text-stone-900">
-                  ¿Activar Permiso?
+                  ¿Activar Perfil?
                 </h2>
                 <p className="text-center text-stone-600 mt-2 text-sm">
                   Operación realizada por: {nombreUsuario}
@@ -910,9 +913,9 @@ function Permisos({ token, userData }) {
 
               <div className="p-8">
                 <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                  ¿Estás seguro de que deseas activar el permiso{" "}
+                  ¿Estás seguro de que deseas activar el perfil{" "}
                   <span className="font-bold text-stone-900 block mt-2 text-lg">
-                    "{permisoToActivate.Perm_Nombre}"
+                    "{perfilToActivate.perf_Nombre}"
                   </span>
                   ?
                 </p>
@@ -921,7 +924,7 @@ function Permisos({ token, userData }) {
                   <button
                     onClick={() => {
                       setShowActivateModal(false);
-                      setPermisoToActivate(null);
+                      setPerfilToActivate(null);
                     }}
                     className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
                   >
@@ -949,9 +952,19 @@ function Permisos({ token, userData }) {
             </div>
           </div>
         )}
+
+        {/* Modal de Asignar Permisos */}
+        {showPermisosModal && perfilForPermisos && (
+          <AsignarPermisos
+            perfil={perfilForPermisos}
+            token={token}
+            nombreUsuario={nombreUsuario}
+            onClose={handleClosePermisosModal}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-export default Permisos;
+export default Perfil;

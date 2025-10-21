@@ -12,6 +12,8 @@ class ApiConfig {
     CREAR: "/api/Usuarios/Agregar",
     ACTUALIZAR: (id) => `/api/Usuarios/actualizar/${id}`,
     ELIMINAR: (id) => `/api/Usuarios/eliminar/${id}`,
+    ACTIVAR: (id) => `/api/Usuarios/activar/${id}`,
+    CAMBIAR_CONTRASENA: (id) => `/api/Usuarios/cambiar-contrasena/${id}`,
     PERFILES: (id) => `/api/Usuarios/obtener/${id}/perfilesUsuario`,
     PERMISOS: (id) => `/api/Usuarios/obtener/${id}/permisos`,
     ASIGNAR_PERFIL: (usuarioId, perfilId) =>

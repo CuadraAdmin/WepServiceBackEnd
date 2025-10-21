@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { User, Home, Users, Shield, Layout, Tag } from "lucide-react";
 import Navbar from "./Navbar";
-import Permisos from "./CU/Permisos";
-import Usuario from "./CU/Usuario";
-import Perfil from "./CU/Perfil";
+import Permisos from "./CU/Permisos/Permisos";
+import Usuario from "./CU/Usuarios/Usuario";
+import Perfil from "./CU/Perfiles/Perfil";
 import Marcas from "./CM/Marcas";
 import { usePermissions } from "../hooks/usePermissions";
 

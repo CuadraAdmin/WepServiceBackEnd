@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   Loader,
 } from "lucide-react";
-import ApiConfig from "../Config/api.config";
+import ApiConfig from "../../Config/api.config";
 
 const Alert = ({ type, message, onClose }) => {
   const styles = {
@@ -49,29 +49,27 @@ const Alert = ({ type, message, onClose }) => {
   );
 };
 
-function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
-  const [todosPermisos, setTodosPermisos] = useState([]);
-  const [permisosAsignados, setPermisosAsignados] = useState([]);
+function AsignarPerfilesUsuario({ usuario, token, nombreUsuario, onClose }) {
+  const [todosPerfiles, setTodosPerfiles] = useState([]);
+  const [perfilesAsignados, setPerfilesAsignados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchDisponibles, setSearchDisponibles] = useState("");
   const [searchAsignados, setSearchAsignados] = useState("");
-  const [permisosProcesando, setPermisosProcesando] = useState(new Set());
+  const [perfilesProcesando, setPerfilesProcesando] = useState(new Set());
 
   useEffect(() => {
     cargarDatos();
   }, []);
 
-  //funcion para normalizar propiedades
-  const normalizarPermiso = (p) => ({
-    Perm_Id: p.Perm_Id || p.perm_Id,
-    Perm_Nombre: p.Perm_Nombre || p.perm_Nombre,
-    Perm_Actividad: p.Perm_Actividad || p.perm_Actividad,
-    Perm_Descripcion: p.Perm_Descripcion || p.perm_Descripcion,
-    Perm_Estatus:
-      p.Perm_Estatus !== undefined ? p.Perm_Estatus : p.perm_Estatus,
+  const normalizarPerfil = (p) => ({
+    Perf_Id: p.Perf_Id || p.perf_Id,
+    Perf_Nombre: p.Perf_Nombre || p.perf_Nombre,
+    Perf_Descripcion: p.Perf_Descripcion || p.perf_Descripcion,
+    Perf_Estatus:
+      p.Perf_Estatus !== undefined ? p.Perf_Estatus : p.perf_Estatus,
   });
 
   const cargarDatos = async () => {
@@ -79,30 +77,27 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     setError("");
 
     try {
-      const responsePermisos = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR),
+      const responsePerfiles = await fetch(
+        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.LISTAR),
         {
           method: "GET",
           headers: ApiConfig.getHeaders(token),
         }
       );
 
-      if (!responsePermisos.ok) {
-        throw new Error("Error al cargar permisos");
+      if (!responsePerfiles.ok) {
+        throw new Error("Error al cargar perfiles");
       }
 
-      const permisos = await responsePermisos.json();
-
-      // Normalizar y filtrar permisos activos
-      const permisosNormalizados = permisos.map(normalizarPermiso);
-      setTodosPermisos(
-        permisosNormalizados.filter((p) => p.Perm_Estatus === true)
+      const perfiles = await responsePerfiles.json();
+      const perfilesNormalizados = perfiles.map(normalizarPerfil);
+      setTodosPerfiles(
+        perfilesNormalizados.filter((p) => p.Perf_Estatus === true)
       );
 
-      const perfilId = perfil.Perf_Id || perfil.perf_Id;
-
+      const usuarioId = usuario.usua_Id || usuario.Usua_Id;
       const responseAsignados = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.PERMISOS(perfilId)),
+        ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuarioId)),
         {
           method: "GET",
           headers: ApiConfig.getHeaders(token),
@@ -110,18 +105,16 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       );
 
       if (!responseAsignados.ok) {
-        throw new Error("Error al cargar permisos del perfil");
+        throw new Error("Error al cargar perfiles del usuario");
       }
 
       const asignados = await responseAsignados.json();
-
-      // Normalizar permisos asignados
-      const asignadosNormalizados = asignados.map(normalizarPermiso);
-      const permisosValidos = asignadosNormalizados.filter(
-        (p) => p && p.Perm_Nombre
+      const asignadosNormalizados = asignados.map(normalizarPerfil);
+      const perfilesValidos = asignadosNormalizados.filter(
+        (p) => p && p.Perf_Nombre
       );
 
-      setPermisosAsignados(permisosValidos);
+      setPerfilesAsignados(perfilesValidos);
     } catch (err) {
       setError(err.message || "Error al cargar datos");
     } finally {
@@ -129,34 +122,31 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     }
   };
 
-  const asignarPermiso = async (permiso) => {
-    const permisoId = permiso.Perm_Id;
+  const asignarPerfil = async (perfil) => {
+    const perfilId = perfil.Perf_Id;
 
-    if (permisosProcesando.has(permisoId)) {
-      return;
-    }
+    if (perfilesProcesando.has(perfilId)) return;
 
-    setPermisosProcesando((prev) => new Set(prev).add(permisoId));
+    setPerfilesProcesando((prev) => new Set(prev).add(perfilId));
     setProcesando(true);
     setError("");
     setSuccess("");
 
     try {
-      // Soporte para ambas capitalizaciones
-      const perfilId = perfil.Perf_Id || perfil.perf_Id;
-
+      const usuarioId = usuario.usua_Id || usuario.Usua_Id;
       const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSPERFILES.ASIGNAR_PERMISO(perfilId, permisoId)
+        ApiConfig.ENDPOINTSUSUARIOS.ASIGNAR_PERFIL(usuarioId, perfilId)
       );
 
       const response = await fetch(url, {
         method: "POST",
         headers: ApiConfig.getHeaders(token),
+        body: JSON.stringify(nombreUsuario),
       });
 
       if (response.ok) {
-        setPermisosAsignados((prev) => [...prev, permiso]);
-        setSuccess(` "${permiso.Perm_Nombre}" asignado`);
+        setPerfilesAsignados((prev) => [...prev, perfil]);
+        setSuccess(`"${perfil.Perf_Nombre}" asignado`);
         setTimeout(() => setSuccess(""), 2000);
       } else {
         const data = await response.json();
@@ -167,32 +157,28 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       setTimeout(() => setError(""), 3000);
     } finally {
       setProcesando(false);
-      setPermisosProcesando((prev) => {
+      setPerfilesProcesando((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(permisoId);
+        newSet.delete(perfilId);
         return newSet;
       });
     }
   };
 
-  const quitarPermiso = async (permiso) => {
-    const permisoId = permiso.Perm_Id;
+  const quitarPerfil = async (perfil) => {
+    const perfilId = perfil.Perf_Id;
 
-    if (permisosProcesando.has(permisoId)) {
-      return;
-    }
+    if (perfilesProcesando.has(perfilId)) return;
 
-    setPermisosProcesando((prev) => new Set(prev).add(permisoId));
+    setPerfilesProcesando((prev) => new Set(prev).add(perfilId));
     setProcesando(true);
     setError("");
     setSuccess("");
 
     try {
-      // Soporte para ambas capitalizaciones
-      const perfilId = perfil.Perf_Id || perfil.perf_Id;
-
+      const usuarioId = usuario.usua_Id || usuario.Usua_Id;
       const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSPERFILES.QUITAR_PERMISO(perfilId, permisoId)
+        ApiConfig.ENDPOINTSUSUARIOS.QUITAR_PERFIL(usuarioId, perfilId)
       );
 
       const response = await fetch(url, {
@@ -201,10 +187,10 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       });
 
       if (response.ok) {
-        setPermisosAsignados((prev) =>
-          prev.filter((p) => p.Perm_Id !== permisoId)
+        setPerfilesAsignados((prev) =>
+          prev.filter((p) => p.Perf_Id !== perfilId)
         );
-        setSuccess(`"${permiso.Perm_Nombre}" removido`);
+        setSuccess(`"${perfil.Perf_Nombre}" removido`);
         setTimeout(() => setSuccess(""), 2000);
       } else {
         const data = await response.json();
@@ -215,51 +201,30 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       setTimeout(() => setError(""), 3000);
     } finally {
       setProcesando(false);
-      setPermisosProcesando((prev) => {
+      setPerfilesProcesando((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(permisoId);
+        newSet.delete(perfilId);
         return newSet;
       });
     }
   };
 
-  // Permisos disponibles (los que NO tiene)
-  const permisosDisponibles = todosPermisos.filter(
-    (permiso) =>
-      permiso.Perm_Nombre &&
-      !permisosAsignados.some((p) => p.Perm_Id === permiso.Perm_Id) &&
-      permiso.Perm_Nombre.toLowerCase().includes(
-        searchDisponibles.toLowerCase()
-      )
+  const perfilesDisponibles = todosPerfiles.filter(
+    (perfil) =>
+      perfil.Perf_Nombre &&
+      !perfilesAsignados.some((p) => p.Perf_Id === perfil.Perf_Id) &&
+      perfil.Perf_Nombre.toLowerCase().includes(searchDisponibles.toLowerCase())
   );
 
-  // permisos asignados filtrados por busqueda
-  const permisosAsignadosFiltrados = permisosAsignados.filter(
-    (permiso) =>
-      permiso.Perm_Nombre &&
-      permiso.Perm_Nombre.toLowerCase().includes(searchAsignados.toLowerCase())
+  const perfilesAsignadosFiltrados = perfilesAsignados.filter(
+    (perfil) =>
+      perfil.Perf_Nombre &&
+      perfil.Perf_Nombre.toLowerCase().includes(searchAsignados.toLowerCase())
   );
-
-  // agrupar permisos por modulo
-  const agruparPorModulo = (permisos) => {
-    return permisos.reduce((acc, permiso) => {
-      if (!permiso.Perm_Nombre) return acc;
-      const modulo = permiso.Perm_Nombre.split(".")[0] || "Otros";
-      if (!acc[modulo]) {
-        acc[modulo] = [];
-      }
-      acc[modulo].push(permiso);
-      return acc;
-    }, {});
-  };
-
-  const disponiblesAgrupados = agruparPorModulo(permisosDisponibles);
-  const asignadosAgrupados = agruparPorModulo(permisosAsignadosFiltrados);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header */}
         <div
           className="p-6 md:p-8 text-white flex justify-between items-center"
           style={{
@@ -272,10 +237,10 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-bold">
-                Gestionar Permisos
+                Gestionar Perfiles
               </h2>
               <p className="text-white/80 mt-1 text-sm">
-                Perfil: {perfil.Perf_Nombre || perfil.perf_Nombre}
+                Usuario: {usuario.usua_Nombre || usuario.Usua_Nombre}
               </p>
             </div>
           </div>
@@ -287,9 +252,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
           </button>
         </div>
 
-        {/* Contenido */}
         <div className="p-6 md:p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* Mensajes */}
           {success && (
             <div className="mb-4">
               <Alert
@@ -310,7 +273,6 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
             </div>
           )}
 
-          {/* estadisticas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div
               className="p-4 rounded-xl"
@@ -319,21 +281,21 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                   "linear-gradient(135deg, rgba(107, 83, 69, 0.05) 0%, rgba(139, 111, 71, 0.05) 100%)",
               }}
             >
-              <p className="text-sm text-stone-600 mb-1">Total de permisos</p>
+              <p className="text-sm text-stone-600 mb-1">Total de perfiles</p>
               <p className="text-2xl font-bold text-stone-900">
-                {todosPermisos.length}
+                {todosPerfiles.length}
               </p>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50">
-              <p className="text-sm text-green-600 mb-1"> Asignados</p>
+              <p className="text-sm text-green-600 mb-1">Asignados</p>
               <p className="text-2xl font-bold text-green-700">
-                {permisosAsignados.length}
+                {perfilesAsignados.length}
               </p>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50">
-              <p className="text-sm text-blue-600 mb-1"> Disponibles</p>
+              <p className="text-sm text-blue-600 mb-1">Disponibles</p>
               <p className="text-2xl font-bold text-blue-700">
-                {permisosDisponibles.length}
+                {perfilesDisponibles.length}
               </p>
             </div>
           </div>
@@ -344,21 +306,21 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                 <div className="w-16 h-16 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
                 <Shield className="w-8 h-8 text-stone-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-stone-600 font-medium">Cargando permisos...</p>
+              <p className="text-stone-600 font-medium">Cargando perfiles...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* COLUMNA IZQUIERDA - Permisos Disponibles */}
+              {/* Perfiles Disponibles */}
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                       <Shield className="w-5 h-5 text-white" />
                     </div>
-                    Permisos Disponibles
+                    Perfiles Disponibles
                   </h3>
                   <span className="px-3 py-1 bg-blue-200 text-blue-800 rounded-full text-sm font-bold">
-                    {permisosDisponibles.length}
+                    {perfilesDisponibles.length}
                   </span>
                 </div>
 
@@ -373,76 +335,64 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                   />
                 </div>
 
-                <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                  {Object.keys(disponiblesAgrupados).length === 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                  {perfilesDisponibles.length === 0 ? (
                     <div className="text-center py-8 text-blue-600">
                       <Shield className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">
                         {searchDisponibles
-                          ? "No hay permisos que coincidan"
-                          : "Todos los permisos están asignados"}
+                          ? "No hay perfiles que coincidan"
+                          : "Todos los perfiles están asignados"}
                       </p>
                     </div>
                   ) : (
-                    Object.entries(disponiblesAgrupados).map(
-                      ([modulo, permisos]) => (
-                        <div key={modulo}>
-                          <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                            {modulo}
-                          </h4>
-                          <div className="space-y-2">
-                            {permisos.map((permiso) => {
-                              const estaProcesando = permisosProcesando.has(
-                                permiso.Perm_Id
-                              );
-                              return (
-                                <div
-                                  key={permiso.Perm_Id}
-                                  className="flex items-center gap-2 bg-white rounded-xl p-3 border border-blue-200 hover:border-blue-300 transition-all group"
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-stone-900 truncate">
-                                      {permiso.Perm_Nombre}
-                                    </p>
-                                    <p className="text-xs text-stone-600 truncate">
-                                      {permiso.Perm_Actividad}
-                                    </p>
-                                  </div>
-                                  <button
-                                    onClick={() => asignarPermiso(permiso)}
-                                    disabled={estaProcesando}
-                                    className="p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                                    title="Asignar permiso"
-                                  >
-                                    {estaProcesando ? (
-                                      <Loader className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <ChevronRight className="w-4 h-4" />
-                                    )}
-                                  </button>
-                                </div>
-                              );
-                            })}
+                    perfilesDisponibles.map((perfil) => {
+                      const estaProcesando = perfilesProcesando.has(
+                        perfil.Perf_Id
+                      );
+                      return (
+                        <div
+                          key={perfil.Perf_Id}
+                          className="flex items-center gap-2 bg-white rounded-xl p-3 border border-blue-200 hover:border-blue-300 transition-all"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-stone-900 truncate">
+                              {perfil.Perf_Nombre}
+                            </p>
+                            <p className="text-xs text-stone-600 truncate">
+                              {perfil.Perf_Descripcion || "Sin descripción"}
+                            </p>
                           </div>
+                          <button
+                            onClick={() => asignarPerfil(perfil)}
+                            disabled={estaProcesando}
+                            className="p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            title="Asignar perfil"
+                          >
+                            {estaProcesando ? (
+                              <Loader className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
                         </div>
-                      )
-                    )
+                      );
+                    })
                   )}
                 </div>
               </div>
 
-              {/* parte derecha - Permisos Asignados */}
+              {/* Perfiles Asignados */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-green-900 flex items-center gap-2">
                     <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                       <CheckCircle className="w-5 h-5 text-white" />
                     </div>
-                    Permisos Asignados
+                    Perfiles Asignados
                   </h3>
                   <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-bold">
-                    {permisosAsignados.length}
+                    {perfilesAsignados.length}
                   </span>
                 </div>
 
@@ -457,61 +407,49 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                   />
                 </div>
 
-                <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                  {Object.keys(asignadosAgrupados).length === 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                  {perfilesAsignadosFiltrados.length === 0 ? (
                     <div className="text-center py-8 text-green-600">
                       <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">
                         {searchAsignados
-                          ? "No hay permisos que coincidan"
-                          : "No hay permisos asignados"}
+                          ? "No hay perfiles que coincidan"
+                          : "No hay perfiles asignados"}
                       </p>
                     </div>
                   ) : (
-                    Object.entries(asignadosAgrupados).map(
-                      ([modulo, permisos]) => (
-                        <div key={modulo}>
-                          <h4 className="text-sm font-bold text-green-800 mb-2 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            {modulo}
-                          </h4>
-                          <div className="space-y-2">
-                            {permisos.map((permiso) => {
-                              const estaProcesando = permisosProcesando.has(
-                                permiso.Perm_Id
-                              );
-                              return (
-                                <div
-                                  key={permiso.Perm_Id}
-                                  className="flex items-center gap-2 bg-white rounded-xl p-3 border border-green-200 hover:border-green-300 transition-all group"
-                                >
-                                  <button
-                                    onClick={() => quitarPermiso(permiso)}
-                                    disabled={estaProcesando}
-                                    className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                                    title="Quitar permiso"
-                                  >
-                                    {estaProcesando ? (
-                                      <Loader className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <ChevronLeft className="w-4 h-4" />
-                                    )}
-                                  </button>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-stone-900 truncate">
-                                      {permiso.Perm_Nombre}
-                                    </p>
-                                    <p className="text-xs text-stone-600 truncate">
-                                      {permiso.Perm_Actividad}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                    perfilesAsignadosFiltrados.map((perfil) => {
+                      const estaProcesando = perfilesProcesando.has(
+                        perfil.Perf_Id
+                      );
+                      return (
+                        <div
+                          key={perfil.Perf_Id}
+                          className="flex items-center gap-2 bg-white rounded-xl p-3 border border-green-200 hover:border-green-300 transition-all"
+                        >
+                          <button
+                            onClick={() => quitarPerfil(perfil)}
+                            disabled={estaProcesando}
+                            className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            title="Quitar perfil"
+                          >
+                            {estaProcesando ? (
+                              <Loader className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ChevronLeft className="w-4 h-4" />
+                            )}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-stone-900 truncate">
+                              {perfil.Perf_Nombre}
+                            </p>
+                            <p className="text-xs text-stone-600 truncate">
+                              {perfil.Perf_Descripcion || "Sin descripción"}
+                            </p>
                           </div>
                         </div>
-                      )
-                    )
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -519,16 +457,15 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-stone-200 bg-stone-50">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-stone-600">
               <span className="font-semibold text-green-700">
-                {permisosAsignados.length} permisos asignados
+                {perfilesAsignados.length} perfiles asignados
               </span>
               {" · "}
               <span className="font-semibold text-blue-700">
-                {permisosDisponibles.length} disponibles
+                {perfilesDisponibles.length} disponibles
               </span>
             </div>
             <button
@@ -547,4 +484,4 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
   );
 }
 
-export default AsignarPermisos;
+export default AsignarPerfilesUsuario;
