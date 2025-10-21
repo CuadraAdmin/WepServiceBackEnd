@@ -267,11 +267,9 @@ function Perfil({ token, userData }) {
         cargarPerfiles();
         setTimeout(() => setSuccess(""), 4000);
       } else {
-        // ⭐ Detectar errores de duplicados ⭐
         const mensaje = data.mensaje || "Error al guardar el perfil";
         const mensajeLower = mensaje.toLowerCase();
 
-        // Detectar si es un error de duplicado
         if (
           (mensajeLower.includes("ya existe") ||
             mensajeLower.includes("ya está registrado")) &&
@@ -417,91 +415,52 @@ function Perfil({ token, userData }) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-6 border border-stone-200">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
+      <div className="sticky top-0 z-30 bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 shadow-md">
+        <div className="px-2 md:px-4 py-4 md:py-6 space-y-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-4">
+            <div className="flex items-center gap-3 shrink-0">
               <div
-                className="p-4 rounded-2xl shadow-lg"
+                className="p-2 md:p-3 rounded-xl md:rounded-2xl shadow-lg"
                 style={{
                   background:
                     "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
                 }}
               >
-                <Users className="w-8 h-8 text-white" />
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-stone-900">
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-stone-900 whitespace-nowrap">
                   Gestión de Perfiles
                 </h1>
-                <p className="text-stone-600 mt-1">
+                <p className="text-stone-600 text-xs">
                   {filteredPerfiles.length} perfil
-                  {filteredPerfiles.length !== 1 ? "es" : ""} encontrado
-                  {filteredPerfiles.length !== 1 ? "s" : ""}
+                  {filteredPerfiles.length !== 1 ? "es" : ""}
                 </p>
               </div>
             </div>
 
-            {hasPermission("Perfiles.Crear") && (
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
-                className="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                }}
-              >
-                <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Nuevo Perfil</span>
-                <span className="sm:hidden">Agregar</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Mensajes */}
-        {success && (
-          <div className="mb-6">
-            <Alert
-              type="success"
-              message={success}
-              onClose={() => setSuccess("")}
-            />
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6">
-            <Alert type="error" message={error} onClose={() => setError("")} />
-          </div>
-        )}
-
-        {/* Barra de búsqueda y filtros */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6 border border-stone-200">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            {/* Búsqueda - Crece para ocupar espacio disponible */}
+            <div className="flex-1 relative w-full lg:min-w-[300px]">
+              <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-stone-400" />
               <input
                 type="text"
                 placeholder="Buscar por nombre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                className="w-full pl-10 md:pl-12 pr-4 py-2.5 md:py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white text-sm"
               />
             </div>
 
-            <div className="flex gap-2">
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+            {/* Controles en una línea horizontal */}
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              {/* Filtro */}
+              <div className="relative flex-1 lg:flex-initial lg:min-w-[130px]">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-stone-400 pointer-events-none" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="pl-10 pr-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white appearance-none cursor-pointer font-medium"
+                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white appearance-none cursor-pointer font-medium text-sm"
                 >
                   <option value="all">Todos</option>
                   <option value="active">Activos</option>
@@ -509,35 +468,77 @@ function Perfil({ token, userData }) {
                 </select>
               </div>
 
-              <div className="hidden md:flex gap-1 bg-stone-100 p-1 rounded-xl">
+              {/* Botones de Vista */}
+              <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg transition-all ${
+                  className={`p-2 md:p-2.5 rounded-lg transition-all ${
                     viewMode === "grid"
                       ? "bg-white shadow-md text-stone-900"
                       : "text-stone-500 hover:text-stone-900"
                   }`}
                   title="Vista de tarjetas"
                 >
-                  <LayoutGrid className="w-5 h-5" />
+                  <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-2 rounded-lg transition-all ${
+                  className={`p-2 md:p-2.5 rounded-lg transition-all ${
                     viewMode === "table"
                       ? "bg-white shadow-md text-stone-900"
                       : "text-stone-500 hover:text-stone-900"
                   }`}
                   title="Vista de tabla"
                 >
-                  <List className="w-5 h-5" />
+                  <List className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </div>
+
+              {/* Botón Nuevo - Siempre visible */}
+              {hasPermission("Perfiles.Crear") && (
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setShowModal(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 md:py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl whitespace-nowrap text-sm"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                  }}
+                >
+                  <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden sm:inline">Nuevo</span>
+                </button>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Contenido principal */}
+          {/* Mensajes - Solo aparecen cuando hay mensajes */}
+          {(success || error) && (
+            <div className="space-y-2">
+              {success && (
+                <Alert
+                  type="success"
+                  message={success}
+                  onClose={() => setSuccess("")}
+                />
+              )}
+              {error && (
+                <Alert
+                  type="error"
+                  message={error}
+                  onClose={() => setError("")}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* contenido con el scroll */}
+      <div className="px-2 md:px-4 py-6">
+        {/* Todo el contenido existente (loading, empty, grid, table) */}
         {loading ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
             <div className="flex flex-col items-center gap-4">
@@ -593,7 +594,7 @@ function Perfil({ token, userData }) {
         ) : (
           <>
             {/* Vista Grid */}
-            {(viewMode === "grid" || window.innerWidth < 768) && (
+            {viewMode === "grid" && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPerfiles.map((perfil) => (
                   <PerfilCard
@@ -610,12 +611,12 @@ function Perfil({ token, userData }) {
             )}
 
             {/* Vista Tabla */}
-            {viewMode === "table" && window.innerWidth >= 768 && (
+            {viewMode === "table" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
                   <table className="w-full">
                     <thead
-                      className="text-white"
+                      className="text-white sticky top-0 z-20"
                       style={{
                         background:
                           "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
@@ -704,265 +705,262 @@ function Perfil({ token, userData }) {
             )}
           </>
         )}
+      </div>
 
-        {/* Modal de formulario */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-              <div
-                className="p-6 md:p-8 text-white flex justify-between items-center"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                }}
+      {/* Todos los modales se mantienen igual... */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div
+              className="p-6 md:p-8 text-white flex justify-between items-center"
+              style={{
+                background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+              }}
+            >
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold">
+                  {editingPerfil ? "Editar Perfil" : "Nuevo Perfil"}
+                </h2>
+                <p className="text-white/80 mt-1 text-sm">
+                  {editingPerfil
+                    ? `Modificando como: ${nombreUsuario}`
+                    : `Creando como: ${nombreUsuario}`}
+                </p>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-white/20 rounded-xl transition-all"
               >
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold">
-                    {editingPerfil ? "Editar Perfil" : "Nuevo Perfil"}
-                  </h2>
-                  <p className="text-white/80 mt-1 text-sm">
-                    {editingPerfil
-                      ? `Modificando como: ${nombreUsuario}`
-                      : `Creando como: ${nombreUsuario}`}
-                  </p>
-                </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-white/20 rounded-xl transition-all"
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+            >
+              {error && <Alert type="error" message={error} />}
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
+                  Nombre del Perfil
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.perf_Nombre}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      perf_Nombre: e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white uppercase"
+                  placeholder="NOMBRE DEL PERFIL"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
+                  Descripción
+                  <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={formData.perf_Descripcion}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      perf_Descripcion: e.target.value,
+                    })
+                  }
+                  required
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all resize-none bg-stone-50 focus:bg-white uppercase"
+                  placeholder="DESCRIPCIÓN DETALLADA DEL PERFIL"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="estatus"
+                  checked={formData.perf_Estatus}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      perf_Estatus: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 rounded border-2 border-stone-300 cursor-pointer"
+                  style={{ accentColor: "#6b5345" }}
+                />
+                <label
+                  htmlFor="estatus"
+                  className="text-sm font-semibold text-stone-700 cursor-pointer"
                 >
-                  <X className="w-6 h-6" />
+                  Perfil activo
+                </label>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      {editingPerfil ? "Actualizar" : "Crear"} Perfil
+                    </>
+                  )}
                 </button>
               </div>
-
-              <form
-                onSubmit={handleSubmit}
-                className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]"
-              >
-                {error && <Alert type="error" message={error} />}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                    Nombre del Perfil
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.perf_Nombre}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        perf_Nombre: e.target.value,
-                      })
-                    }
-                    required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white uppercase"
-                    placeholder="NOMBRE DEL PERFIL"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                    Descripción
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.perf_Descripcion}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        perf_Descripcion: e.target.value,
-                      })
-                    }
-                    required
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all resize-none bg-stone-50 focus:bg-white uppercase"
-                    placeholder="DESCRIPCIÓN DETALLADA DEL PERFIL"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
-                  <input
-                    type="checkbox"
-                    id="estatus"
-                    checked={formData.perf_Estatus}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        perf_Estatus: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 rounded border-2 border-stone-300 cursor-pointer"
-                    style={{ accentColor: "#6b5345" }}
-                  />
-                  <label
-                    htmlFor="estatus"
-                    className="text-sm font-semibold text-stone-700 cursor-pointer"
-                  >
-                    Perfil activo
-                  </label>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 px-6 py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-5 h-5" />
-                        {editingPerfil ? "Actualizar" : "Crear"} Perfil
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de confirmación de desactivación */}
-        {showDeleteModal && perfilToDelete && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
-              <div className="p-8 bg-gradient-to-br from-red-50 to-rose-50 rounded-t-3xl">
-                <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <AlertCircle className="w-8 h-8 text-red-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-center text-stone-900">
-                  ¿Desactivar Perfil?
-                </h2>
-                <p className="text-center text-stone-600 mt-2 text-sm">
-                  Operación realizada por: {nombreUsuario}
-                </p>
+      {/* Los demás modales se mantienen igual... */}
+      {showDeleteModal && perfilToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
+            <div className="p-8 bg-gradient-to-br from-red-50 to-rose-50 rounded-t-3xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <AlertCircle className="w-8 h-8 text-red-600" />
               </div>
+              <h2 className="text-2xl font-bold text-center text-stone-900">
+                ¿Desactivar Perfil?
+              </h2>
+              <p className="text-center text-stone-600 mt-2 text-sm">
+                Operación realizada por: {nombreUsuario}
+              </p>
+            </div>
 
-              <div className="p-8">
-                <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                  ¿Estás seguro de que deseas desactivar el perfil{" "}
-                  <span className="font-bold text-stone-900 block mt-2 text-lg">
-                    "{perfilToDelete.perf_Nombre}"
-                  </span>
-                  ?
-                </p>
+            <div className="p-8">
+              <p className="text-center text-stone-600 mb-6 leading-relaxed">
+                ¿Estás seguro de que deseas desactivar el perfil{" "}
+                <span className="font-bold text-stone-900 block mt-2 text-lg">
+                  "{perfilToDelete.perf_Nombre}"
+                </span>
+                ?
+              </p>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      setShowDeleteModal(false);
-                      setPerfilToDelete(null);
-                    }}
-                    className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={loading}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Desactivando...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-5 h-5" />
-                        Desactivar
-                      </>
-                    )}
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPerfilToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Desactivando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-5 h-5" />
+                      Desactivar
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de confirmación de activacion */}
-        {showActivateModal && perfilToActivate && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
-              <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-t-3xl">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-center text-stone-900">
-                  ¿Activar Perfil?
-                </h2>
-                <p className="text-center text-stone-600 mt-2 text-sm">
-                  Operación realizada por: {nombreUsuario}
-                </p>
+      {showActivateModal && perfilToActivate && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
+            <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-t-3xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
+              <h2 className="text-2xl font-bold text-center text-stone-900">
+                ¿Activar Perfil?
+              </h2>
+              <p className="text-center text-stone-600 mt-2 text-sm">
+                Operación realizada por: {nombreUsuario}
+              </p>
+            </div>
 
-              <div className="p-8">
-                <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                  ¿Estás seguro de que deseas activar el perfil{" "}
-                  <span className="font-bold text-stone-900 block mt-2 text-lg">
-                    "{perfilToActivate.perf_Nombre}"
-                  </span>
-                  ?
-                </p>
+            <div className="p-8">
+              <p className="text-center text-stone-600 mb-6 leading-relaxed">
+                ¿Estás seguro de que deseas activar el perfil{" "}
+                <span className="font-bold text-stone-900 block mt-2 text-lg">
+                  "{perfilToActivate.perf_Nombre}"
+                </span>
+                ?
+              </p>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      setShowActivateModal(false);
-                      setPerfilToActivate(null);
-                    }}
-                    className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleActivate}
-                    disabled={loading}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Activando...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-5 h-5" />
-                        Activar
-                      </>
-                    )}
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    setShowActivateModal(false);
+                    setPerfilToActivate(null);
+                  }}
+                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleActivate}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Activando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Activar
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de Asignar Permisos */}
-        {showPermisosModal && perfilForPermisos && (
-          <AsignarPermisos
-            perfil={perfilForPermisos}
-            token={token}
-            nombreUsuario={nombreUsuario}
-            onClose={handleClosePermisosModal}
-          />
-        )}
-      </div>
+      {showPermisosModal && perfilForPermisos && (
+        <AsignarPermisos
+          perfil={perfilForPermisos}
+          token={token}
+          nombreUsuario={nombreUsuario}
+          onClose={handleClosePermisosModal}
+        />
+      )}
     </div>
   );
 }
