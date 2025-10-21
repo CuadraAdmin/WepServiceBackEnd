@@ -1,15 +1,26 @@
 import { useState, useEffect } from "react";
-import { Users, Plus } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  LayoutGrid,
+  List,
+  Edit2,
+  Trash2,
+  Shield,
+  Check,
+  Lock,
+} from "lucide-react";
 import ApiConfig from "../../Config/api.config";
 import { usePermissions } from "../../../hooks/usePermissions";
 import AsignarPerfilesUsuario from "./AsignarPerfilesUsuario";
 import UsuarioCard from "./UsuarioCard";
-import TablaUsuarios from "./TablaUsuarios";
 import ModalFormulario from "./ModalFormulario";
 import ModalConfirmacion from "./ModalConfirmacion";
 import ModalCambiarContrasena from "./ModalCambiarContrasena";
-import SearchBar from "../../Globales/SearchBar";
 import Alert from "../../Globales/Alert";
+import Badge from "../../Globales/Badge";
 
 function Usuario({ token, userData }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -394,169 +405,334 @@ function Usuario({ token, userData }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
-      {/* Header Sticky */}
-      <div className="sticky top-0 z-40 bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 pb-4 pt-4 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto space-y-4">
-          {/* Header */}
-          <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-stone-200">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className="p-4 rounded-2xl shadow-lg"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                  }}
+      <div className="sticky top-0 z-30 bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 shadow-md">
+        <div className="px-2 md:px-4 py-4 md:py-6 space-y-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-4">
+            <div className="flex items-center gap-3 shrink-0">
+              <div
+                className="p-2 md:p-3 rounded-xl md:rounded-2xl shadow-lg"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                }}
+              >
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-stone-900 whitespace-nowrap">
+                  Gestión de Usuarios
+                </h1>
+                <p className="text-stone-600 text-xs">
+                  {filteredUsuarios.length} usuario
+                  {filteredUsuarios.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+
+            {/* búsqueda */}
+            <div className="flex-1 relative w-full lg:min-w-[300px]">
+              <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, usuario o correo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 md:pl-12 pr-4 py-2.5 md:py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white text-sm"
+              />
+            </div>
+
+            {/* controles */}
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              {/* filtro */}
+              <div className="relative flex-1 lg:flex-initial lg:min-w-[130px]">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-stone-400 pointer-events-none" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white appearance-none cursor-pointer font-medium text-sm"
                 >
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-stone-900">
-                    Gestión de Usuarios
-                  </h1>
-                  <p className="text-stone-600 mt-1">
-                    {filteredUsuarios.length} usuario
-                    {filteredUsuarios.length !== 1 ? "s" : ""} encontrado
-                    {filteredUsuarios.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
+                  <option value="all">Todos</option>
+                  <option value="active">Activos</option>
+                  <option value="inactive">Inactivos</option>
+                </select>
               </div>
 
+              {/* Botones de Vista */}
+              <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 md:p-2.5 rounded-lg transition-all ${
+                    viewMode === "grid"
+                      ? "bg-white shadow-md text-stone-900"
+                      : "text-stone-500 hover:text-stone-900"
+                  }`}
+                  title="Vista de tarjetas"
+                >
+                  <LayoutGrid className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-2 md:p-2.5 rounded-lg transition-all ${
+                    viewMode === "table"
+                      ? "bg-white shadow-md text-stone-900"
+                      : "text-stone-500 hover:text-stone-900"
+                  }`}
+                  title="Vista de tabla"
+                >
+                  <List className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </div>
+
+              {/* Botón Nuevo */}
               {hasPermission("Usuarios.Crear") && (
                 <button
                   onClick={() => {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 md:py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl whitespace-nowrap text-sm"
                   style={{
                     background:
                       "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
                   }}
                 >
-                  <Plus className="w-5 h-5" />
-                  <span className="hidden sm:inline">Nuevo Usuario</span>
-                  <span className="sm:hidden">Agregar</span>
+                  <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden sm:inline">Nuevo</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Mensajes */}
-          {success && (
-            <Alert
-              type="success"
-              message={success}
-              onClose={() => setSuccess("")}
-            />
+          {(success || error) && (
+            <div className="space-y-2">
+              {success && (
+                <Alert
+                  type="success"
+                  message={success}
+                  onClose={() => setSuccess("")}
+                />
+              )}
+              {error && (
+                <Alert
+                  type="error"
+                  message={error}
+                  onClose={() => setError("")}
+                />
+              )}
+            </div>
           )}
-
-          {error && (
-            <Alert type="error" message={error} onClose={() => setError("")} />
-          )}
-
-          {/* Barra de búsqueda */}
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            filterStatus={filterStatus}
-            onFilterChange={setFilterStatus}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="px-4 md:px-8 pb-8">
-        <div className="max-w-7xl mx-auto">
-          {loading ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
-                  <Users className="w-8 h-8 text-stone-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                </div>
-                <p className="text-stone-600 font-medium">
-                  Cargando usuarios...
+      {/* Contenido con scroll */}
+      <div className="px-2 md:px-4 py-6">
+        {loading ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-stone-200 border-t-transparent rounded-full animate-spin"></div>
+                <Users className="w-8 h-8 text-stone-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+              <p className="text-stone-600 font-medium">Cargando usuarios...</p>
+            </div>
+          </div>
+        ) : filteredUsuarios.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
+            <div className="flex flex-col items-center gap-4">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.1) 100%)",
+                }}
+              >
+                <Users className="w-10 h-10 text-stone-400" />
+              </div>
+              <div>
+                <p className="text-stone-900 text-lg font-semibold mb-1">
+                  No se encontraron usuarios
+                </p>
+                <p className="text-stone-500 text-sm">
+                  {searchTerm || filterStatus !== "all"
+                    ? "Intenta ajustar los filtros de búsqueda"
+                    : "Comienza creando tu primer usuario"}
                 </p>
               </div>
+              {!searchTerm &&
+                filterStatus === "all" &&
+                hasPermission("Usuarios.Crear") && (
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowModal(true);
+                    }}
+                    className="mt-4 flex items-center gap-2 px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    }}
+                  >
+                    <Plus className="w-5 h-5" />
+                    Crear Usuario
+                  </button>
+                )}
             </div>
-          ) : filteredUsuarios.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-stone-200">
-              <div className="flex flex-col items-center gap-4">
-                <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.1) 100%)",
-                  }}
-                >
-                  <Users className="w-10 h-10 text-stone-400" />
-                </div>
-                <div>
-                  <p className="text-stone-900 text-lg font-semibold mb-1">
-                    No se encontraron usuarios
-                  </p>
-                  <p className="text-stone-500 text-sm">
-                    {searchTerm || filterStatus !== "all"
-                      ? "Intenta ajustar los filtros de búsqueda"
-                      : "Comienza creando tu primer usuario"}
-                  </p>
+          </div>
+        ) : (
+          <>
+            {/* Vista Grid */}
+            {viewMode === "grid" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredUsuarios.map((usuario) => (
+                  <UsuarioCard
+                    key={usuario.usua_Id}
+                    usuario={usuario}
+                    onEdit={openEditModal}
+                    onDelete={(u) => {
+                      setUsuarioToDelete(u);
+                      setShowDeleteModal(true);
+                    }}
+                    onActivate={(u) => {
+                      setUsuarioToActivate(u);
+                      setShowActivateModal(true);
+                    }}
+                    onAsignarPerfiles={(u) => {
+                      setUsuarioForPerfiles(u);
+                      setShowPerfilesModal(true);
+                    }}
+                    onChangePassword={openPasswordModal}
+                    hasPermission={hasPermission}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Vista Tabla */}
+            {viewMode === "table" && (
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-180px)]">
+                  <table className="w-full">
+                    <thead
+                      className="text-white sticky top-0 z-20"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                      }}
+                    >
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                          Nombre
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                          Usuario
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                          Correo
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                          Teléfono
+                        </th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold">
+                          Estado
+                        </th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-200">
+                      {filteredUsuarios.map((usuario) => (
+                        <tr
+                          key={usuario.usua_Id}
+                          className="hover:bg-stone-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 text-sm font-bold text-stone-900">
+                            {usuario.usua_Nombre}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-stone-600">
+                            {usuario.usua_Usuario}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-stone-500">
+                            {usuario.usua_Correo}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-stone-500">
+                            {usuario.usua_Telefono}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <Badge active={usuario.usua_Estatus}>
+                              {usuario.usua_Estatus ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              {hasPermission("Usuarios.AsignarPerfiles") && (
+                                <button
+                                  onClick={() => {
+                                    setUsuarioForPerfiles(usuario);
+                                    setShowPerfilesModal(true);
+                                  }}
+                                  className="p-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-600 transition-all hover:scale-110"
+                                  title="Asignar Perfiles"
+                                >
+                                  <Shield className="w-4 h-4" />
+                                </button>
+                              )}
+                              {hasPermission("Usuarios.CambiarContrasena") && (
+                                <button
+                                  onClick={() => openPasswordModal(usuario)}
+                                  className="p-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 transition-all hover:scale-110"
+                                  title="Cambiar Contraseña"
+                                >
+                                  <Lock className="w-4 h-4" />
+                                </button>
+                              )}
+                              {hasPermission("Usuarios.Editar") && (
+                                <button
+                                  onClick={() => openEditModal(usuario)}
+                                  className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-all hover:scale-110"
+                                  title="Editar"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              )}
+                              {hasPermission("Usuarios.Eliminar") &&
+                                usuario.usua_Estatus && (
+                                  <button
+                                    onClick={() => {
+                                      setUsuarioToDelete(usuario);
+                                      setShowDeleteModal(true);
+                                    }}
+                                    className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-all hover:scale-110"
+                                    title="Desactivar"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              {hasPermission("Usuarios.Activar") &&
+                                !usuario.usua_Estatus && (
+                                  <button
+                                    onClick={() => {
+                                      setUsuarioToActivate(usuario);
+                                      setShowActivateModal(true);
+                                    }}
+                                    className="p-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-all hover:scale-110"
+                                    title="Activar"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
-          ) : (
-            <>
-              {(viewMode === "grid" || window.innerWidth < 768) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredUsuarios.map((usuario) => (
-                    <UsuarioCard
-                      key={usuario.usua_Id}
-                      usuario={usuario}
-                      onEdit={openEditModal}
-                      onDelete={(u) => {
-                        setUsuarioToDelete(u);
-                        setShowDeleteModal(true);
-                      }}
-                      onActivate={(u) => {
-                        setUsuarioToActivate(u);
-                        setShowActivateModal(true);
-                      }}
-                      onAsignarPerfiles={(u) => {
-                        setUsuarioForPerfiles(u);
-                        setShowPerfilesModal(true);
-                      }}
-                      onChangePassword={openPasswordModal}
-                      hasPermission={hasPermission}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {viewMode === "table" && window.innerWidth >= 768 && (
-                <TablaUsuarios
-                  usuarios={filteredUsuarios}
-                  onEdit={openEditModal}
-                  onDelete={(u) => {
-                    setUsuarioToDelete(u);
-                    setShowDeleteModal(true);
-                  }}
-                  onActivate={(u) => {
-                    setUsuarioToActivate(u);
-                    setShowActivateModal(true);
-                  }}
-                  onAsignarPerfiles={(u) => {
-                    setUsuarioForPerfiles(u);
-                    setShowPerfilesModal(true);
-                  }}
-                  onChangePassword={openPasswordModal}
-                  hasPermission={hasPermission}
-                />
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Modales */}
