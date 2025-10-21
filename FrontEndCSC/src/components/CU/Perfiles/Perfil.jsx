@@ -613,7 +613,7 @@ function Perfil({ token, userData }) {
             {/* Vista Tabla */}
             {viewMode === "table" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
-                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
+                <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-180px)]">
                   <table className="w-full">
                     <thead
                       className="text-white sticky top-0 z-20"
