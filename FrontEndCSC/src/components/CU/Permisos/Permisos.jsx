@@ -609,16 +609,16 @@ function Permisos({ token, userData }) {
                         <th className="px-6 py-4 text-left text-sm font-semibold">
                           Nombre
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                        <th className="text-left text-sm font-semibold">
                           Actividad
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold">
+                        <th className="text-left text-sm font-semibold">
                           Descripción
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold">
+                        <th className="text-center text-sm font-semibold">
                           Estado
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold">
+                        <th className="text-center text-sm font-semibold">
                           Acciones
                         </th>
                       </tr>
@@ -632,10 +632,10 @@ function Permisos({ token, userData }) {
                           <td className="px-6 py-4 text-sm font-bold text-stone-900">
                             {permiso.Perm_Nombre}
                           </td>
-                          <td className="px-6 py-4 text-sm text-stone-600">
+                          <td className=" text-sm text-stone-600">
                             {permiso.Perm_Actividad}
                           </td>
-                          <td className="px-6 py-4 text-sm text-stone-500 max-w-xs truncate">
+                          <td className=" text-sm text-stone-500 max-w-xs truncate">
                             {permiso.Perm_Descripcion || "Sin descripción"}
                           </td>
                           <td className="px-6 py-4 text-center">
