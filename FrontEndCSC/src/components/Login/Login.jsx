@@ -283,49 +283,6 @@ function Login() {
             <div className="pt-4">
               <div className="flex justify-center gap-4 mt-6">
                 <a
-                  href="https://www.facebook.com/share/1GdksZysJU/?mibextid=wwXIfr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    boxShadow: "0 4px 12px rgba(107, 83, 69, 0.3)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 6px 20px rgba(107, 83, 69, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(107, 83, 69, 0.3)";
-                  }}
-                >
-                  <Facebook className="w-6 h-6 text-white" />
-                </a>
-
-                <a
-                  href="https://www.instagram.com/cuadralifestyle?igsh=MmcwZWZydWZtenVj"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 transform hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    boxShadow: "0 4px 12px rgba(107, 83, 69, 0.3)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 6px 20px rgba(107, 83, 69, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(107, 83, 69, 0.3)";
-                  }}
-                >
-                  <Instagram className="w-6 h-6 text-white" />
-                </a>
-                <a
                   href="https://gcuadra.sharepoint.com/"
                   target="_blank"
                   rel="noopener noreferrer"
