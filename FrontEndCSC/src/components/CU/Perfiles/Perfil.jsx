@@ -19,6 +19,7 @@ import {
 import { usePermissions } from "../../../hooks/usePermissions";
 import AsignarPermisos from "./AsignarPermisos";
 import ApiConfig from "../../Config/api.config";
+import ApiService from "../../../Services/ApiService";
 
 const Badge = ({ active, children }) => (
   <span
@@ -197,12 +198,9 @@ function Perfil({ token, userData }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.LISTAR),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.get(
+        ApiConfig.ENDPOINTSPERFILES.LISTAR,
+        token
       );
 
       if (response.ok) {
@@ -212,7 +210,7 @@ function Perfil({ token, userData }) {
         setError(`Error al cargar perfiles (${response.status})`);
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -225,34 +223,36 @@ function Perfil({ token, userData }) {
     setSuccess("");
 
     try {
-      const url = editingPerfil
-        ? ApiConfig.getUrl(
-            ApiConfig.ENDPOINTSPERFILES.ACTUALIZAR(editingPerfil.perf_Id)
-          )
-        : ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.CREAR);
+      let response;
 
-      const method = editingPerfil ? "PUT" : "POST";
+      if (editingPerfil) {
+        const body = {
+          perf_Id: editingPerfil.perf_Id,
+          perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
+          perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
+          perf_Estatus: formData.perf_Estatus,
+          perf_ModificadoPor: nombreUsuario,
+        };
 
-      const body = editingPerfil
-        ? {
-            perf_Id: editingPerfil.perf_Id,
-            perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
-            perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
-            perf_Estatus: formData.perf_Estatus,
-            perf_ModificadoPor: nombreUsuario,
-          }
-        : {
-            perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
-            perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
-            perf_Estatus: formData.perf_Estatus,
-            perf_CreadoPor: nombreUsuario,
-          };
+        response = await ApiService.put(
+          ApiConfig.ENDPOINTSPERFILES.ACTUALIZAR(editingPerfil.perf_Id),
+          body,
+          token
+        );
+      } else {
+        const body = {
+          perf_Nombre: formData.perf_Nombre.trim().toUpperCase(),
+          perf_Descripcion: formData.perf_Descripcion.trim().toUpperCase(),
+          perf_Estatus: formData.perf_Estatus,
+          perf_CreadoPor: nombreUsuario,
+        };
 
-      const response = await fetch(url, {
-        method: method,
-        headers: ApiConfig.getHeaders(token),
-        body: JSON.stringify(body),
-      });
+        response = await ApiService.post(
+          ApiConfig.ENDPOINTSPERFILES.CREAR,
+          body,
+          token
+        );
+      }
 
       const data = await response.json();
 
@@ -294,14 +294,9 @@ function Perfil({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERFILES.ELIMINAR(perfilToDelete.perf_Id)
-        ),
-        {
-          method: "DELETE",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.delete(
+        ApiConfig.ENDPOINTSPERFILES.ELIMINAR(perfilToDelete.perf_Id),
+        token
       );
 
       if (response.ok) {
@@ -328,14 +323,10 @@ function Perfil({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERFILES.ACTIVAR(perfilToActivate.perf_Id)
-        ),
-        {
-          method: "PATCH",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.patch(
+        ApiConfig.ENDPOINTSPERFILES.ACTIVAR(perfilToActivate.perf_Id),
+        null,
+        token
       );
 
       if (response.ok) {

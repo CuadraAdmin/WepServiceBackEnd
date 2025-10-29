@@ -21,6 +21,7 @@ import ModalConfirmacion from "./ModalConfirmacion";
 import ModalCambiarContrasena from "./ModalCambiarContrasena";
 import Alert from "../../Globales/Alert";
 import Badge from "../../Globales/Badge";
+import ApiService from "../../../Services/ApiService";
 
 function Usuario({ token, userData }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -72,12 +73,9 @@ function Usuario({ token, userData }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.LISTAR),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.get(
+        ApiConfig.ENDPOINTSUSUARIOS.LISTAR,
+        token
       );
 
       if (response.ok) {
@@ -85,14 +83,9 @@ function Usuario({ token, userData }) {
         const usuariosConPerfiles = await Promise.all(
           data.map(async (usuario) => {
             try {
-              const perfilesResponse = await fetch(
-                ApiConfig.getUrl(
-                  ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuario.usua_Id)
-                ),
-                {
-                  method: "GET",
-                  headers: ApiConfig.getHeaders(token),
-                }
+              const perfilesResponse = await ApiService.get(
+                ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuario.usua_Id),
+                token
               );
               if (perfilesResponse.ok) {
                 const perfiles = await perfilesResponse.json();
@@ -112,7 +105,7 @@ function Usuario({ token, userData }) {
         setError(`Error al cargar usuarios (${response.status})`);
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -126,9 +119,6 @@ function Usuario({ token, userData }) {
 
     try {
       if (editingUsuario) {
-        const url = ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSUSUARIOS.ACTUALIZAR(editingUsuario.usua_Id)
-        );
         const body = {
           Usua_Nombre: formData.usua_Nombre.trim().toUpperCase(),
           Usua_Usuario: formData.usua_Usuario.trim(),
@@ -139,11 +129,11 @@ function Usuario({ token, userData }) {
           Usua_ModificadoPor: nombreUsuario,
         };
 
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: ApiConfig.getHeaders(token),
-          body: JSON.stringify(body),
-        });
+        const response = await ApiService.put(
+          ApiConfig.ENDPOINTSUSUARIOS.ACTUALIZAR(editingUsuario.usua_Id),
+          body,
+          token
+        );
 
         const data = await response.json();
 
@@ -157,7 +147,6 @@ function Usuario({ token, userData }) {
           throw new Error(data.mensaje || "Error al actualizar el usuario");
         }
       } else {
-        const url = ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.CREAR);
         const body = {
           Usua_Usuario: formData.usua_Usuario.trim(),
           Usua_Nombre: formData.usua_Nombre.trim().toUpperCase(),
@@ -168,11 +157,11 @@ function Usuario({ token, userData }) {
           Usua_CreadoPor: nombreUsuario,
         };
 
-        const response = await fetch(url, {
-          method: "POST",
-          headers: ApiConfig.getHeaders(token),
-          body: JSON.stringify(body),
-        });
+        const response = await ApiService.post(
+          ApiConfig.ENDPOINTSUSUARIOS.CREAR,
+          body,
+          token
+        );
 
         const data = await response.json();
 
@@ -236,17 +225,12 @@ function Usuario({ token, userData }) {
         ContrasenaNueva: passwordData.contrasenaNueva.trim(),
       };
 
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSUSUARIOS.CAMBIAR_CONTRASENA(
-            usuarioToChangePassword.usua_Id
-          )
+      const response = await ApiService.put(
+        ApiConfig.ENDPOINTSUSUARIOS.CAMBIAR_CONTRASENA(
+          usuarioToChangePassword.usua_Id
         ),
-        {
-          method: "PUT",
-          headers: ApiConfig.getHeaders(token),
-          body: JSON.stringify(requestBody),
-        }
+        requestBody,
+        token
       );
 
       const data = await response.json();
@@ -271,14 +255,9 @@ function Usuario({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSUSUARIOS.ELIMINAR(usuarioToDelete.usua_Id)
-        ),
-        {
-          method: "DELETE",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.delete(
+        ApiConfig.ENDPOINTSUSUARIOS.ELIMINAR(usuarioToDelete.usua_Id),
+        token
       );
 
       if (response.ok) {
@@ -304,14 +283,10 @@ function Usuario({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSUSUARIOS.ACTIVAR(usuarioToActivate.usua_Id)
-        ),
-        {
-          method: "PATCH",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.patch(
+        ApiConfig.ENDPOINTSUSUARIOS.ACTIVAR(usuarioToActivate.usua_Id),
+        null,
+        token
       );
 
       if (response.ok) {
