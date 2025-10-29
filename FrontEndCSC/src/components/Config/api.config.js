@@ -1,7 +1,6 @@
 import BASEURL from "./BASEURL";
 
 class ApiConfig {
-  // URL base de la API que se obtiene de BASEURL.js
   static BASE_URL = BASEURL.getBaseUrl();
 
   // Endpoints de Usuarios

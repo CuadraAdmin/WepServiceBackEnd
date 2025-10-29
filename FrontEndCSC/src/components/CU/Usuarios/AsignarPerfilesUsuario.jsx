@@ -10,6 +10,7 @@ import {
   Loader,
 } from "lucide-react";
 import ApiConfig from "../../Config/api.config";
+import ApiService from "../../../Services/ApiService";
 
 const Alert = ({ type, message, onClose }) => {
   const styles = {
@@ -77,12 +78,9 @@ function AsignarPerfilesUsuario({ usuario, token, nombreUsuario, onClose }) {
     setError("");
 
     try {
-      const responsePerfiles = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.LISTAR),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const responsePerfiles = await ApiService.get(
+        ApiConfig.ENDPOINTSPERFILES.LISTAR,
+        token
       );
 
       if (!responsePerfiles.ok) {
@@ -96,12 +94,9 @@ function AsignarPerfilesUsuario({ usuario, token, nombreUsuario, onClose }) {
       );
 
       const usuarioId = usuario.usua_Id || usuario.Usua_Id;
-      const responseAsignados = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuarioId)),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const responseAsignados = await ApiService.get(
+        ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuarioId),
+        token
       );
 
       if (!responseAsignados.ok) {
@@ -134,15 +129,12 @@ function AsignarPerfilesUsuario({ usuario, token, nombreUsuario, onClose }) {
 
     try {
       const usuarioId = usuario.usua_Id || usuario.Usua_Id;
-      const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSUSUARIOS.ASIGNAR_PERFIL(usuarioId, perfilId)
-      );
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: ApiConfig.getHeaders(token),
-        body: JSON.stringify(nombreUsuario),
-      });
+      const response = await ApiService.post(
+        ApiConfig.ENDPOINTSUSUARIOS.ASIGNAR_PERFIL(usuarioId, perfilId),
+        nombreUsuario,
+        token
+      );
 
       if (response.ok) {
         setPerfilesAsignados((prev) => [...prev, perfil]);
@@ -177,14 +169,11 @@ function AsignarPerfilesUsuario({ usuario, token, nombreUsuario, onClose }) {
 
     try {
       const usuarioId = usuario.usua_Id || usuario.Usua_Id;
-      const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSUSUARIOS.QUITAR_PERFIL(usuarioId, perfilId)
-      );
 
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: ApiConfig.getHeaders(token),
-      });
+      const response = await ApiService.delete(
+        ApiConfig.ENDPOINTSUSUARIOS.QUITAR_PERFIL(usuarioId, perfilId),
+        token
+      );
 
       if (response.ok) {
         setPerfilesAsignados((prev) =>

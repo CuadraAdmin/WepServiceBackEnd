@@ -10,6 +10,7 @@ import {
   Loader,
 } from "lucide-react";
 import ApiConfig from "../../Config/api.config";
+import ApiService from "../../../Services/ApiService";
 const Alert = ({ type, message, onClose }) => {
   const styles = {
     success: {
@@ -78,12 +79,9 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     setError("");
 
     try {
-      const responsePermisos = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const responsePermisos = await ApiService.get(
+        ApiConfig.ENDPOINTSPERMISOS.LISTAR,
+        token
       );
 
       if (!responsePermisos.ok) {
@@ -100,12 +98,9 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
 
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
-      const responseAsignados = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERFILES.PERMISOS(perfilId)),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const responseAsignados = await ApiService.get(
+        ApiConfig.ENDPOINTSPERFILES.PERMISOS(perfilId),
+        token
       );
 
       if (!responseAsignados.ok) {
@@ -144,14 +139,11 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       // Soporte para ambas capitalizaciones
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
-      const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSPERFILES.ASIGNAR_PERMISO(perfilId, permisoId)
+      const response = await ApiService.post(
+        ApiConfig.ENDPOINTSPERFILES.ASIGNAR_PERMISO(perfilId, permisoId),
+        null,
+        token
       );
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: ApiConfig.getHeaders(token),
-      });
 
       if (response.ok) {
         setPermisosAsignados((prev) => [...prev, permiso]);
@@ -190,14 +182,10 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
       // Soporte para ambas capitalizaciones
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
-      const url = ApiConfig.getUrl(
-        ApiConfig.ENDPOINTSPERFILES.QUITAR_PERMISO(perfilId, permisoId)
+      const response = await ApiService.delete(
+        ApiConfig.ENDPOINTSPERFILES.QUITAR_PERMISO(perfilId, permisoId),
+        token
       );
-
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: ApiConfig.getHeaders(token),
-      });
 
       if (response.ok) {
         setPermisosAsignados((prev) =>

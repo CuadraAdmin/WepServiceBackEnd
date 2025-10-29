@@ -14,12 +14,55 @@ const ModalFormulario = ({
   nombreUsuario,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   if (!show) return null;
 
+  const validateForm = () => {
+    if (!formData.usua_Usuario || formData.usua_Usuario.trim() === "") {
+      setValidationError("El campo Usuario es requerido");
+      return false;
+    }
+    if (!formData.usua_Nombre || formData.usua_Nombre.trim() === "") {
+      setValidationError("El campo Nombre Completo es requerido");
+      return false;
+    }
+    if (!formData.usua_Correo || formData.usua_Correo.trim() === "") {
+      setValidationError("El campo Correo Electrónico es requerido");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.usua_Correo)) {
+      setValidationError("El correo debe contener @ y un dominio válido");
+      return false;
+    }
+    if (!formData.usua_Telefono || formData.usua_Telefono.trim() === "") {
+      setValidationError("El campo Teléfono es requerido");
+      return false;
+    }
+    if (formData.usua_Telefono.length < 10) {
+      setValidationError("El teléfono debe tener 10 dígitos");
+      return false;
+    }
+    if (!editingUsuario) {
+      if (!formData.usua_Contrasena || formData.usua_Contrasena.trim() === "") {
+        setValidationError("El campo Contraseña es requerido");
+        return false;
+      }
+      if (formData.usua_Contrasena.length < 6) {
+        setValidationError("La contraseña debe tener al menos 6 caracteres");
+        return false;
+      }
+    }
+    setValidationError("");
+    return true;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(e);
+    if (validateForm()) {
+      onSubmit(e);
+    }
   };
 
   return (
@@ -51,6 +94,7 @@ const ModalFormulario = ({
 
         <div className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           {error && <Alert type="error" message={error} />}
+          {validationError && <Alert type="error" message={validationError} />}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -117,6 +161,8 @@ const ModalFormulario = ({
                 }
                 autoComplete="new-email"
                 required
+                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                title="Ingrese un correo válido"
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
               />
             </div>
@@ -131,14 +177,18 @@ const ModalFormulario = ({
                 type="tel"
                 name="telefono-field"
                 value={formData.usua_Telefono}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
                   setFormData({
                     ...formData,
-                    usua_Telefono: e.target.value,
-                  })
-                }
+                    usua_Telefono: value,
+                  });
+                }}
                 autoComplete="off"
                 required
+                pattern="[0-9]{10}"
+                maxLength={10}
+                title="Ingrese un teléfono de 10 dígitos"
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
               />
             </div>
@@ -164,6 +214,8 @@ const ModalFormulario = ({
                   }
                   autoComplete="new-password"
                   required
+                  minLength={6}
+                  title="La contraseña debe tener al menos 6 caracteres"
                   className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 />
                 <button
@@ -213,7 +265,7 @@ const ModalFormulario = ({
             </button>
             <button
               type="button"
-              onClick={onSubmit}
+              onClick={handleSubmit}
               disabled={loading}
               className="flex-1 px-6 py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               style={{

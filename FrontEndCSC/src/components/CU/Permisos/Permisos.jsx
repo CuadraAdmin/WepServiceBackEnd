@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import ApiConfig from "../../Config/api.config";
 import { usePermissions } from "../../../hooks/usePermissions";
+import ApiService from "../../../Services/ApiService";
 
 const Badge = ({ active, children }) => (
   <span
@@ -187,12 +188,9 @@ function Permisos({ token, userData }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.LISTAR),
-        {
-          method: "GET",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.get(
+        ApiConfig.ENDPOINTSPERMISOS.LISTAR,
+        token
       );
 
       if (response.ok) {
@@ -202,7 +200,7 @@ function Permisos({ token, userData }) {
         setError(`Error al cargar permisos (${response.status})`);
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -215,36 +213,38 @@ function Permisos({ token, userData }) {
     setSuccess("");
 
     try {
-      const url = editingPermiso
-        ? ApiConfig.getUrl(
-            ApiConfig.ENDPOINTSPERMISOS.ACTUALIZAR(editingPermiso.Perm_Id)
-          )
-        : ApiConfig.getUrl(ApiConfig.ENDPOINTSPERMISOS.CREAR);
+      let response;
 
-      const method = editingPermiso ? "PUT" : "POST";
+      if (editingPermiso) {
+        const body = {
+          perm_Id: editingPermiso.Perm_Id,
+          perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
+          perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
+          perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
+          perm_Estatus: formData.perm_Estatus,
+          perm_ModificadoPor: nombreUsuario,
+        };
 
-      const body = editingPermiso
-        ? {
-            perm_Id: editingPermiso.Perm_Id,
-            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
-            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
-            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
-            perm_Estatus: formData.perm_Estatus,
-            perm_ModificadoPor: nombreUsuario,
-          }
-        : {
-            perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
-            perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
-            perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
-            perm_Estatus: formData.perm_Estatus,
-            perm_CreadoPor: nombreUsuario,
-          };
+        response = await ApiService.put(
+          ApiConfig.ENDPOINTSPERMISOS.ACTUALIZAR(editingPermiso.Perm_Id),
+          body,
+          token
+        );
+      } else {
+        const body = {
+          perm_Nombre: formData.perm_Nombre.trim().toUpperCase(),
+          perm_Actividad: formData.perm_Actividad.trim().toUpperCase(),
+          perm_Descripcion: formData.perm_Descripcion.trim().toUpperCase(),
+          perm_Estatus: formData.perm_Estatus,
+          perm_CreadoPor: nombreUsuario,
+        };
 
-      const response = await fetch(url, {
-        method: method,
-        headers: ApiConfig.getHeaders(token),
-        body: JSON.stringify(body),
-      });
+        response = await ApiService.post(
+          ApiConfig.ENDPOINTSPERMISOS.CREAR,
+          body,
+          token
+        );
+      }
 
       const data = await response.json();
 
@@ -273,7 +273,7 @@ function Permisos({ token, userData }) {
         }
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -286,14 +286,9 @@ function Permisos({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id)
-        ),
-        {
-          method: "DELETE",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.delete(
+        ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id),
+        token
       );
 
       if (response.ok) {
@@ -307,7 +302,7 @@ function Permisos({ token, userData }) {
         setError(data.mensaje || "Error al desactivar el permiso");
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -320,14 +315,10 @@ function Permisos({ token, userData }) {
     setError("");
 
     try {
-      const response = await fetch(
-        ApiConfig.getUrl(
-          ApiConfig.ENDPOINTSPERMISOS.ACTIVAR(permisoToActivate.Perm_Id)
-        ),
-        {
-          method: "PATCH",
-          headers: ApiConfig.getHeaders(token),
-        }
+      const response = await ApiService.patch(
+        ApiConfig.ENDPOINTSPERMISOS.ACTIVAR(permisoToActivate.Perm_Id),
+        null,
+        token
       );
 
       if (response.ok) {
@@ -341,7 +332,7 @@ function Permisos({ token, userData }) {
         setError(data.mensaje || "Error al activar el permiso");
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
