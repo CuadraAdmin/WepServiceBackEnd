@@ -82,7 +82,7 @@ function Usuario({ token, userData }) {
         const data = await response.json();
         const usuariosConPerfiles = await Promise.all(
           data.map(async (usuario) => {
-            try {
+            /**try {
               const perfilesResponse = await ApiService.get(
                 ApiConfig.ENDPOINTSUSUARIOS.PERFILES(usuario.usua_Id),
                 token
@@ -96,7 +96,7 @@ function Usuario({ token, userData }) {
                 `Error al cargar perfiles del usuario ${usuario.usua_Id}:`,
                 err
               );
-            }
+            }*/
             return { ...usuario, perfiles: [] };
           })
         );
