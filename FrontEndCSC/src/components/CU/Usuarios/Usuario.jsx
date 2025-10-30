@@ -93,7 +93,7 @@ function Usuario({ token, userData }) {
               }
             } catch (err) {
               console.error(
-                `Error al cargar perfiles del usuario pr ${usuario.usua_Id}:`,
+                `Error al cargar perfiles del usuario ${usuario.usua_Id}:`,
                 err
               );
             }*/
