@@ -234,16 +234,18 @@ namespace WebServiceBackEnd.DA.CM
                     SqlCommand cmd = new SqlCommand("cm.usp_Marcas_Eliminar", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Marc_Id", id);
-                    cmd.Parameters.AddWithValue("@Marc_ModificadoPor",string.IsNullOrEmpty(modificadoPor) ? DBNull.Value : modificadoPor);
+                    cmd.Parameters.AddWithValue("@Marc_ModificadoPor",
+                        string.IsNullOrEmpty(modificadoPor) ? DBNull.Value : modificadoPor);
 
-                    int filasAfectadas = await cmd.ExecuteNonQueryAsync();
-                    return filasAfectadas > 0;
+                    await cmd.ExecuteNonQueryAsync();
+                    return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception($"Error al eliminar marca: {ex.Message}");
+                throw;
             }
+            
         }
 
         public async Task<bool> Activar(int id, string? modificadoPor = null)
@@ -257,16 +259,19 @@ namespace WebServiceBackEnd.DA.CM
                     SqlCommand cmd = new SqlCommand("cm.usp_Marcas_Activar", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@Marc_Id", id);
-                    cmd.Parameters.AddWithValue("@Marc_ModificadoPor",string.IsNullOrEmpty(modificadoPor) ? DBNull.Value : modificadoPor);
+                    cmd.Parameters.AddWithValue("@Marc_ModificadoPor",
+                        string.IsNullOrEmpty(modificadoPor) ? DBNull.Value : modificadoPor);
 
-                    int filasAfectadas = await cmd.ExecuteNonQueryAsync();
-                    return filasAfectadas > 0;
+                    await cmd.ExecuteNonQueryAsync();
+                    return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception($"Error al activar marca: {ex.Message}");
+
+                throw;
             }
+            
         }
 
         public async Task<List<dynamic>> ListarConFiltros(MarcasBE filtros)
