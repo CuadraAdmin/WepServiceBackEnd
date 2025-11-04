@@ -94,13 +94,7 @@ namespace WebServiceBackEnd.BP.CM
                 if (marca.Empr_Id <= 0)
                     throw new ArgumentException("El ID de empresa es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(marca.Marc_Consecutivo))
-                    throw new ArgumentException("El consecutivo de la marca es obligatorio");
-
-                if (string.IsNullOrWhiteSpace(marca.Marc_Pais))
-                    throw new ArgumentException("El país de la marca es obligatorio");
-
-                // Verificar que la marca existe
+                
                 var marcaExistente = await _marcasDA.ObtenerPorId(marca.Marc_Id);
                 if (marcaExistente == null)
                     throw new ArgumentException("La marca no existe en el sistema");

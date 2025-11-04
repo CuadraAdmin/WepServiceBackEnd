@@ -33,7 +33,7 @@
         public DateTime? Marc_ModificadoFecha { get; set; }
 
 
-        public EmpresaBE objEmpresaBE { get; set; }
+        public EmpresaBE? objEmpresaBE { get; set; }
 
         // Propiedades auxiliares para operaciones
         public int? Accion { get; set; }
