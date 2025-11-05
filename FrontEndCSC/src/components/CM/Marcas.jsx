@@ -47,7 +47,32 @@ function Marcas({ token, userData }) {
     token,
     Usua_Id
   );
+  const extractErrorMessage = (errorMessage) => {
+    if (!errorMessage) return "Error desconocido";
 
+    if (errorMessage.includes("Error en BP al")) {
+      const match = errorMessage.match(/Error en BP al [^:]+: (.+)/);
+      if (match && match[1]) {
+        return extractErrorMessage(match[1]);
+      }
+    }
+
+    if (errorMessage.includes("SQLError:")) {
+      const match = errorMessage.match(/SQLError: ([^#]+)/);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+
+    if (errorMessage.includes("#SP:") || errorMessage.includes("#SV:")) {
+      const match = errorMessage.match(/^([^#]+)/);
+      if (match && match[1]) {
+        return match[1].replace("SQLError:", "").trim();
+      }
+    }
+
+    return errorMessage;
+  };
   const [formData, setFormData] = useState({
     Marc_Id: 0,
     Empr_Id: "",
@@ -172,28 +197,21 @@ function Marcas({ token, userData }) {
         );
         setShowModal(false);
         resetForm();
+        setError("");
         await cargarMarcas();
         setTimeout(() => setSuccess(""), 4000);
       } else {
         const errorData = await response.json();
-        const errorMessage = errorData.mensaje || "Error al guardar la marca";
-        setError(errorMessage);
-        // Cerrar el modal para que el error sea visible
-        setShowModal(false);
-        // Hacer scroll al inicio para que vea la alerta
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        // Limpiar el error después de 6 segundos
-        setTimeout(() => setError(""), 6000);
+        const rawError = errorData.mensaje || "Error al guardar la marca";
+        const cleanError = extractErrorMessage(rawError);
+        setError(cleanError);
+        setTimeout(() => setError(""), 8000);
       }
     } catch (error) {
-      const errorMessage = "Error de conexión: " + error.message;
-      setError(errorMessage);
-      // Cerrar el modal para que el error sea visible
-      setShowModal(false);
-      // Hacer scroll al inicio
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      // Limpiar el error después de 6 segundos
-      setTimeout(() => setError(""), 6000);
+      const rawError = "Error de conexión: " + error.message;
+      const cleanError = extractErrorMessage(rawError);
+      setError(cleanError);
+      setTimeout(() => setError(""), 8000);
     } finally {
       setLoading(false);
     }
@@ -346,7 +364,7 @@ function Marcas({ token, userData }) {
   const handleCloseModal = () => {
     setShowModal(false);
     resetForm();
-    //setError("");
+    setError("");
   };
 
   const handleExportToExcel = () => {
@@ -546,6 +564,17 @@ function Marcas({ token, userData }) {
                 </button>
               </div>
             </div>
+
+            {/* ALERTA DE ERROR DENTRO DEL MODAL */}
+            {error && (
+              <div className="px-8 pt-6">
+                <Alert
+                  type="error"
+                  message={error}
+                  onClose={() => setError("")}
+                />
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
