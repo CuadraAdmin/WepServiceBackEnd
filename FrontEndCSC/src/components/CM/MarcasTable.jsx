@@ -665,7 +665,7 @@ function MarcasTable({
                     </div>
                     {marca.Marc_Registro && (
                       <div className="text-xs text-stone-500 mt-1">
-                        Reg: {marca.Marc_Registro}
+                        Registro: {marca.Marc_Registro}
                       </div>
                     )}
                   </td>
