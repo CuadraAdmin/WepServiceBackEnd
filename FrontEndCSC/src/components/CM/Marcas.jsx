@@ -565,17 +565,6 @@ function Marcas({ token, userData }) {
               </div>
             </div>
 
-            {/* ALERTA DE ERROR DENTRO DEL MODAL */}
-            {error && (
-              <div className="px-8 pt-6">
-                <Alert
-                  type="error"
-                  message={error}
-                  onClose={() => setError("")}
-                />
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 {/* EMPRESA - OBLIGATORIO */}
@@ -973,7 +962,16 @@ function Marcas({ token, userData }) {
                   />
                 </div>
               </div>
-
+              {/* ALERTA DE ERROR DENTRO DEL MODAL */}
+              {error && (
+                <div className="px-8 pt-6">
+                  <Alert
+                    type="error"
+                    message={error}
+                    onClose={() => setError("")}
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
                 <input
                   type="checkbox"
