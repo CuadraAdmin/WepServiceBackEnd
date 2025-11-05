@@ -98,9 +98,9 @@ namespace WebServiceBackEnd.DA.CM
                                 Marc_Observaciones = reader.IsDBNull(reader.GetOrdinal("Marc_Observaciones"))? null : reader.GetString(reader.GetOrdinal("Marc_Observaciones")),
                                 Marc_FechaSolicitud = reader.IsDBNull(reader.GetOrdinal("Marc_FechaSolicitud"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaSolicitud")),
                                 Marc_FechaRegistro = reader.IsDBNull(reader.GetOrdinal("Marc_FechaRegistro"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaRegistro")),
-                                Marc_Dure = reader.IsDBNull(reader.GetOrdinal("Marc_Dure"))? null : reader.GetString(reader.GetOrdinal("Marc_Dure")),
+                                Marc_Dure = reader.IsDBNull(reader.GetOrdinal("Marc_Dure")) ? null : reader.GetDateTime(reader.GetOrdinal("Marc_Dure")),
                                 Marc_Renovacion = reader.IsDBNull(reader.GetOrdinal("Marc_Renovacion"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_Renovacion")),
-                                Marc_Oposicion = reader.IsDBNull(reader.GetOrdinal("Marc_Oposicion"))? null : reader.GetString(reader.GetOrdinal("Marc_Oposicion")),
+                                Marc_Oposicion = reader.IsDBNull(reader.GetOrdinal("Marc_Oposicion")) ? null : reader.GetDateTime(reader.GetOrdinal("Marc_Oposicion")),
                                 Marc_ProximaTarea = reader.IsDBNull(reader.GetOrdinal("Marc_ProximaTarea"))? null : reader.GetString(reader.GetOrdinal("Marc_ProximaTarea")),
                                 Marc_FechaSeguimiento = reader.IsDBNull(reader.GetOrdinal("Marc_FechaSeguimiento"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaSeguimiento")),
                                 Marc_FechaAviso = reader.IsDBNull(reader.GetOrdinal("Marc_FechaAviso"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaAviso")),
@@ -149,9 +149,9 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_Observaciones",string.IsNullOrEmpty(marca.Marc_Observaciones) ? DBNull.Value : marca.Marc_Observaciones);
                     cmd.Parameters.AddWithValue("@Marc_FechaSolicitud",marca.Marc_FechaSolicitud.HasValue ? marca.Marc_FechaSolicitud.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_FechaRegistro",marca.Marc_FechaRegistro.HasValue ? marca.Marc_FechaRegistro.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Marc_Dure",string.IsNullOrEmpty(marca.Marc_Dure) ? DBNull.Value : marca.Marc_Dure);
+                    cmd.Parameters.AddWithValue("@Marc_Dure",marca.Marc_Dure.HasValue ? marca.Marc_Dure.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_Renovacion",marca.Marc_Renovacion.HasValue ? marca.Marc_Renovacion.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Marc_Oposicion",string.IsNullOrEmpty(marca.Marc_Oposicion) ? DBNull.Value : marca.Marc_Oposicion);
+                    cmd.Parameters.AddWithValue("@Marc_Oposicion",marca.Marc_Oposicion.HasValue ? marca.Marc_Oposicion.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_ProximaTarea",string.IsNullOrEmpty(marca.Marc_ProximaTarea) ? DBNull.Value : marca.Marc_ProximaTarea);
                     cmd.Parameters.AddWithValue("@Marc_FechaSeguimiento",marca.Marc_FechaSeguimiento.HasValue ? marca.Marc_FechaSeguimiento.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_FechaAviso",marca.Marc_FechaAviso.HasValue ? marca.Marc_FechaAviso.Value : DBNull.Value);
@@ -204,9 +204,9 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_Observaciones",string.IsNullOrEmpty(marca.Marc_Observaciones) ? DBNull.Value : marca.Marc_Observaciones);
                     cmd.Parameters.AddWithValue("@Marc_FechaSolicitud",marca.Marc_FechaSolicitud.HasValue ? marca.Marc_FechaSolicitud.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_FechaRegistro",marca.Marc_FechaRegistro.HasValue ? marca.Marc_FechaRegistro.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Marc_Dure",string.IsNullOrEmpty(marca.Marc_Dure) ? DBNull.Value : marca.Marc_Dure);
+                    cmd.Parameters.AddWithValue("@Marc_Dure", marca.Marc_Dure.HasValue ? marca.Marc_Dure.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_Renovacion",marca.Marc_Renovacion.HasValue ? marca.Marc_Renovacion.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Marc_Oposicion",string.IsNullOrEmpty(marca.Marc_Oposicion) ? DBNull.Value : marca.Marc_Oposicion);
+                    cmd.Parameters.AddWithValue("@Marc_Oposicion", marca.Marc_Oposicion.HasValue ? marca.Marc_Oposicion.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_ProximaTarea",string.IsNullOrEmpty(marca.Marc_ProximaTarea) ? DBNull.Value : marca.Marc_ProximaTarea);
                     cmd.Parameters.AddWithValue("@Marc_FechaSeguimiento",marca.Marc_FechaSeguimiento.HasValue ? marca.Marc_FechaSeguimiento.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_FechaAviso",marca.Marc_FechaAviso.HasValue ? marca.Marc_FechaAviso.Value : DBNull.Value);
@@ -352,9 +352,9 @@ namespace WebServiceBackEnd.DA.CM
                             row["Marc_Observaciones"] = reader.IsDBNull(reader.GetOrdinal("Marc_Observaciones"))? null : reader.GetString(reader.GetOrdinal("Marc_Observaciones"));
                             row["Marc_FechaSolicitud"] = reader.IsDBNull(reader.GetOrdinal("Marc_FechaSolicitud"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaSolicitud"));
                             row["Marc_FechaRegistro"] = reader.IsDBNull(reader.GetOrdinal("Marc_FechaRegistro"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaRegistro"));
-                            row["Marc_Dure"] = reader.IsDBNull(reader.GetOrdinal("Marc_Dure"))? null : reader.GetString(reader.GetOrdinal("Marc_Dure"));
+                            row["Marc_Dure"] = reader.IsDBNull(reader.GetOrdinal("Marc_Dure"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_Dure"));
                             row["Marc_Renovacion"] = reader.IsDBNull(reader.GetOrdinal("Marc_Renovacion"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_Renovacion"));
-                            row["Marc_Oposicion"] = reader.IsDBNull(reader.GetOrdinal("Marc_Oposicion"))? null : reader.GetString(reader.GetOrdinal("Marc_Oposicion"));
+                            row["Marc_Oposicion"] = reader.IsDBNull(reader.GetOrdinal("Marc_Oposicion"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_Oposicion"));
                             row["Marc_ProximaTarea"] = reader.IsDBNull(reader.GetOrdinal("Marc_ProximaTarea"))? null : reader.GetString(reader.GetOrdinal("Marc_ProximaTarea"));
                             row["Marc_FechaSeguimiento"] = reader.IsDBNull(reader.GetOrdinal("Marc_FechaSeguimiento"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaSeguimiento"));
                             row["Marc_FechaAviso"] = reader.IsDBNull(reader.GetOrdinal("Marc_FechaAviso"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaAviso"));
