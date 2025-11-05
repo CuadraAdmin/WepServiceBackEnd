@@ -51,7 +51,12 @@ class ApiConfig {
 
   // Endpoints de Marcas
   static ENDPOINTSMARCA = {
-    MARCAS: "/api/Marca",
+    MARCAS: "/api/Marcas",
+  };
+
+  // Endpoints de Empresas
+  static ENDPOINTSEMPRESAS = {
+    EMPRESAS: "/api/Empresas",
   };
 
   static getUrl(endpoint) {

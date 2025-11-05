@@ -13,14 +13,14 @@ function MarcasFiles({ marca, onClose }) {
   const [archivos, setArchivos] = useState([
     {
       id: 1,
-      nombre: "Logo_CuadraUSA.png",
+      nombre: "Logo_Marca.png",
       tipo: "image/png",
       tamaño: "245 KB",
       fecha: "2025-01-15",
     },
     {
       id: 2,
-      nombre: "Catalogo_2025.pdf",
+      nombre: "Certificado_Registro.pdf",
       tipo: "application/pdf",
       tamaño: "2.3 MB",
       fecha: "2025-01-20",
@@ -63,16 +63,17 @@ function MarcasFiles({ marca, onClose }) {
         <div
           className="p-6 rounded-t-3xl flex items-center justify-between"
           style={{
-            background: `linear-gradient(135deg, ${marca.color}dd 0%, ${marca.color} 100%)`,
+            background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
           }}
         >
           <div className="flex items-center gap-4">
-            <div
-              className="w-12 h-12 rounded-xl shadow-lg"
-              style={{ background: marca.color }}
-            />
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Upload className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{marca.nombre}</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {marca.Marc_Marca || "Marca"}
+              </h2>
               <p className="text-white/90 text-sm">
                 Gestión de archivos de la marca
               </p>
@@ -88,7 +89,6 @@ function MarcasFiles({ marca, onClose }) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Upload Area */}
           <div className="mb-6">
             <label className="block w-full border-2 border-dashed border-stone-300 rounded-2xl p-8 hover:border-stone-400 transition-colors cursor-pointer bg-stone-50 hover:bg-stone-100">
               <input
@@ -101,14 +101,15 @@ function MarcasFiles({ marca, onClose }) {
                 <div
                   className="p-4 rounded-2xl shadow-lg"
                   style={{
-                    background: `linear-gradient(135deg, ${marca.color}22 0%, ${marca.color}44 100%)`,
+                    background:
+                      "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.2) 100%)",
                   }}
                 >
-                  <Upload className="w-8 h-8" style={{ color: marca.color }} />
+                  <Upload className="w-8 h-8 text-stone-700" />
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-semibold text-stone-900">
-                    Arrastra archivos aquí o haz clic para seleccionar
+                    Hacer clic para seleccionar un archivo
                   </p>
                   <p className="text-sm text-stone-600 mt-1">
                     Soporta cualquier tipo de archivo (imágenes, PDF, Word,
@@ -122,7 +123,7 @@ function MarcasFiles({ marca, onClose }) {
           {/* Archivos Lista */}
           <div className="space-y-3">
             <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+              <FileText className="w-5 h-5 text-stone-700" />
               Archivos cargados ({archivos.length})
             </h3>
 
@@ -154,9 +155,12 @@ function MarcasFiles({ marca, onClose }) {
                     <div className="flex items-center gap-4">
                       <div
                         className="p-3 rounded-lg"
-                        style={{ background: `${marca.color}22` }}
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.15) 100%)",
+                        }}
                       >
-                        <div style={{ color: marca.color }}>
+                        <div className="text-stone-700">
                           {getFileIcon(archivo.tipo)}
                         </div>
                       </div>
@@ -201,7 +205,7 @@ function MarcasFiles({ marca, onClose }) {
             onClick={onClose}
             className="w-full px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg"
             style={{
-              background: `linear-gradient(135deg, ${marca.color} 0%, ${marca.color}dd 100%)`,
+              background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
             }}
           >
             Cerrar
