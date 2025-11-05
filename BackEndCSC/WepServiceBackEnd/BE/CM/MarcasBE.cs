@@ -20,9 +20,9 @@
         public string? Marc_Observaciones { get; set; }
         public DateTime? Marc_FechaSolicitud { get; set; }
         public DateTime? Marc_FechaRegistro { get; set; }
-        public string? Marc_Dure { get; set; }
+        public DateTime? Marc_Dure { get; set; }
         public DateTime? Marc_Renovacion { get; set; }
-        public string? Marc_Oposicion { get; set; }
+        public DateTime? Marc_Oposicion { get; set; }
         public string? Marc_ProximaTarea { get; set; }
         public DateTime? Marc_FechaSeguimiento { get; set; }
         public DateTime? Marc_FechaAviso { get; set; }
