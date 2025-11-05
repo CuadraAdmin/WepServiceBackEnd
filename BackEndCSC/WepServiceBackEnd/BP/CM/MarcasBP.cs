@@ -60,10 +60,10 @@ namespace WebServiceBackEnd.BP.CM
                     throw new ArgumentException("Los datos de la marca son requeridos");
                 if (marca.Empr_Id <= 0)
                     throw new ArgumentException("El ID de empresa es obligatorio");
-                if (string.IsNullOrWhiteSpace(marca.Marc_Consecutivo))
-                    throw new ArgumentException("El consecutivo de la marca es obligatorio");
-                if (string.IsNullOrWhiteSpace(marca.Marc_Pais))
-                    throw new ArgumentException("El país de la marca es obligatorio");                
+                //if (string.IsNullOrWhiteSpace(marca.Marc_Consecutivo))
+                //    throw new ArgumentException("El consecutivo de la marca es obligatorio");
+                //if (string.IsNullOrWhiteSpace(marca.Marc_Pais))
+                //    throw new ArgumentException("El país de la marca es obligatorio");                
 
                 return await _marcasDA.Crear(marca);
             }
