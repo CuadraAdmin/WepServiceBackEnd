@@ -7,20 +7,23 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Filter,
-  Check,
   FileDown,
   Trash2,
+  Check,
 } from "lucide-react";
 import Alert from "../Globales/Alert";
+import Select from "../Globales/Select";
 import MarcasTable from "./MarcasTable";
 import MarcasFiles from "./MarcasFiles";
+import MarcasDetails from "./MarcasDetails";
 import { exportToExcel } from "./exportUtils";
-import MultiSelectConBusqueda from "../Globales/MultiSelectConBusqueda";
+import ApiConfig from "../Config/api.config";
+import { usePermissions } from "../../hooks/usePermissions";
+import ApiService from "../../Services/ApiService";
 
 function Marcas({ token, userData }) {
-  const [marcasSeleccionadas, setMarcasSeleccionadas] = useState([]);
   const [marcas, setMarcas] = useState([]);
+  const [empresas, setEmpresas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -29,167 +32,292 @@ function Marcas({ token, userData }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showActivateModal, setShowActivateModal] = useState(false);
   const [showFilesModal, setShowFilesModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState(null);
   const [editingMarca, setEditingMarca] = useState(null);
   const [marcaToDelete, setMarcaToDelete] = useState(null);
   const [marcaToActivate, setMarcaToActivate] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+
   const usuario = userData?.usuario || {};
   const nombreUsuario = usuario.usua_Usuario || "Sistema";
   const Usua_Id = usuario.usua_Id;
+
+  const { hasPermission, loading: permissionsLoading } = usePermissions(
+    token,
+    Usua_Id
+  );
+
   const [formData, setFormData] = useState({
-    nombre: "",
-    descripcion: "",
-    categoria: "",
-    paisOrigen: "",
-    anioFundacion: "",
-    color: "#6b5345",
-    activo: true,
+    Marc_Id: 0,
+    Empr_Id: "",
+    Marc_Consecutivo: "",
+    Marc_Pais: "",
+    Marc_SolicitudNacional: "",
+    Marc_Registro: "",
+    Marc_Marca: "",
+    Marc_Diseno: "",
+    Marc_Clase: "",
+    Marc_Titular: "",
+    Marc_Figura: "",
+    Marc_Titulo: "",
+    Marc_Tipo: "",
+    Marc_Rama: "",
+    Marc_Autor: "",
+    Marc_Observaciones: "",
+    Marc_FechaSolicitud: null,
+    Marc_FechaRegistro: null,
+    Marc_Dure: null,
+    Marc_Renovacion: null,
+    Marc_Oposicion: null,
+    Marc_ProximaTarea: "",
+    Marc_FechaSeguimiento: null,
+    Marc_FechaAviso: null,
+    Marc_Estatus: true,
   });
-  //alert(Usua_Id + " " + nombreUsuario);
 
   useEffect(() => {
-    cargarMarcas();
-  }, []);
+    if (Usua_Id && !permissionsLoading) {
+      cargarMarcas();
+      cargarEmpresas();
+    }
+  }, [Usua_Id, permissionsLoading]);
 
-  const cargarMarcas = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const marcasJson = [
-        {
-          id: 1,
-          nombre: "Cuadra",
-          descripcion: "Marca líder en ropa",
-          categoria: "Vaquero",
-          paisOrigen: "Estados Unidos",
-          anioFundacion: "20/10/2026",
-          color: "#FF6B35",
-          activo: true,
-        },
-        {
-          id: 2,
-          nombre: "Corra l",
-          descripcion: "Ropa USA",
-          categoria: "Vaquero",
-          paisOrigen: "USA",
-          anioFundacion: "01/02/2025",
-          color: "#004D9B",
-          activo: true,
-        },
-        {
-          id: 3,
-          nombre: "Tiendas Cuadra",
-          descripcion: "Bolsas etc",
-          categoria: "vestimenta",
-          paisOrigen: "Mexico",
-          anioFundacion: "03/03/2027",
-          color: "#000000",
-          activo: false,
-        },
-      ];
-      setMarcas(marcasJson);
-      setLoading(false);
-    }, 1000);
+  const cargarEmpresas = async () => {
+    try {
+      const response = await ApiService.get(
+        `${ApiConfig.ENDPOINTSEMPRESAS.EMPRESAS}/obtenerPorPermiso/${Usua_Id}`,
+        token
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmpresas(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar empresas:", error);
+    }
   };
-  const opcionesMarcas = marcas.map((marca) => ({
-    value: marca.id.toString(),
-    label: marca.nombre,
-  }));
-  const handleSubmit = (e) => {
+
+  const cargarMarcas = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await ApiService.get(
+        `${ApiConfig.ENDPOINTSMARCA.MARCAS}/obtenerPorPermisos/${Usua_Id}`,
+        token
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setMarcas(data);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al cargar marcas");
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess("");
 
-    setTimeout(() => {
-      if (editingMarca) {
-        setMarcas(
-          marcas.map((m) =>
-            m.id === editingMarca.id
-              ? {
-                  ...editingMarca,
-                  ...formData,
-                  nombre: formData.nombre.trim().toUpperCase(),
-                }
-              : m
-          )
-        );
-        setSuccess("MARCA ACTUALIZADA EXITOSAMENTE");
-      } else {
-        const newMarca = {
-          id: Math.max(...marcas.map((m) => m.id), 0) + 1,
-          ...formData,
-          nombre: formData.nombre.trim().toUpperCase(),
-        };
-        setMarcas([...marcas, newMarca]);
-        setSuccess("MARCA CREADA EXITOSAMENTE");
+    try {
+      if (!formData.Empr_Id || formData.Empr_Id === "") {
+        setError("La empresa es obligatoria");
+        setLoading(false);
+        return;
       }
-      setShowModal(false);
-      resetForm();
+
+      const dataToSend = {
+        ...formData,
+        Empr_Id: parseInt(formData.Empr_Id),
+        Marc_CreadoPor: editingMarca ? undefined : nombreUsuario,
+        Marc_ModificadoPor: editingMarca ? nombreUsuario : undefined,
+      };
+
+      let response;
+      if (editingMarca) {
+        response = await ApiService.put(
+          `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${formData.Marc_Id}`,
+          dataToSend,
+          token
+        );
+      } else {
+        response = await ApiService.post(
+          `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear`,
+          dataToSend,
+          token
+        );
+      }
+
+      if (response.ok) {
+        setSuccess(
+          editingMarca
+            ? "MARCA ACTUALIZADA EXITOSAMENTE"
+            : "MARCA CREADA EXITOSAMENTE"
+        );
+        setShowModal(false);
+        resetForm();
+        await cargarMarcas();
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al guardar la marca");
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
+    } finally {
       setLoading(false);
-      setTimeout(() => setSuccess(""), 4000);
-    }, 1000);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!marcaToDelete) return;
     setLoading(true);
+    setError("");
+    setSuccess("");
 
-    setTimeout(() => {
-      setMarcas(
-        marcas.map((m) =>
-          m.id === marcaToDelete.id ? { ...m, activo: false } : m
-        )
+    try {
+      const response = await ApiService.delete(
+        `${ApiConfig.ENDPOINTSMARCA.MARCAS}/eliminar/${marcaToDelete.Marc_Id}`,
+        token
       );
-      setSuccess("MARCA DESACTIVADA EXITOSAMENTE");
+
+      if (response.ok) {
+        setSuccess("MARCA DESACTIVADA EXITOSAMENTE");
+        setShowDeleteModal(false);
+        setMarcaToDelete(null);
+        await cargarMarcas();
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al desactivar la marca");
+        setShowDeleteModal(false);
+        setMarcaToDelete(null);
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
       setShowDeleteModal(false);
       setMarcaToDelete(null);
+    } finally {
       setLoading(false);
-      setTimeout(() => setSuccess(""), 4000);
-    }, 800);
+    }
   };
 
-  const handleActivate = () => {
+  const handleActivate = async () => {
     if (!marcaToActivate) return;
     setLoading(true);
+    setError("");
+    setSuccess("");
 
-    setTimeout(() => {
-      setMarcas(
-        marcas.map((m) =>
-          m.id === marcaToActivate.id ? { ...m, activo: true } : m
-        )
+    try {
+      const response = await ApiService.patch(
+        `${ApiConfig.ENDPOINTSMARCA.MARCAS}/activar/${marcaToActivate.Marc_Id}`,
+        null,
+        token
       );
-      setSuccess("MARCA ACTIVADA EXITOSAMENTE");
+
+      if (response.ok) {
+        setSuccess("MARCA ACTIVADA EXITOSAMENTE");
+        setShowActivateModal(false);
+        setMarcaToActivate(null);
+        await cargarMarcas();
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al activar la marca");
+        setShowActivateModal(false);
+        setMarcaToActivate(null);
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
       setShowActivateModal(false);
       setMarcaToActivate(null);
+    } finally {
       setLoading(false);
-      setTimeout(() => setSuccess(""), 4000);
-    }, 800);
+    }
   };
 
   const openEditModal = (marca) => {
     setEditingMarca(marca);
     setFormData({
-      nombre: marca.nombre,
-      descripcion: marca.descripcion || "",
-      categoria: marca.categoria || "",
-      paisOrigen: marca.paisOrigen || "",
-      anioFundacion: marca.anioFundacion || "",
-      color: marca.color || "#6b5345",
-      activo: marca.activo,
+      Marc_Id: marca.Marc_Id,
+      Empr_Id: marca.Empr_Id.toString(),
+      Marc_Consecutivo: marca.Marc_Consecutivo || "",
+      Marc_Pais: marca.Marc_Pais || "",
+      Marc_SolicitudNacional: marca.Marc_SolicitudNacional || "",
+      Marc_Registro: marca.Marc_Registro || "",
+      Marc_Marca: marca.Marc_Marca || "",
+      Marc_Diseno: marca.Marc_Diseno || "",
+      Marc_Clase: marca.Marc_Clase || "",
+      Marc_Titular: marca.Marc_Titular || "",
+      Marc_Figura: marca.Marc_Figura || "",
+      Marc_Titulo: marca.Marc_Titulo || "",
+      Marc_Tipo: marca.Marc_Tipo || "",
+      Marc_Rama: marca.Marc_Rama || "",
+      Marc_Autor: marca.Marc_Autor || "",
+      Marc_Observaciones: marca.Marc_Observaciones || "",
+      Marc_FechaSolicitud: marca.Marc_FechaSolicitud
+        ? new Date(marca.Marc_FechaSolicitud).toISOString().split("T")[0]
+        : null,
+      Marc_FechaRegistro: marca.Marc_FechaRegistro
+        ? new Date(marca.Marc_FechaRegistro).toISOString().split("T")[0]
+        : null,
+      Marc_Dure: marca.Marc_Dure
+        ? new Date(marca.Marc_Dure).toISOString().split("T")[0]
+        : null,
+      Marc_Renovacion: marca.Marc_Renovacion
+        ? new Date(marca.Marc_Renovacion).toISOString().split("T")[0]
+        : null,
+      Marc_Oposicion: marca.Marc_Oposicion
+        ? new Date(marca.Marc_Oposicion).toISOString().split("T")[0]
+        : null,
+      Marc_ProximaTarea: marca.Marc_ProximaTarea || "",
+      Marc_FechaSeguimiento: marca.Marc_FechaSeguimiento
+        ? new Date(marca.Marc_FechaSeguimiento).toISOString().split("T")[0]
+        : null,
+      Marc_FechaAviso: marca.Marc_FechaAviso
+        ? new Date(marca.Marc_FechaAviso).toISOString().split("T")[0]
+        : null,
+      Marc_Estatus: marca.Marc_Estatus,
     });
     setShowModal(true);
   };
 
   const resetForm = () => {
     setFormData({
-      nombre: "",
-      descripcion: "",
-      categoria: "",
-      paisOrigen: "",
-      anioFundacion: "",
-      color: "#6b5345",
-      activo: true,
+      Marc_Id: 0,
+      Empr_Id: "",
+      Marc_Consecutivo: "",
+      Marc_Pais: "",
+      Marc_SolicitudNacional: "",
+      Marc_Registro: "",
+      Marc_Marca: "",
+      Marc_Diseno: "",
+      Marc_Clase: "",
+      Marc_Titular: "",
+      Marc_Figura: "",
+      Marc_Titulo: "",
+      Marc_Tipo: "",
+      Marc_Rama: "",
+      Marc_Autor: "",
+      Marc_Observaciones: "",
+      Marc_FechaSolicitud: null,
+      Marc_FechaRegistro: null,
+      Marc_Dure: null,
+      Marc_Renovacion: null,
+      Marc_Oposicion: null,
+      Marc_ProximaTarea: "",
+      Marc_FechaSeguimiento: null,
+      Marc_FechaAviso: null,
+      Marc_Estatus: true,
     });
     setEditingMarca(null);
   };
@@ -208,23 +336,25 @@ function Marcas({ token, userData }) {
 
   const filteredMarcas = marcas.filter((marca) => {
     const matchesSearch =
-      marca.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      marca.categoria?.toLowerCase().includes(searchTerm.toLowerCase());
+      marca.Marc_Marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      marca.Marc_Titular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      marca.Marc_Registro?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       filterStatus === "all" ||
-      (filterStatus === "active" && marca.activo) ||
-      (filterStatus === "inactive" && !marca.activo);
+      (filterStatus === "active" && marca.Marc_Estatus) ||
+      (filterStatus === "inactive" && !marca.Marc_Estatus);
 
     return matchesSearch && matchesStatus;
   });
 
-  const statsActivas = marcas.filter((m) => m.activo).length;
-  const statsInactivas = marcas.filter((m) => !m.activo).length;
+  const empresasOptions = empresas.map((empresa) => ({
+    value: empresa.Empr_Id.toString(),
+    label: `${empresa.Empr_Nombre} (${empresa.Empr_Clave})`,
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
-      {/* Header */}
       <div className="sticky top-0 z-30 bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50 shadow-md">
         <div className="px-2 md:px-4 py-4 md:py-6 space-y-4">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-4">
@@ -256,32 +386,22 @@ function Marcas({ token, userData }) {
                 <FileDown className="w-5 h-5" />
                 <span className="hidden sm:inline">Exportar Excel</span>
               </button>
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                }}
-              >
-                <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Nueva Marca</span>
-              </button>
+              {hasPermission("Marcas.Agregar") && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                  }}
+                >
+                  <Plus className="w-5 h-5" />
+                  <span className="hidden sm:inline">Nueva Marca</span>
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="min-h-screen...">
-            <div className="px-4 py-4">
-              <MultiSelectConBusqueda
-                options={opcionesMarcas}
-                selected={marcasSeleccionadas}
-                onChange={setMarcasSeleccionadas}
-                label="Seleccionar Marcas"
-                placeholder="Elige una o más marcas..."
-              />
-            </div>
-          </div>
-          {/* Filters */}
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
@@ -330,7 +450,6 @@ function Marcas({ token, userData }) {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="px-2 md:px-4 py-6">
         {success && (
           <div className="mb-6">
@@ -338,15 +457,13 @@ function Marcas({ token, userData }) {
               type="success"
               message={success}
               onClose={() => setSuccess("")}
-            >
-              {success}
-            </Alert>
+            />
           </div>
         )}
 
         {error && (
           <div className="mb-6">
-            <Alert variant="error">{error}</Alert>
+            <Alert type="error" message={error} onClose={() => setError("")} />
           </div>
         )}
 
@@ -370,14 +487,19 @@ function Marcas({ token, userData }) {
               setSelectedMarca(marca);
               setShowFilesModal(true);
             }}
+            onViewDetails={(marca) => {
+              setSelectedMarca(marca);
+              setShowDetailsModal(true);
+            }}
+            hasPermission={hasPermission}
           />
         )}
       </div>
 
-      {/* Modal de Crear/Editar */}
+      {/* Modal Crear/Editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div
               className="p-8 rounded-t-3xl"
               style={{
@@ -385,9 +507,16 @@ function Marcas({ token, userData }) {
               }}
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">
-                  {editingMarca ? "Editar Marca" : "Nueva Marca"}
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {editingMarca ? "Editar Marca" : "Nueva Marca"}
+                  </h2>
+                  {editingMarca && formData.Marc_Marca && (
+                    <p className="text-white/90 text-sm mt-1">
+                      {formData.Marc_Marca}
+                    </p>
+                  )}
+                </div>
                 <button
                   onClick={handleCloseModal}
                   className="p-2 hover:bg-white/20 rounded-xl transition-colors"
@@ -398,124 +527,400 @@ function Marcas({ token, userData }) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              {error && <Alert variant="error">{error}</Alert>}
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                  <Tag className="w-4 h-4" />
-                  Nombre de la Marca *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.nombre}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  placeholder="CUADRA"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-700">
-                  Descripción
-                </label>
-                <textarea
-                  value={formData.descripcion}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descripcion: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white resize-none"
-                  rows="3"
-                  placeholder="Descripción de la marca..."
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Categoría
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.categoria}
-                    onChange={(e) =>
-                      setFormData({ ...formData, categoria: e.target.value })
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* EMPRESA - OBLIGATORIO */}
+                <div className="md:col-span-2">
+                  <Select
+                    label="Empresa"
+                    options={empresasOptions}
+                    value={formData.Empr_Id}
+                    onChange={(value) =>
+                      setFormData({ ...formData, Empr_Id: value })
                     }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Vaquero"
+                    placeholder="Seleccione una empresa"
+                    required={true}
                   />
                 </div>
 
+                {/* CONSECUTIVO */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-stone-700">
-                    País de Origen
+                    Consecutivo
                   </label>
                   <input
                     type="text"
-                    value={formData.paisOrigen}
-                    onChange={(e) =>
-                      setFormData({ ...formData, paisOrigen: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="México"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-700">
-                  Año de Fundación
-                </label>
-                <input
-                  type="text"
-                  value={formData.anioFundacion}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      anioFundacion: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  placeholder="2024"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                  Color de Marca
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="color"
-                    value={formData.color}
+                    value={formData.Marc_Consecutivo}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        color: e.target.value,
+                        Marc_Consecutivo: e.target.value,
                       })
                     }
-                    className="w-20 h-12 rounded-xl border-2 border-stone-200 cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Consecutivo"
                   />
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          color: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white font-mono"
-                      placeholder="#6b5345"
-                    />
-                  </div>
-                  <div
-                    className="w-12 h-12 rounded-xl shadow-md"
-                    style={{ background: formData.color }}
-                  ></div>
+                </div>
+
+                {/* PAÍS */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    País
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Pais}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Pais: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Pais"
+                  />
+                </div>
+
+                {/* SOLICITUD NACIONAL (EXPEDIENTE) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Solicitud Nacional (Expediente)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_SolicitudNacional}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_SolicitudNacional: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Expediente"
+                  />
+                </div>
+
+                {/* REGISTRO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Registro
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Registro}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_Registro: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Registro"
+                  />
+                </div>
+
+                {/* MARCA */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Marca
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Marca}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Marca: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Nombre de la marca"
+                  />
+                </div>
+
+                {/* DISEÑO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Diseño
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Diseno}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Diseno: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Diseño"
+                  />
+                </div>
+
+                {/* CLASE */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Clase
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Clase}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Clase: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Clase"
+                  />
+                </div>
+
+                {/* TITULAR - 2 columnas */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Titular
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Titular}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_Titular: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Titular"
+                  />
+                </div>
+
+                {/* FIGURA */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Figura
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Figura}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Figura: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Figura"
+                  />
+                </div>
+
+                {/* TÍTULO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Título
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Titulo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Titulo: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Título"
+                  />
+                </div>
+
+                {/* TIPO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Tipo
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Tipo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Tipo: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Tipo"
+                  />
+                </div>
+
+                {/* RAMA */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Rama
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Rama}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Rama: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Rama"
+                  />
+                </div>
+
+                {/* AUTOR */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Autor
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_Autor}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Autor: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Autor"
+                  />
+                </div>
+
+                {/* OBSERVACIONES - 2 columnas */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Observaciones
+                  </label>
+                  <textarea
+                    value={formData.Marc_Observaciones}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_Observaciones: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white resize-none"
+                    rows="3"
+                    placeholder="Observaciones adicionales..."
+                  />
+                </div>
+
+                {/* FECHA SOLICITUD */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Fecha Solicitud
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_FechaSolicitud || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_FechaSolicitud: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* FECHA REGISTRO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Fecha Registro
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_FechaRegistro || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_FechaRegistro: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* DURE */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Dure
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_Dure || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, Marc_Dure: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* RENOVACION */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Renovación
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_Renovacion || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_Renovacion: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* OPOSICIÓN */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Oposición
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_Oposicion || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_Oposicion: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* PRÓXIMA TAREA */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Próxima Tarea
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.Marc_ProximaTarea}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_ProximaTarea: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="Próxima tarea"
+                  />
+                </div>
+
+                {/* FECHA DE SEGUIMIENTO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Fecha de Seguimiento
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_FechaSeguimiento || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_FechaSeguimiento: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
+                </div>
+
+                {/* FECHA DE AVISO */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700">
+                    Fecha de Aviso
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.Marc_FechaAviso || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Marc_FechaAviso: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                  />
                 </div>
               </div>
 
@@ -523,11 +928,11 @@ function Marcas({ token, userData }) {
                 <input
                   type="checkbox"
                   id="activo"
-                  checked={formData.activo}
+                  checked={formData.Marc_Estatus}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      activo: e.target.checked,
+                      Marc_Estatus: e.target.checked,
                     })
                   }
                   className="w-5 h-5 rounded border-2 border-stone-300 cursor-pointer"
@@ -576,7 +981,7 @@ function Marcas({ token, userData }) {
         </div>
       )}
 
-      {/* Modal de Confirmación - Desactivar */}
+      {/* Modal Desactivar */}
       {showDeleteModal && marcaToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
@@ -593,7 +998,7 @@ function Marcas({ token, userData }) {
               <p className="text-center text-stone-600 mb-6 leading-relaxed">
                 ¿Estás seguro de que deseas desactivar la marca{" "}
                 <span className="font-bold text-stone-900 block mt-2 text-lg">
-                  "{marcaToDelete.nombre}"
+                  "{marcaToDelete.Marc_Marca}"
                 </span>
                 ?
               </p>
@@ -631,7 +1036,7 @@ function Marcas({ token, userData }) {
         </div>
       )}
 
-      {/* Modal de Confirmación - Activar */}
+      {/* Modal Activar */}
       {showActivateModal && marcaToActivate && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
@@ -648,7 +1053,7 @@ function Marcas({ token, userData }) {
               <p className="text-center text-stone-600 mb-6 leading-relaxed">
                 ¿Estás seguro de que deseas activar la marca{" "}
                 <span className="font-bold text-stone-900 block mt-2 text-lg">
-                  "{marcaToActivate.nombre}"
+                  "{marcaToActivate.Marc_Marca}"
                 </span>
                 ?
               </p>
@@ -686,12 +1091,23 @@ function Marcas({ token, userData }) {
         </div>
       )}
 
-      {/* Modal de Archivos */}
+      {/* Modal Archivos */}
       {showFilesModal && selectedMarca && (
         <MarcasFiles
           marca={selectedMarca}
           onClose={() => {
             setShowFilesModal(false);
+            setSelectedMarca(null);
+          }}
+        />
+      )}
+
+      {/* Modal Detalles */}
+      {showDetailsModal && selectedMarca && (
+        <MarcasDetails
+          marca={selectedMarca}
+          onClose={() => {
+            setShowDetailsModal(false);
             setSelectedMarca(null);
           }}
         />
