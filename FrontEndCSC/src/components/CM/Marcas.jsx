@@ -138,6 +138,13 @@ function Marcas({ token, userData }) {
       const dataToSend = {
         ...formData,
         Empr_Id: parseInt(formData.Empr_Id),
+        Marc_FechaSolicitud: formData.Marc_FechaSolicitud || null,
+        Marc_FechaRegistro: formData.Marc_FechaRegistro || null,
+        Marc_Dure: formData.Marc_Dure || null,
+        Marc_Renovacion: formData.Marc_Renovacion || null,
+        Marc_Oposicion: formData.Marc_Oposicion || null,
+        Marc_FechaSeguimiento: formData.Marc_FechaSeguimiento || null,
+        Marc_FechaAviso: formData.Marc_FechaAviso || null,
         Marc_CreadoPor: editingMarca ? undefined : nombreUsuario,
         Marc_ModificadoPor: editingMarca ? nombreUsuario : undefined,
       };
@@ -169,10 +176,24 @@ function Marcas({ token, userData }) {
         setTimeout(() => setSuccess(""), 4000);
       } else {
         const errorData = await response.json();
-        setError(errorData.mensaje || "Error al guardar la marca");
+        const errorMessage = errorData.mensaje || "Error al guardar la marca";
+        setError(errorMessage);
+        // Cerrar el modal para que el error sea visible
+        setShowModal(false);
+        // Hacer scroll al inicio para que vea la alerta
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Limpiar el error después de 6 segundos
+        setTimeout(() => setError(""), 6000);
       }
     } catch (error) {
-      setError("Error de conexión: " + error.message);
+      const errorMessage = "Error de conexión: " + error.message;
+      setError(errorMessage);
+      // Cerrar el modal para que el error sea visible
+      setShowModal(false);
+      // Hacer scroll al inicio
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Limpiar el error después de 6 segundos
+      setTimeout(() => setError(""), 6000);
     } finally {
       setLoading(false);
     }
@@ -266,26 +287,26 @@ function Marcas({ token, userData }) {
       Marc_Observaciones: marca.Marc_Observaciones || "",
       Marc_FechaSolicitud: marca.Marc_FechaSolicitud
         ? new Date(marca.Marc_FechaSolicitud).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_FechaRegistro: marca.Marc_FechaRegistro
         ? new Date(marca.Marc_FechaRegistro).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_Dure: marca.Marc_Dure
         ? new Date(marca.Marc_Dure).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_Renovacion: marca.Marc_Renovacion
         ? new Date(marca.Marc_Renovacion).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_Oposicion: marca.Marc_Oposicion
         ? new Date(marca.Marc_Oposicion).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_ProximaTarea: marca.Marc_ProximaTarea || "",
       Marc_FechaSeguimiento: marca.Marc_FechaSeguimiento
         ? new Date(marca.Marc_FechaSeguimiento).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_FechaAviso: marca.Marc_FechaAviso
         ? new Date(marca.Marc_FechaAviso).toISOString().split("T")[0]
-        : null,
+        : "",
       Marc_Estatus: marca.Marc_Estatus,
     });
     setShowModal(true);
@@ -309,14 +330,14 @@ function Marcas({ token, userData }) {
       Marc_Rama: "",
       Marc_Autor: "",
       Marc_Observaciones: "",
-      Marc_FechaSolicitud: null,
-      Marc_FechaRegistro: null,
-      Marc_Dure: null,
-      Marc_Renovacion: null,
-      Marc_Oposicion: null,
+      Marc_FechaSolicitud: "",
+      Marc_FechaRegistro: "",
+      Marc_Dure: "",
+      Marc_Renovacion: "",
+      Marc_Oposicion: "",
       Marc_ProximaTarea: "",
-      Marc_FechaSeguimiento: null,
-      Marc_FechaAviso: null,
+      Marc_FechaSeguimiento: "",
+      Marc_FechaAviso: "",
       Marc_Estatus: true,
     });
     setEditingMarca(null);
@@ -325,7 +346,7 @@ function Marcas({ token, userData }) {
   const handleCloseModal = () => {
     setShowModal(false);
     resetForm();
-    setError("");
+    //setError("");
   };
 
   const handleExportToExcel = () => {
