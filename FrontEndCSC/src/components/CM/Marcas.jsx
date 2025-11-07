@@ -561,24 +561,27 @@ function Marcas({ token, userData }) {
               />
             </div>
 
-            {/* Botón de Filtros Avanzados */}
-            <FilterButton
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              hasActiveFilters={hasActiveFilters}
-              onClearFilters={() => setAdvancedFilters(null)}
-            />
+            {/* Fila de Filtros y Select - En línea en móvil, separados en PC */}
+            <div className="flex gap-3 md:contents">
+              {/* Botón de Filtros Avanzados */}
+              <FilterButton
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={() => setAdvancedFilters(null)}
+              />
 
-            {/* Select de Estatus */}
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
-            >
-              <option value="all">Todas</option>
-              <option value="active">Activas</option>
-              <option value="inactive">Inactivas</option>
-            </select>
+              {/* Select de Estatus */}
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="flex-1 md:flex-initial px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
+              >
+                <option value="all">Todas</option>
+                <option value="active">Activas</option>
+                <option value="inactive">Inactivas</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
