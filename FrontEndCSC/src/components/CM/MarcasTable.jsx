@@ -301,7 +301,7 @@ function MarcasTable({
                 </div>
               </th>
 
-              <th className="px-6 py-3 text-left text-xs font-semibold text-white">
+              <th className="px-10 py-3 text-left text-xs font-semibold text-white">
                 <div className="flex items-center">
                   <span className="py-1 px-2.5 text-sm text-white">Marca</span>
                   <div
@@ -570,10 +570,10 @@ function MarcasTable({
                     </button>
                     {showFilters.Marc_Renovacion && (
                       <div
-                        className="absolute top-full left-0 mt-2 z-50 w-56 bg-white border border-stone-200 shadow-lg rounded-lg p-3"
+                        className="absolute top-full left-0 mt-2 z-50 w-72 bg-white border border-stone-200 shadow-lg rounded-lg p-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="flex gap-x-2">
+                        <div className="flex gap-x-1">
                           <input
                             type="date"
                             value={filters.Marc_Renovacion_Min}
