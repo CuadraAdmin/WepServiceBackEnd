@@ -19,7 +19,7 @@ export function FilterButton({
         }`}
       >
         <Filter className="w-5 h-5" />
-        <span className="hidden md:inline">Filtros Avanzados</span>
+        <span className="hidden md:inline">Filtros </span>
         <span className="md:hidden">Filtros</span>
         {hasActiveFilters && (
           <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold">
