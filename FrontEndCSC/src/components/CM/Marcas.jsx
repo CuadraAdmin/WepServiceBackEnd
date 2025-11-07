@@ -1,21 +1,15 @@
 import { useState, useEffect } from "react";
-import {
-  Tag,
-  Plus,
-  Search,
-  X,
-  Save,
-  AlertCircle,
-  CheckCircle,
-  FileDown,
-  Trash2,
-  Check,
-} from "lucide-react";
+import { Tag, Plus, Search, FileDown } from "lucide-react";
 import Alert from "../Globales/Alert";
-import Select from "../Globales/Select";
 import MarcasTable from "./MarcasTable";
 import MarcasFiles from "./MarcasFiles";
 import MarcasDetails from "./MarcasDetails";
+import MarcasAdvancedFilters, {
+  FilterButton,
+} from "../Globales/MarcasAdvancedFilters";
+import ModalFormulario from "./ModalFormulario";
+import ModalDesactivar from "./ModalDesactivar";
+import ModalActivar from "./ModalActivar";
 import { exportToExcel } from "./exportUtils";
 import ApiConfig from "../Config/api.config";
 import { usePermissions } from "../../hooks/usePermissions";
@@ -39,6 +33,10 @@ function Marcas({ token, userData }) {
   const [marcaToActivate, setMarcaToActivate] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
 
+  // Estado para filtros avanzados
+  const [advancedFilters, setAdvancedFilters] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+
   const usuario = userData?.usuario || {};
   const nombreUsuario = usuario.usua_Usuario || "Sistema";
   const Usua_Id = usuario.usua_Id;
@@ -47,6 +45,7 @@ function Marcas({ token, userData }) {
     token,
     Usua_Id
   );
+
   const extractErrorMessage = (errorMessage) => {
     if (!errorMessage) return "Error desconocido";
 
@@ -73,6 +72,7 @@ function Marcas({ token, userData }) {
 
     return errorMessage;
   };
+
   const [formData, setFormData] = useState({
     Marc_Id: 0,
     Empr_Id: "",
@@ -373,19 +373,125 @@ function Marcas({ token, userData }) {
     setTimeout(() => setSuccess(""), 4000);
   };
 
+  // Función para aplicar filtros avanzados
+  const applyAdvancedFilters = (marca, filters) => {
+    // Filtro por empresas
+    if (
+      filters.empresas.length > 0 &&
+      !filters.empresas.includes(marca.Empr_Nombre)
+    ) {
+      return false;
+    }
+
+    // Filtro por marcas
+    if (
+      filters.marcas.length > 0 &&
+      !filters.marcas.includes(marca.Marc_Marca)
+    ) {
+      return false;
+    }
+
+    // Filtro por registros
+    if (
+      filters.registros.length > 0 &&
+      !filters.registros.includes(marca.Marc_Registro)
+    ) {
+      return false;
+    }
+
+    // Filtro por fecha específica (año, mes, día)
+    if (filters.fechaAno || filters.fechaMes || filters.fechaDia) {
+      if (!marca.Marc_Renovacion) return false;
+
+      const fechaRenovacion = new Date(marca.Marc_Renovacion);
+
+      if (
+        filters.fechaAno &&
+        fechaRenovacion.getFullYear() !== parseInt(filters.fechaAno)
+      ) {
+        return false;
+      }
+
+      if (
+        filters.fechaMes &&
+        String(fechaRenovacion.getMonth() + 1).padStart(2, "0") !==
+          filters.fechaMes
+      ) {
+        return false;
+      }
+
+      if (
+        filters.fechaDia &&
+        String(fechaRenovacion.getDate()).padStart(2, "0") !== filters.fechaDia
+      ) {
+        return false;
+      }
+    }
+
+    // Filtro por rango de fechas (tiene prioridad sobre fecha específica si ambos están presentes)
+    if (filters.fechaRangoDesde || filters.fechaRangoHasta) {
+      if (!marca.Marc_Renovacion) return false;
+
+      const fechaRenovacion = new Date(marca.Marc_Renovacion);
+
+      // Filtro "Desde"
+      if (filters.fechaRangoDesde) {
+        const fechaDesde = new Date(filters.fechaRangoDesde);
+        // Resetear horas para comparar solo fechas
+        fechaDesde.setHours(0, 0, 0, 0);
+        fechaRenovacion.setHours(0, 0, 0, 0);
+
+        if (fechaRenovacion < fechaDesde) {
+          return false;
+        }
+      }
+
+      // Filtro "Hasta"
+      if (filters.fechaRangoHasta) {
+        const fechaHasta = new Date(filters.fechaRangoHasta);
+        // Resetear horas para comparar solo fechas
+        fechaHasta.setHours(23, 59, 59, 999);
+        fechaRenovacion.setHours(0, 0, 0, 0);
+
+        if (fechaRenovacion > fechaHasta) {
+          return false;
+        }
+      }
+    }
+
+    // Filtro por estatus
+    if (filters.estatus.length > 0) {
+      const marcaEstatus = marca.Marc_Estatus ? "true" : "false";
+      if (!filters.estatus.includes(marcaEstatus)) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const filteredMarcas = marcas.filter((marca) => {
+    // Búsqueda por texto
     const matchesSearch =
       marca.Marc_Marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.Marc_Titular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.Marc_Registro?.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Filtro de estatus básico
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "active" && marca.Marc_Estatus) ||
       (filterStatus === "inactive" && !marca.Marc_Estatus);
 
-    return matchesSearch && matchesStatus;
+    // Filtros avanzados
+    const matchesAdvanced =
+      !advancedFilters || applyAdvancedFilters(marca, advancedFilters);
+
+    return matchesSearch && matchesStatus && matchesAdvanced;
   });
+
+  // Calcular si hay filtros activos para el botón
+  const hasActiveFilters = advancedFilters !== null;
 
   const empresasOptions = empresas.map((empresa) => ({
     value: empresa.Empr_Id.toString(),
@@ -441,7 +547,9 @@ function Marcas({ token, userData }) {
             </div>
           </div>
 
+          {/* NUEVA BARRA DE BÚSQUEDA CON FILTROS Y SELECT DE ESTATUS */}
           <div className="flex flex-col md:flex-row gap-3">
+            {/* Barra de búsqueda */}
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
@@ -453,43 +561,38 @@ function Marcas({ token, userData }) {
               />
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilterStatus("all")}
-                className={`px-4 py-3 rounded-xl font-semibold transition-all ${
-                  filterStatus === "all"
-                    ? "bg-stone-700 text-white shadow-lg"
-                    : "bg-white text-stone-600 hover:bg-stone-50"
-                }`}
-              >
-                Todas
-              </button>
-              <button
-                onClick={() => setFilterStatus("active")}
-                className={`px-4 py-3 rounded-xl font-semibold transition-all ${
-                  filterStatus === "active"
-                    ? "bg-green-600 text-white shadow-lg"
-                    : "bg-white text-stone-600 hover:bg-stone-50"
-                }`}
-              >
-                Activas
-              </button>
-              <button
-                onClick={() => setFilterStatus("inactive")}
-                className={`px-4 py-3 rounded-xl font-semibold transition-all ${
-                  filterStatus === "inactive"
-                    ? "bg-red-600 text-white shadow-lg"
-                    : "bg-white text-stone-600 hover:bg-stone-50"
-                }`}
-              >
-                Inactivas
-              </button>
-            </div>
+            {/* Botón de Filtros Avanzados */}
+            <FilterButton
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={() => setAdvancedFilters(null)}
+            />
+
+            {/* Select de Estatus */}
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
+            >
+              <option value="all">Todas</option>
+              <option value="active">Activas</option>
+              <option value="inactive">Inactivas</option>
+            </select>
           </div>
         </div>
       </div>
 
       <div className="px-2 md:px-4 py-6">
+        {/* Filtros Avanzados */}
+        <MarcasAdvancedFilters
+          marcas={marcas}
+          onApplyFilters={setAdvancedFilters}
+          onClearFilters={() => setAdvancedFilters(null)}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+        />
+
         {success && (
           <div className="mb-6">
             <Alert
@@ -536,608 +639,42 @@ function Marcas({ token, userData }) {
       </div>
 
       {/* Modal Crear/Editar */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div
-              className="p-8 rounded-t-3xl"
-              style={{
-                background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {editingMarca ? "Editar Marca" : "Nueva Marca"}
-                  </h2>
-                  {editingMarca && formData.Marc_Marca && (
-                    <p className="text-white/90 text-sm mt-1">
-                      {formData.Marc_Marca}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* EMPRESA - OBLIGATORIO */}
-                <div className="md:col-span-2">
-                  <Select
-                    label="Empresa"
-                    options={empresasOptions}
-                    value={formData.Empr_Id}
-                    onChange={(value) =>
-                      setFormData({ ...formData, Empr_Id: value })
-                    }
-                    placeholder="Seleccione una empresa"
-                    required={true}
-                  />
-                </div>
-
-                {/* CONSECUTIVO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Consecutivo
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Consecutivo}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Consecutivo: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Consecutivo"
-                  />
-                </div>
-
-                {/* PAÍS */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    País
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Pais}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Pais: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Pais"
-                  />
-                </div>
-
-                {/* SOLICITUD NACIONAL (EXPEDIENTE) */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Solicitud Nacional (Expediente)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_SolicitudNacional}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_SolicitudNacional: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Expediente"
-                  />
-                </div>
-
-                {/* REGISTRO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Registro
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Registro}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Registro: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Registro"
-                  />
-                </div>
-
-                {/* MARCA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Marca
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Marca}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Marca: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Nombre de la marca"
-                  />
-                </div>
-
-                {/* DISEÑO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Diseño
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Diseno}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Diseno: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Diseño"
-                  />
-                </div>
-
-                {/* CLASE */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Clase
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Clase}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Clase: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Clase"
-                  />
-                </div>
-
-                {/* TITULAR - 2 columnas */}
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Titular
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Titular}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Titular: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Titular"
-                  />
-                </div>
-
-                {/* FIGURA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Figura
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Figura}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Figura: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Figura"
-                  />
-                </div>
-
-                {/* TÍTULO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Título
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Titulo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Titulo: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Título"
-                  />
-                </div>
-
-                {/* TIPO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Tipo
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Tipo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Tipo: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Tipo"
-                  />
-                </div>
-
-                {/* RAMA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Rama
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Rama}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Rama: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Rama"
-                  />
-                </div>
-
-                {/* AUTOR */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Autor
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_Autor}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Autor: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Autor"
-                  />
-                </div>
-
-                {/* OBSERVACIONES - 2 columnas */}
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Observaciones
-                  </label>
-                  <textarea
-                    value={formData.Marc_Observaciones}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Observaciones: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white resize-none"
-                    rows="3"
-                    placeholder="Observaciones adicionales..."
-                  />
-                </div>
-
-                {/* FECHA SOLICITUD */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Fecha Solicitud
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_FechaSolicitud || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_FechaSolicitud: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* FECHA REGISTRO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Fecha Registro
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_FechaRegistro || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_FechaRegistro: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* DURE */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Dure
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_Dure || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, Marc_Dure: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* RENOVACION */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Renovación
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_Renovacion || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Renovacion: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* OPOSICIÓN */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Oposición
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_Oposicion || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_Oposicion: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* PRÓXIMA TAREA */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Próxima Tarea
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.Marc_ProximaTarea}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_ProximaTarea: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                    placeholder="Próxima tarea"
-                  />
-                </div>
-
-                {/* FECHA DE SEGUIMIENTO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Fecha de Seguimiento
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_FechaSeguimiento || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_FechaSeguimiento: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-
-                {/* FECHA DE AVISO */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-stone-700">
-                    Fecha de Aviso
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.Marc_FechaAviso || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Marc_FechaAviso: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-              {/* ALERTA DE ERROR DENTRO DEL MODAL */}
-              {error && (
-                <div className="px-8 pt-6">
-                  <Alert
-                    type="error"
-                    message={error}
-                    onClose={() => setError("")}
-                  />
-                </div>
-              )}
-              <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
-                <input
-                  type="checkbox"
-                  id="activo"
-                  checked={formData.Marc_Estatus}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      Marc_Estatus: e.target.checked,
-                    })
-                  }
-                  className="w-5 h-5 rounded border-2 border-stone-300 cursor-pointer"
-                  style={{ accentColor: "#6b5345" }}
-                />
-                <label
-                  htmlFor="activo"
-                  className="text-sm font-semibold text-stone-700 cursor-pointer"
-                >
-                  Marca activa
-                </label>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" />
-                      {editingMarca ? "Actualizar" : "Crear"} Marca
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ModalFormulario
+        show={showModal}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmit}
+        formData={formData}
+        setFormData={setFormData}
+        empresasOptions={empresasOptions}
+        loading={loading}
+        error={error}
+        setError={setError}
+        editingMarca={editingMarca}
+      />
 
       {/* Modal Desactivar */}
-      {showDeleteModal && marcaToDelete && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
-            <div className="p-8 bg-gradient-to-br from-red-50 to-rose-50 rounded-t-3xl">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <AlertCircle className="w-8 h-8 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-center text-stone-900">
-                ¿Desactivar Marca?
-              </h2>
-            </div>
-
-            <div className="p-8">
-              <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                ¿Estás seguro de que deseas desactivar la marca{" "}
-                <span className="font-bold text-stone-900 block mt-2 text-lg">
-                  "{marcaToDelete.Marc_Marca}"
-                </span>
-                ?
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setMarcaToDelete(null);
-                  }}
-                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Desactivando...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-5 h-5" />
-                      Desactivar
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalDesactivar
+        show={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setMarcaToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        marca={marcaToDelete}
+        loading={loading}
+      />
 
       {/* Modal Activar */}
-      {showActivateModal && marcaToActivate && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
-            <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-t-3xl">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-center text-stone-900">
-                ¿Activar Marca?
-              </h2>
-            </div>
-
-            <div className="p-8">
-              <p className="text-center text-stone-600 mb-6 leading-relaxed">
-                ¿Estás seguro de que deseas activar la marca{" "}
-                <span className="font-bold text-stone-900 block mt-2 text-lg">
-                  "{marcaToActivate.Marc_Marca}"
-                </span>
-                ?
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => {
-                    setShowActivateModal(false);
-                    setMarcaToActivate(null);
-                  }}
-                  className="flex-1 px-6 py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-semibold hover:bg-stone-50 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleActivate}
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Activando...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Activar
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalActivar
+        show={showActivateModal}
+        onClose={() => {
+          setShowActivateModal(false);
+          setMarcaToActivate(null);
+        }}
+        onConfirm={handleActivate}
+        marca={marcaToActivate}
+        loading={loading}
+      />
 
       {/* Modal Archivos */}
       {showFilesModal && selectedMarca && (
