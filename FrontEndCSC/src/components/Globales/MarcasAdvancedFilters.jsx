@@ -155,7 +155,7 @@ function MarcasAdvancedFilters({
               placeholder="Seleccionar..."
               searchPlaceholder="Buscar empresa..."
               color="#6b5345"
-              showSearch={true}
+              showSearch={false}
             />
           </div>
 
@@ -171,7 +171,7 @@ function MarcasAdvancedFilters({
               placeholder="Seleccionar..."
               searchPlaceholder="Buscar marca..."
               color="#6b5345"
-              showSearch={true}
+              showSearch={false}
             />
           </div>
 
