@@ -134,7 +134,7 @@ function MarcasAdvancedFilters({
     filters.fechaRangoHasta !== "" ||
     filters.estatus.length > 0;
 
-  // Solo renderizar el panel si showFilters es true
+  // Solo hacer aparecer los filtros si showFilters es true
   if (!showFilters) return null;
 
   return (
@@ -209,7 +209,7 @@ function MarcasAdvancedFilters({
               }
               placeholder="Año"
               min="1900"
-              max="2099"
+              max="9099"
               className="w-full px-3 py-2.5 text-sm rounded-lg border-2 border-stone-200 focus:border-stone-400 outline-none transition-all"
             />
           </div>
