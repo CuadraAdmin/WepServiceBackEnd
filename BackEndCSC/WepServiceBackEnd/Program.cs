@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+// IMPORTANTE: Registrar BlobStorageService
 builder.Services.AddScoped<BlobStorageService>();
 
 builder.Services.AddCors(options =>
@@ -71,17 +72,14 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API para gestión de marcas y archivos"
     });
 
-    // Mapear IFormFile como binary en Swagger
     options.MapType<IFormFile>(() => new OpenApiSchema
     {
         Type = "string",
         Format = "binary"
     });
 
-    // Filtro para manejar file uploads
     options.OperationFilter<SwaggerFileOperationFilter>();
 
-    // Configuración para JWT en Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
