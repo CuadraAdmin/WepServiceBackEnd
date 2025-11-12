@@ -670,8 +670,24 @@ function MarcasTable({
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="w-16 h-16 rounded-lg border-2 border-stone-200 bg-stone-50 flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-stone-400" />
+                    <div className="w-16 h-16 rounded-lg border-2 border-stone-200 bg-stone-50 flex items-center justify-center overflow-hidden">
+                      {marca.Marc_Diseno ? (
+                        <img
+                          src={marca.Marc_Diseno}
+                          alt={marca.Marc_Marca || "Diseño"}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextSibling.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <FileText
+                        className="w-6 h-6 text-stone-400"
+                        style={{
+                          display: marca.Marc_Diseno ? "none" : "block",
+                        }}
+                      />
                     </div>
                   </td>
                   <td className="px-6 py-4">

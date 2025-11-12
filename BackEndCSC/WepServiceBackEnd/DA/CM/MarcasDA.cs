@@ -384,5 +384,42 @@ namespace WebServiceBackEnd.DA.CM
                 throw new Exception($"Error al obtener marcas por empresas con permisos: {ex.Message}");
             }
         }
+        public async Task<(string EmpresaClave, string MarcaNombre)?> ObtenerEmpresaYMarcaPorId(int marcaId)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    SqlCommand cmd = new SqlCommand(@"
+                SELECT e.Empr_Clave, m.Marc_Marca
+                FROM cm.Marcas m
+                INNER JOIN dbo.Empresa e ON m.Empr_Id = e.Empr_Id
+                WHERE m.Marc_Id = @MarcaId", conn);
+
+                    cmd.Parameters.AddWithValue("@MarcaId", marcaId);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            var empresaClave = reader.IsDBNull(0) ? null : reader.GetString(0);
+                            var marcaNombre = reader.IsDBNull(1) ? null : reader.GetString(1);
+
+                            if (!string.IsNullOrEmpty(empresaClave) && !string.IsNullOrEmpty(marcaNombre))
+                            {
+                                return (empresaClave, marcaNombre);
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener empresa y marca: {ex.Message}");
+            }
+        }
     }
 }

@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
-using WebServiceBackEnd.BE.CU;
-using WebServiceBackEnd.BP.CU;
-using WebServiceBackEnd.DA.CU;
+using System.Text;
+using WebServiceBackEnd;
+using WebServiceBackEnd.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<BlobStorageService>();
 
 builder.Services.AddCors(options =>
 {
@@ -42,36 +44,78 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // ========== REGISTRO AUTOMÁTICO CON REFLECTION ==========
 var assembly = Assembly.GetExecutingAssembly();
 
-// Registrar todas las clases que terminan en "DA"
 var daTypes = assembly.GetTypes()
     .Where(t => t.Name.EndsWith("DA") && !t.IsInterface && !t.IsAbstract);
-
 foreach (var type in daTypes)
 {
     builder.Services.AddScoped(type);
 }
 
-// Registrar todas las clases que terminan en "BP"
 var bpTypes = assembly.GetTypes()
     .Where(t => t.Name.EndsWith("BP") && !t.IsInterface && !t.IsAbstract);
-
 foreach (var type in bpTypes)
 {
     builder.Services.AddScoped(type);
 }
 // ========================================================
 
-builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Configuración de Swagger con soporte para archivos
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "WebService BackEnd API",
+        Version = "v1",
+        Description = "API para gestión de marcas y archivos"
+    });
+
+    // Mapear IFormFile como binary en Swagger
+    options.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+
+    // Filtro para manejar file uploads
+    options.OperationFilter<SwaggerFileOperationFilter>();
+
+    // Configuración para JWT en Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebService BackEnd API v1");
+    });
 }
 
 app.UseCors("AllowAll");
@@ -79,4 +123,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();
