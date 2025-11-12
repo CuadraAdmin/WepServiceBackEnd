@@ -22,3 +22,4 @@ FrontEndCSC/.env.*.local
 *.swp
 *.swo
 FrontEndCSC/src/components/Config/BASEURL.js
+BackEndCSC/WepServiceBackEnd/appsettings.Development.json
