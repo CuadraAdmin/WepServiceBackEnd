@@ -1,25 +1,41 @@
 ﻿using WebServiceBackEnd.BE.CM;
 using WebServiceBackEnd.DA.CM;
+using WebServiceBackEnd.Services;
 
 namespace WebServiceBackEnd.BP.CM
 {
     public class MarcasBP
     {
         private readonly MarcasDA _marcasDA;
+        private readonly BlobStorageService _blobStorageService;
 
-        public MarcasBP(MarcasDA marcasDA)
+        public MarcasBP(MarcasDA marcasDA, BlobStorageService blobStorageService)
         {
             _marcasDA = marcasDA;
+            _blobStorageService = blobStorageService;
         }
 
         /// <summary>
-        /// Lista todas las marcas
+        /// Lista todas las marcas con sus imágenes de diseño
         /// </summary>
         public async Task<List<dynamic>> Listar()
         {
             try
             {
-                return await _marcasDA.Listar();
+                var marcas = await _marcasDA.Listar();
+
+                foreach (dynamic marca in marcas)
+                {
+                    var marcaDict = marca as IDictionary<string, object>;
+                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
+                    {
+                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
+                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
+                        marcaDict["Marc_Diseno"] = imagenUrl;
+                    }
+                }
+
+                return marcas;
             }
             catch (Exception ex)
             {
@@ -28,7 +44,7 @@ namespace WebServiceBackEnd.BP.CM
         }
 
         /// <summary>
-        /// Obtiene una marca por su ID
+        /// Obtiene una marca por su ID con su imagen de diseño
         /// </summary>
         public async Task<MarcasBE?> ObtenerPorId(int id)
         {
@@ -37,7 +53,14 @@ namespace WebServiceBackEnd.BP.CM
                 if (id <= 0)
                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
 
-                return await _marcasDA.ObtenerPorId(id);
+                var marca = await _marcasDA.ObtenerPorId(id);
+
+                if (marca != null)
+                {
+                    marca.Marc_Diseno = await _blobStorageService.ObtenerImagenDisenoAsync(id);
+                }
+
+                return marca;
             }
             catch (ArgumentException)
             {
@@ -60,10 +83,6 @@ namespace WebServiceBackEnd.BP.CM
                     throw new ArgumentException("Los datos de la marca son requeridos");
                 if (marca.Empr_Id <= 0)
                     throw new ArgumentException("El ID de empresa es obligatorio");
-                //if (string.IsNullOrWhiteSpace(marca.Marc_Consecutivo))
-                //    throw new ArgumentException("El consecutivo de la marca es obligatorio");
-                //if (string.IsNullOrWhiteSpace(marca.Marc_Pais))
-                //    throw new ArgumentException("El país de la marca es obligatorio");                
 
                 return await _marcasDA.Crear(marca);
             }
@@ -84,7 +103,6 @@ namespace WebServiceBackEnd.BP.CM
         {
             try
             {
-                // Validaciones
                 if (marca == null)
                     throw new ArgumentException("Los datos de la marca son requeridos");
 
@@ -94,7 +112,7 @@ namespace WebServiceBackEnd.BP.CM
                 if (marca.Empr_Id <= 0)
                     throw new ArgumentException("El ID de empresa es obligatorio");
 
-                
+
                 var marcaExistente = await _marcasDA.ObtenerPorId(marca.Marc_Id);
                 if (marcaExistente == null)
                     throw new ArgumentException("La marca no existe en el sistema");
@@ -123,7 +141,6 @@ namespace WebServiceBackEnd.BP.CM
                 if (id <= 0)
                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
 
-                // Verificar que la marca existe
                 var marca = await _marcasDA.ObtenerPorId(id);
                 if (marca == null)
                     throw new ArgumentException("La marca no existe en el sistema");
@@ -153,7 +170,6 @@ namespace WebServiceBackEnd.BP.CM
                 if (id <= 0)
                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
 
-                // Verificar que la marca existe
                 var marca = await _marcasDA.ObtenerPorId(id);
                 if (marca == null)
                     throw new ArgumentException("La marca no existe en el sistema");
@@ -183,11 +199,23 @@ namespace WebServiceBackEnd.BP.CM
                 if (filtros == null)
                     filtros = new MarcasBE();
 
-                // Valores por defecto
                 if (!filtros.Accion.HasValue)
                     filtros.Accion = 1;
 
-                return await _marcasDA.ListarConFiltros(filtros);
+                var marcas = await _marcasDA.ListarConFiltros(filtros);
+
+                foreach (dynamic marca in marcas)
+                {
+                    var marcaDict = marca as IDictionary<string, object>;
+                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
+                    {
+                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
+                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
+                        marcaDict["Marc_Diseno"] = imagenUrl;
+                    }
+                }
+
+                return marcas;
             }
             catch (Exception ex)
             {
@@ -205,7 +233,20 @@ namespace WebServiceBackEnd.BP.CM
                 if (usuarioId <= 0)
                     throw new ArgumentException("El ID del usuario debe ser mayor a 0");
 
-                return await _marcasDA.ObtenerPorEmpresasConPermisos(usuarioId);
+                var marcas = await _marcasDA.ObtenerPorEmpresasConPermisos(usuarioId);
+
+                foreach (dynamic marca in marcas)
+                {
+                    var marcaDict = marca as IDictionary<string, object>;
+                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
+                    {
+                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
+                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
+                        marcaDict["Marc_Diseno"] = imagenUrl;
+                    }
+                }
+
+                return marcas;
             }
             catch (ArgumentException)
             {
@@ -316,7 +357,7 @@ namespace WebServiceBackEnd.BP.CM
             {
                 var filtros = new MarcasBE
                 {
-                    Accion = 0, // Listado básico
+                    Accion = 0,
                     Marc_FiltroEstatus = true,
                     Marc_Estatus = true
                 };

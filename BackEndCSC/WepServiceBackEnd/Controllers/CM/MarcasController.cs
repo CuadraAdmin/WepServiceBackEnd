@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebServiceBackEnd.BE.CM;
 using WebServiceBackEnd.BP.CM;
+using WebServiceBackEnd.Services;
 
 namespace WebServiceBackEnd.Controllers.CM
 {
@@ -11,10 +12,12 @@ namespace WebServiceBackEnd.Controllers.CM
     public class MarcasController : ControllerBase
     {
         private readonly MarcasBP _marcasBP;
+        private readonly BlobStorageService _blobStorageService;
 
-        public MarcasController(MarcasBP marcasBP)
+        public MarcasController(MarcasBP marcasBP, BlobStorageService blobStorageService)
         {
             _marcasBP = marcasBP;
+            _blobStorageService = blobStorageService;
         }
 
         /// <summary>
@@ -102,11 +105,22 @@ namespace WebServiceBackEnd.Controllers.CM
                 if (id != marca.Marc_Id)
                     return BadRequest(new { mensaje = "El ID en la URL no coincide con el ID de la marca" });
 
+                var marcaAnterior = await _marcasBP.ObtenerPorId(id);
+                if (marcaAnterior == null)
+                    return NotFound(new { mensaje = "Marca no encontrada" });
+
+                string nombreAnterior = marcaAnterior.Marc_Marca;
+
                 var resultado = await _marcasBP.Actualizar(marca);
 
                 if (!resultado)
                 {
                     return NotFound(new { mensaje = "Marca no encontrada" });
+                }
+
+                if (nombreAnterior != marca.Marc_Marca)
+                {
+                    await _blobStorageService.RenombrarCarpetaMarcaAsync(id, nombreAnterior);
                 }
 
                 return Ok(new { mensaje = "Marca actualizada exitosamente" });

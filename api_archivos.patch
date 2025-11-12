@@ -1,0 +1,1121 @@
+From 3ac327287f606a1117f46ec5b3960b0f98f7d9af Mon Sep 17 00:00:00 2001
+From: HectorBalderas <eduardo.balderas@cuadra.com.mX>
+Date: Wed, 12 Nov 2025 12:49:01 -0600
+Subject: [PATCH] apis para los archivos/imagenes
+
+---
+ .../WepServiceBackEnd/BE/CM/ArchivoMarcaBE.cs |  12 +
+ .../WepServiceBackEnd/BP/CM/MarcasBP.cs       |  79 ++++-
+ .../CM/MarcasArchivosController.cs            | 201 +++++++++++
+ .../Controllers/CM/MarcasController.cs        |  16 +-
+ .../WepServiceBackEnd/DA/CM/MarcasDA.cs       |  37 ++
+ BackEndCSC/WepServiceBackEnd/Program.cs       |  69 +++-
+ .../Services/BlobStorageService.cs            | 333 ++++++++++++++++++
+ .../SwaggerFileOperationFilter.cs             |  69 ++++
+ .../WebServiceBackEnd.csproj                  |   1 +
+ .../appsettings.Development.json              |   6 +-
+ FrontEndCSC/src/components/CM/MarcasTable.jsx |  20 +-
+ 11 files changed, 808 insertions(+), 35 deletions(-)
+ create mode 100644 BackEndCSC/WepServiceBackEnd/BE/CM/ArchivoMarcaBE.cs
+ create mode 100644 BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasArchivosController.cs
+ create mode 100644 BackEndCSC/WepServiceBackEnd/Services/BlobStorageService.cs
+ create mode 100644 BackEndCSC/WepServiceBackEnd/SwaggerFileOperationFilter.cs
+
+diff --git a/BackEndCSC/WepServiceBackEnd/BE/CM/ArchivoMarcaBE.cs b/BackEndCSC/WepServiceBackEnd/BE/CM/ArchivoMarcaBE.cs
+new file mode 100644
+index 0000000..1e00468
+--- /dev/null
++++ b/BackEndCSC/WepServiceBackEnd/BE/CM/ArchivoMarcaBE.cs
+@@ -0,0 +1,12 @@
++﻿namespace WebServiceBackEnd.BE.CM
++{
++    public class ArchivoMarcaBE
++    {
++        public string Nombre { get; set; } = string.Empty;
++        public string Url { get; set; } = string.Empty;
++        public string TipoArchivo { get; set; } = string.Empty;
++        public string ContentType { get; set; } = string.Empty;
++        public long Tamaño { get; set; }
++        public DateTime FechaSubida { get; set; }
++    }
++}
+diff --git a/BackEndCSC/WepServiceBackEnd/BP/CM/MarcasBP.cs b/BackEndCSC/WepServiceBackEnd/BP/CM/MarcasBP.cs
+index 9025b98..481f15c 100644
+--- a/BackEndCSC/WepServiceBackEnd/BP/CM/MarcasBP.cs
++++ b/BackEndCSC/WepServiceBackEnd/BP/CM/MarcasBP.cs
+@@ -1,25 +1,41 @@
+ ﻿using WebServiceBackEnd.BE.CM;
+ using WebServiceBackEnd.DA.CM;
++using WebServiceBackEnd.Services;
+ 
+ namespace WebServiceBackEnd.BP.CM
+ {
+     public class MarcasBP
+     {
+         private readonly MarcasDA _marcasDA;
++        private readonly BlobStorageService _blobStorageService;
+ 
+-        public MarcasBP(MarcasDA marcasDA)
++        public MarcasBP(MarcasDA marcasDA, BlobStorageService blobStorageService)
+         {
+             _marcasDA = marcasDA;
++            _blobStorageService = blobStorageService;
+         }
+ 
+         /// <summary>
+-        /// Lista todas las marcas
++        /// Lista todas las marcas con sus imágenes de diseño
+         /// </summary>
+         public async Task<List<dynamic>> Listar()
+         {
+             try
+             {
+-                return await _marcasDA.Listar();
++                var marcas = await _marcasDA.Listar();
++
++                foreach (dynamic marca in marcas)
++                {
++                    var marcaDict = marca as IDictionary<string, object>;
++                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
++                    {
++                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
++                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
++                        marcaDict["Marc_Diseno"] = imagenUrl;
++                    }
++                }
++
++                return marcas;
+             }
+             catch (Exception ex)
+             {
+@@ -28,7 +44,7 @@ namespace WebServiceBackEnd.BP.CM
+         }
+ 
+         /// <summary>
+-        /// Obtiene una marca por su ID
++        /// Obtiene una marca por su ID con su imagen de diseño
+         /// </summary>
+         public async Task<MarcasBE?> ObtenerPorId(int id)
+         {
+@@ -37,7 +53,14 @@ namespace WebServiceBackEnd.BP.CM
+                 if (id <= 0)
+                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
+ 
+-                return await _marcasDA.ObtenerPorId(id);
++                var marca = await _marcasDA.ObtenerPorId(id);
++
++                if (marca != null)
++                {
++                    marca.Marc_Diseno = await _blobStorageService.ObtenerImagenDisenoAsync(id);
++                }
++
++                return marca;
+             }
+             catch (ArgumentException)
+             {
+@@ -60,10 +83,6 @@ namespace WebServiceBackEnd.BP.CM
+                     throw new ArgumentException("Los datos de la marca son requeridos");
+                 if (marca.Empr_Id <= 0)
+                     throw new ArgumentException("El ID de empresa es obligatorio");
+-                //if (string.IsNullOrWhiteSpace(marca.Marc_Consecutivo))
+-                //    throw new ArgumentException("El consecutivo de la marca es obligatorio");
+-                //if (string.IsNullOrWhiteSpace(marca.Marc_Pais))
+-                //    throw new ArgumentException("El país de la marca es obligatorio");                
+ 
+                 return await _marcasDA.Crear(marca);
+             }
+@@ -84,7 +103,6 @@ namespace WebServiceBackEnd.BP.CM
+         {
+             try
+             {
+-                // Validaciones
+                 if (marca == null)
+                     throw new ArgumentException("Los datos de la marca son requeridos");
+ 
+@@ -94,7 +112,7 @@ namespace WebServiceBackEnd.BP.CM
+                 if (marca.Empr_Id <= 0)
+                     throw new ArgumentException("El ID de empresa es obligatorio");
+ 
+-                
++
+                 var marcaExistente = await _marcasDA.ObtenerPorId(marca.Marc_Id);
+                 if (marcaExistente == null)
+                     throw new ArgumentException("La marca no existe en el sistema");
+@@ -123,13 +141,12 @@ namespace WebServiceBackEnd.BP.CM
+                 if (id <= 0)
+                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
+ 
+-                // Verificar que la marca existe
+                 var marca = await _marcasDA.ObtenerPorId(id);
+                 if (marca == null)
+                     throw new ArgumentException("La marca no existe en el sistema");
+ 
+                 if (!marca.Marc_Estatus)
+-                    throw new ArgumentException("La marca ya está eliminada");
++                    throw new ArgumentException("La marca ya está eliminada");              
+ 
+                 return await _marcasDA.Eliminar(id, modificadoPor);
+             }
+@@ -153,7 +170,6 @@ namespace WebServiceBackEnd.BP.CM
+                 if (id <= 0)
+                     throw new ArgumentException("El ID de la marca debe ser mayor a 0");
+ 
+-                // Verificar que la marca existe
+                 var marca = await _marcasDA.ObtenerPorId(id);
+                 if (marca == null)
+                     throw new ArgumentException("La marca no existe en el sistema");
+@@ -174,7 +190,7 @@ namespace WebServiceBackEnd.BP.CM
+         }
+ 
+         /// <summary>
+-        /// Lista marcas con filtros personalizados
++        /// Lista marcas con filtros personalizados 
+         /// </summary>
+         public async Task<List<dynamic>> ListarConFiltros(MarcasBE filtros)
+         {
+@@ -183,11 +199,23 @@ namespace WebServiceBackEnd.BP.CM
+                 if (filtros == null)
+                     filtros = new MarcasBE();
+ 
+-                // Valores por defecto
+                 if (!filtros.Accion.HasValue)
+                     filtros.Accion = 1;
+ 
+-                return await _marcasDA.ListarConFiltros(filtros);
++                var marcas = await _marcasDA.ListarConFiltros(filtros);
++
++                foreach (dynamic marca in marcas)
++                {
++                    var marcaDict = marca as IDictionary<string, object>;
++                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
++                    {
++                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
++                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
++                        marcaDict["Marc_Diseno"] = imagenUrl;
++                    }
++                }
++
++                return marcas;
+             }
+             catch (Exception ex)
+             {
+@@ -205,7 +233,20 @@ namespace WebServiceBackEnd.BP.CM
+                 if (usuarioId <= 0)
+                     throw new ArgumentException("El ID del usuario debe ser mayor a 0");
+ 
+-                return await _marcasDA.ObtenerPorEmpresasConPermisos(usuarioId);
++                var marcas = await _marcasDA.ObtenerPorEmpresasConPermisos(usuarioId);
++
++                foreach (dynamic marca in marcas)
++                {
++                    var marcaDict = marca as IDictionary<string, object>;
++                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
++                    {
++                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
++                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
++                        marcaDict["Marc_Diseno"] = imagenUrl;
++                    }
++                }
++
++                return marcas;
+             }
+             catch (ArgumentException)
+             {
+@@ -316,7 +357,7 @@ namespace WebServiceBackEnd.BP.CM
+             {
+                 var filtros = new MarcasBE
+                 {
+-                    Accion = 0, // Listado básico
++                    Accion = 0,
+                     Marc_FiltroEstatus = true,
+                     Marc_Estatus = true
+                 };
+diff --git a/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasArchivosController.cs b/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasArchivosController.cs
+new file mode 100644
+index 0000000..bc80188
+--- /dev/null
++++ b/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasArchivosController.cs
+@@ -0,0 +1,201 @@
++﻿using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using WebServiceBackEnd.Services;
++
++namespace WebServiceBackEnd.Controllers.CM
++{
++    [Route("api/[controller]")]
++    [ApiController]
++    [Authorize]
++    public class MarcasArchivosController : ControllerBase
++    {
++        private readonly BlobStorageService _blobStorageService;
++
++        public MarcasArchivosController(BlobStorageService blobStorageService)
++        {
++            _blobStorageService = blobStorageService;
++        }
++
++        /// <summary>
++        /// Subir IMAGEN DE DISEÑO de la marca (solo una por marca)
++        /// </summary>
++        [HttpPost("upload-diseno/{marcaId}")]
++        [Consumes("multipart/form-data")]
++        public async Task<IActionResult> UploadImagenDiseno(int marcaId,  IFormFile file)
++        {
++            try
++            {
++                if (file == null || file.Length == 0)
++                {
++                    return BadRequest(new { mensaje = "No se ha proporcionado ningún archivo" });
++                }
++
++                // Validar que sea imagen
++                if (!file.ContentType.StartsWith("image/"))
++                {
++                    return BadRequest(new { mensaje = "Solo se permiten archivos de imagen" });
++                }
++
++                // Validar tamaño (máximo 5MB para diseño)
++                if (file.Length > 5 * 1024 * 1024)
++                {
++                    return BadRequest(new { mensaje = "La imagen excede el tamaño máximo de 5MB" });
++                }
++
++                var url = await _blobStorageService.UploadImagenDisenoAsync(marcaId, file);
++
++                return Ok(new
++                {
++                    mensaje = "Imagen de diseño subida exitosamente",
++                    url = url
++                });
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++
++        /// <summary>
++        /// Subir archivo general (documentos, imágenes adicionales, etc.)
++        /// </summary>
++        [HttpPost("upload/{marcaId}")]
++        [Consumes("multipart/form-data")]
++        public async Task<IActionResult> UploadArchivo(int marcaId, IFormFile file, string tipoArchivo = "documento")
++        {
++            try
++            {
++                if (file == null || file.Length == 0)
++                {
++                    return BadRequest(new { mensaje = "No se ha proporcionado ningún archivo" });
++                }
++
++                // Validar tamaño (máximo 10MB)
++                if (file.Length > 10 * 1024 * 1024)
++                {
++                    return BadRequest(new { mensaje = "El archivo excede el tamaño máximo de 10MB" });
++                }
++
++                // Validar extensiones permitidas
++                var extensionesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
++                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
++
++                if (!extensionesPermitidas.Contains(extension))
++                {
++                    return BadRequest(new { mensaje = "Tipo de archivo no permitido" });
++                }
++
++                var url = await _blobStorageService.UploadFileAsync(marcaId, file, tipoArchivo);
++
++                return Ok(new
++                {
++                    mensaje = "Archivo subido exitosamente",
++                    url = url,
++                    nombre = file.FileName,
++                    tipo = tipoArchivo
++                });
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++
++        /// <summary>
++        /// Obtener URL de imagen de diseño de una marca
++        /// </summary>
++        [HttpGet("imagen-diseno/{marcaId}")]
++        public async Task<IActionResult> ObtenerImagenDiseno(int marcaId)
++        {
++            try
++            {
++                var url = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
++
++                if (url == null)
++                {
++                    return NotFound(new { mensaje = "No se encontró imagen de diseño para esta marca" });
++                }
++
++                return Ok(new { url = url });
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++
++        /// <summary>
++        /// Listar todos los archivos de una marca
++        /// </summary>
++        [HttpGet("listar/{marcaId}")]
++        public async Task<IActionResult> ListarArchivos(int marcaId)
++        {
++            try
++            {
++                var archivos = await _blobStorageService.ListarArchivosAsync(marcaId);
++                return Ok(archivos);
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++
++        /// <summary>
++        /// Eliminar un archivo específico
++        /// </summary>
++        [HttpDelete("eliminar")]
++        public async Task<IActionResult> EliminarArchivo([FromBody] EliminarArchivoRequest request)
++        {
++            try
++            {
++                if (string.IsNullOrEmpty(request?.Url))
++                {
++                    return BadRequest(new { mensaje = "URL del archivo es requerida" });
++                }
++
++                var resultado = await _blobStorageService.DeleteFileAsync(request.Url);
++
++                if (resultado)
++                {
++                    return Ok(new { mensaje = "Archivo eliminado exitosamente" });
++                }
++                else
++                {
++                    return NotFound(new { mensaje = "Archivo no encontrado" });
++                }
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++
++        
++        /// <summary>
++        /// Eliminar todos los archivos de una marca
++        /// </summary>
++        [HttpDelete("eliminar-todos/{marcaId}")]
++        public async Task<IActionResult> EliminarTodosArchivos(int marcaId)
++        {
++            try
++            {
++                var deletedCount = await _blobStorageService.DeleteAllFilesFromMarcaAsync(marcaId);
++                return Ok(new
++                {
++                    mensaje = $"Se eliminaron {deletedCount} archivos exitosamente",
++                    cantidad = deletedCount
++                });
++            }
++            catch (Exception ex)
++            {
++                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
++            }
++        }
++    }
++    // Clase auxiliar para recibir la URL
++    public class EliminarArchivoRequest
++    {
++        public string Url { get; set; }
++    }
++}
+\ No newline at end of file
+diff --git a/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasController.cs b/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasController.cs
+index 154db41..2c6aa07 100644
+--- a/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasController.cs
++++ b/BackEndCSC/WepServiceBackEnd/Controllers/CM/MarcasController.cs
+@@ -2,6 +2,7 @@
+ using Microsoft.AspNetCore.Mvc;
+ using WebServiceBackEnd.BE.CM;
+ using WebServiceBackEnd.BP.CM;
++using WebServiceBackEnd.Services;
+ 
+ namespace WebServiceBackEnd.Controllers.CM
+ {
+@@ -11,10 +12,12 @@ namespace WebServiceBackEnd.Controllers.CM
+     public class MarcasController : ControllerBase
+     {
+         private readonly MarcasBP _marcasBP;
++        private readonly BlobStorageService _blobStorageService;
+ 
+-        public MarcasController(MarcasBP marcasBP)
++        public MarcasController(MarcasBP marcasBP, BlobStorageService blobStorageService)
+         {
+             _marcasBP = marcasBP;
++            _blobStorageService = blobStorageService;
+         }
+ 
+         /// <summary>
+@@ -102,6 +105,12 @@ namespace WebServiceBackEnd.Controllers.CM
+                 if (id != marca.Marc_Id)
+                     return BadRequest(new { mensaje = "El ID en la URL no coincide con el ID de la marca" });
+ 
++                var marcaAnterior = await _marcasBP.ObtenerPorId(id);
++                if (marcaAnterior == null)
++                    return NotFound(new { mensaje = "Marca no encontrada" });
++
++                string nombreAnterior = marcaAnterior.Marc_Marca;
++
+                 var resultado = await _marcasBP.Actualizar(marca);
+ 
+                 if (!resultado)
+@@ -109,6 +118,11 @@ namespace WebServiceBackEnd.Controllers.CM
+                     return NotFound(new { mensaje = "Marca no encontrada" });
+                 }
+ 
++                if (nombreAnterior != marca.Marc_Marca)
++                {
++                    await _blobStorageService.RenombrarCarpetaMarcaAsync(id, nombreAnterior);
++                }
++
+                 return Ok(new { mensaje = "Marca actualizada exitosamente" });
+             }
+             catch (ArgumentException ex)
+diff --git a/BackEndCSC/WepServiceBackEnd/DA/CM/MarcasDA.cs b/BackEndCSC/WepServiceBackEnd/DA/CM/MarcasDA.cs
+index ebf90c9..ad3b935 100644
+--- a/BackEndCSC/WepServiceBackEnd/DA/CM/MarcasDA.cs
++++ b/BackEndCSC/WepServiceBackEnd/DA/CM/MarcasDA.cs
+@@ -384,5 +384,42 @@ namespace WebServiceBackEnd.DA.CM
+                 throw new Exception($"Error al obtener marcas por empresas con permisos: {ex.Message}");
+             }
+         }
++        public async Task<(string EmpresaClave, string MarcaNombre)?> ObtenerEmpresaYMarcaPorId(int marcaId)
++        {
++            try
++            {
++                using (SqlConnection conn = new SqlConnection(_connectionString))
++                {
++                    await conn.OpenAsync();
++
++                    SqlCommand cmd = new SqlCommand(@"
++                SELECT e.Empr_Clave, m.Marc_Marca 
++                FROM cm.Marcas m
++                INNER JOIN dbo.Empresa e ON m.Empr_Id = e.Empr_Id
++                WHERE m.Marc_Id = @MarcaId", conn);
++
++                    cmd.Parameters.AddWithValue("@MarcaId", marcaId);
++
++                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
++                    {
++                        if (await reader.ReadAsync())
++                        {
++                            var empresaClave = reader.IsDBNull(0) ? null : reader.GetString(0);
++                            var marcaNombre = reader.IsDBNull(1) ? null : reader.GetString(1);
++
++                            if (!string.IsNullOrEmpty(empresaClave) && !string.IsNullOrEmpty(marcaNombre))
++                            {
++                                return (empresaClave, marcaNombre);
++                            }
++                        }
++                    }
++                }
++                return null;
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al obtener empresa y marca: {ex.Message}");
++            }
++        }
+     }
+ }
+\ No newline at end of file
+diff --git a/BackEndCSC/WepServiceBackEnd/Program.cs b/BackEndCSC/WepServiceBackEnd/Program.cs
+index d4d7ce5..4768be3 100644
+--- a/BackEndCSC/WepServiceBackEnd/Program.cs
++++ b/BackEndCSC/WepServiceBackEnd/Program.cs
+@@ -1,15 +1,17 @@
+ using Microsoft.AspNetCore.Authentication.JwtBearer;
+ using Microsoft.IdentityModel.Tokens;
+-using System.Text;
++using Microsoft.OpenApi.Models;
+ using System.Reflection;
+-using WebServiceBackEnd.BE.CU;
+-using WebServiceBackEnd.BP.CU;
+-using WebServiceBackEnd.DA.CU;
++using System.Text;
++using WebServiceBackEnd;
++using WebServiceBackEnd.Services;
+ 
+ var builder = WebApplication.CreateBuilder(args);
+ 
+ builder.Services.AddControllers();
+ 
++builder.Services.AddScoped<BlobStorageService>();
++
+ builder.Services.AddCors(options =>
+ {
+     options.AddPolicy("AllowAll", builder =>
+@@ -42,36 +44,78 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+ // ========== REGISTRO AUTOM�TICO CON REFLECTION ==========
+ var assembly = Assembly.GetExecutingAssembly();
+ 
+-// Registrar todas las clases que terminan en "DA"
+ var daTypes = assembly.GetTypes()
+     .Where(t => t.Name.EndsWith("DA") && !t.IsInterface && !t.IsAbstract);
+-
+ foreach (var type in daTypes)
+ {
+     builder.Services.AddScoped(type);
+ }
+ 
+-// Registrar todas las clases que terminan en "BP"
+ var bpTypes = assembly.GetTypes()
+     .Where(t => t.Name.EndsWith("BP") && !t.IsInterface && !t.IsAbstract);
+-
+ foreach (var type in bpTypes)
+ {
+     builder.Services.AddScoped(type);
+ }
+ // ========================================================
+ 
+-builder.Services.AddOpenApi();
+ builder.Services.AddEndpointsApiExplorer();
+-builder.Services.AddSwaggerGen();
++
++// Configuraci�n de Swagger con soporte para archivos
++builder.Services.AddSwaggerGen(options =>
++{
++    options.SwaggerDoc("v1", new OpenApiInfo
++    {
++        Title = "WebService BackEnd API",
++        Version = "v1",
++        Description = "API para gesti�n de marcas y archivos"
++    });
++
++    // Mapear IFormFile como binary en Swagger
++    options.MapType<IFormFile>(() => new OpenApiSchema
++    {
++        Type = "string",
++        Format = "binary"
++    });
++
++    // Filtro para manejar file uploads
++    options.OperationFilter<SwaggerFileOperationFilter>();
++
++    // Configuraci�n para JWT en Swagger
++    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
++    {
++        Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
++        Name = "Authorization",
++        In = ParameterLocation.Header,
++        Type = SecuritySchemeType.ApiKey,
++        Scheme = "Bearer"
++    });
++
++    options.AddSecurityRequirement(new OpenApiSecurityRequirement
++    {
++        {
++            new OpenApiSecurityScheme
++            {
++                Reference = new OpenApiReference
++                {
++                    Type = ReferenceType.SecurityScheme,
++                    Id = "Bearer"
++                }
++            },
++            Array.Empty<string>()
++        }
++    });
++});
+ 
+ var app = builder.Build();
+ 
+ if (app.Environment.IsDevelopment())
+ {
+     app.UseSwagger();
+-    app.UseSwaggerUI();
+-    app.MapOpenApi();
++    app.UseSwaggerUI(c =>
++    {
++        c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebService BackEnd API v1");
++    });
+ }
+ 
+ app.UseCors("AllowAll");
+@@ -79,4 +123,5 @@ app.UseHttpsRedirection();
+ app.UseAuthentication();
+ app.UseAuthorization();
+ app.MapControllers();
++
+ app.Run();
+\ No newline at end of file
+diff --git a/BackEndCSC/WepServiceBackEnd/Services/BlobStorageService.cs b/BackEndCSC/WepServiceBackEnd/Services/BlobStorageService.cs
+new file mode 100644
+index 0000000..6771448
+--- /dev/null
++++ b/BackEndCSC/WepServiceBackEnd/Services/BlobStorageService.cs
+@@ -0,0 +1,333 @@
++﻿using Azure.Storage.Blobs;
++using Azure.Storage.Blobs.Models;
++using Azure.Storage.Sas;
++using WebServiceBackEnd.BE.CM;
++using WebServiceBackEnd.DA.CM;
++
++namespace WebServiceBackEnd.Services
++{
++    public class BlobStorageService
++    {
++        private readonly BlobServiceClient _blobServiceClient;
++        private readonly string _containerName;
++        private readonly MarcasDA _marcasDA;
++
++        public BlobStorageService(IConfiguration configuration, MarcasDA marcasDA)
++        {
++            var connectionString = configuration.GetConnectionString("AzureBlobStorage");
++            _blobServiceClient = new BlobServiceClient(connectionString);
++            _containerName = configuration["AzureBlobStorage:ContainerName"] ?? "marcas-archivos";
++            _marcasDA = marcasDA;
++
++            CreateContainerIfNotExists().Wait();
++        }
++
++        private async Task CreateContainerIfNotExists()
++        {
++            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++            await containerClient.CreateIfNotExistsAsync();
++        }
++
++        /// <summary>
++        /// Obtener ruta base: Cuadra/Nike_1/
++        /// </summary>
++        private async Task<string> ObtenerRutaBaseAsync(int marcaId)
++        {
++            var datos = await _marcasDA.ObtenerEmpresaYMarcaPorId(marcaId);
++
++            if (datos == null)
++                throw new Exception("Marca o empresa no encontrada");
++
++            return $"{datos.Value.EmpresaClave}/{datos.Value.MarcaNombre}_{marcaId}";
++        }
++
++        /// <summary>
++        /// Renombrar carpeta de marca si cambió el nombre
++        /// </summary>
++        public async Task RenombrarCarpetaMarcaAsync(int marcaId, string nombreAnterior)
++        {
++            try
++            {
++                var datos = await _marcasDA.ObtenerEmpresaYMarcaPorId(marcaId);
++
++                if (datos == null)
++                    throw new Exception("Marca no encontrada");
++
++                string rutaAnterior = $"{datos.Value.EmpresaClave}/{nombreAnterior}_{marcaId}";
++                string rutaNueva = $"{datos.Value.EmpresaClave}/{datos.Value.MarcaNombre}_{marcaId}";
++
++                // Si los nombres son iguales, no hacer nada
++                if (rutaAnterior == rutaNueva)
++                    return;
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++
++                // Listar todos los archivos de la ruta anterior
++                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: $"{rutaAnterior}/"))
++                {
++                    var blobAnterior = containerClient.GetBlobClient(blobItem.Name);
++
++                    // Nueva ruta del archivo
++                    var nuevaRuta = blobItem.Name.Replace(rutaAnterior, rutaNueva);
++                    var blobNuevo = containerClient.GetBlobClient(nuevaRuta);
++
++                    // Copiar archivo a nueva ubicación
++                    await blobNuevo.StartCopyFromUriAsync(blobAnterior.Uri);
++
++                    // Esperar a que termine la copia
++                    var propiedades = await blobNuevo.GetPropertiesAsync();
++                    while (propiedades.Value.CopyStatus == CopyStatus.Pending)
++                    {
++                        await Task.Delay(100);
++                        propiedades = await blobNuevo.GetPropertiesAsync();
++                    }
++
++                    // Eliminar archivo anterior
++                    await blobAnterior.DeleteIfExistsAsync();
++                }
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al renombrar carpeta de marca: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Subir imagen de diseño (logo)
++        /// Ruta: Cuadra/Nike_1/diseno/guid.jpg
++        /// </summary>
++        public async Task<string> UploadImagenDisenoAsync(int marcaId, IFormFile file)
++        {
++            try
++            {
++                string rutaBase = await ObtenerRutaBaseAsync(marcaId);
++
++                await DeleteArchivosTipo(rutaBase, "diseno");
++
++                var fileName = $"{rutaBase}/diseno/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var blobClient = containerClient.GetBlobClient(fileName);
++
++                using (var stream = file.OpenReadStream())
++                {
++                    await blobClient.UploadAsync(stream, new BlobHttpHeaders
++                    {
++                        ContentType = file.ContentType
++                    });
++                }
++
++                return GenerateSasUrl(blobClient);
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al subir imagen de diseño: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Subir archivo general
++        /// Ruta: Cuadra/Nike_1/Archivos/guid.pdf
++        /// </summary>
++        public async Task<string> UploadFileAsync(int marcaId, IFormFile file, string tipoArchivo = "imagen")
++        {
++            try
++            {
++                string rutaBase = await ObtenerRutaBaseAsync(marcaId);
++
++                var fileName = $"{rutaBase}/Archivos/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var blobClient = containerClient.GetBlobClient(fileName);
++
++                using (var stream = file.OpenReadStream())
++                {
++                    await blobClient.UploadAsync(stream, new BlobHttpHeaders
++                    {
++                        ContentType = file.ContentType
++                    });
++                }
++
++                return GenerateSasUrl(blobClient);
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al subir archivo: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Listar todos los archivos de una marca
++        /// </summary>
++        public async Task<List<ArchivoMarcaBE>> ListarArchivosAsync(int marcaId)
++        {
++            try
++            {
++                var archivos = new List<ArchivoMarcaBE>();
++                string rutaBase = await ObtenerRutaBaseAsync(marcaId);
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var prefix = $"{rutaBase}/Archivos/"; // Cambiado para solo buscar en carpeta Archivos
++
++                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix))
++                {
++                    var blobClient = containerClient.GetBlobClient(blobItem.Name);
++                    var properties = await blobClient.GetPropertiesAsync();
++
++                    var pathParts = blobItem.Name.Split('/');
++                    var nombreArchivo = pathParts.Length > 3 ? pathParts[3] : blobItem.Name;
++
++                    archivos.Add(new ArchivoMarcaBE
++                    {
++                        Nombre = nombreArchivo,
++                        Url = GenerateSasUrl(blobClient),
++                        TipoArchivo = "Archivos",
++                        ContentType = properties.Value.ContentType,
++                        Tamaño = properties.Value.ContentLength,
++                        FechaSubida = properties.Value.CreatedOn.DateTime
++                    });
++                }
++
++                return archivos;
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al listar archivos: {ex.Message}");
++            }
++        }
++        /// <summary>
++        /// Obtener URL de imagen de diseño
++        /// </summary>
++        public async Task<string?> ObtenerImagenDisenoAsync(int marcaId)
++        {
++            try
++            {
++                string rutaBase = await ObtenerRutaBaseAsync(marcaId);
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var prefix = $"{rutaBase}/diseno/";
++
++                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix))
++                {
++                    var blobClient = containerClient.GetBlobClient(blobItem.Name);
++                    return GenerateSasUrl(blobClient);
++                }
++
++                return null;
++            }
++            catch (Exception)
++            {
++                return null;
++            }
++        }
++
++        /// <summary>
++        /// Eliminar archivo por URL
++        /// </summary>
++        public async Task<bool> DeleteFileAsync(string fileUrl)
++        {
++            try
++            {
++                // Separar la URL base del SAS token
++                var urlSinToken = fileUrl.Split('?')[0];
++                var uri = new Uri(urlSinToken);
++
++                var segments = uri.AbsolutePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
++
++                
++                var blobName = string.Join("/", segments.Skip(1));
++
++                
++                blobName = Uri.UnescapeDataString(blobName);
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var blobClient = containerClient.GetBlobClient(blobName);
++
++                
++                var existe = await blobClient.ExistsAsync();
++
++                if (!existe)
++                {
++                    throw new Exception($"El archivo no existe en Azure Storage. Ruta: {blobName}");
++                }
++
++                return await blobClient.DeleteIfExistsAsync();
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al eliminar archivo: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Eliminar archivos de un tipo específico
++        /// </summary>
++        private async Task DeleteArchivosTipo(string rutaBase, string tipoArchivo)
++        {
++            try
++            {
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var prefix = $"{rutaBase}/{tipoArchivo}/";
++
++                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix))
++                {
++                    var blobClient = containerClient.GetBlobClient(blobItem.Name);
++                    await blobClient.DeleteIfExistsAsync();
++                }
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al eliminar archivos de tipo {tipoArchivo}: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Eliminar TODOS los archivos de una marca
++        /// </summary>
++        public async Task<int> DeleteAllFilesFromMarcaAsync(int marcaId)
++        {
++            try
++            {
++                string rutaBase = await ObtenerRutaBaseAsync(marcaId);
++
++                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
++                var prefix = $"{rutaBase}/";
++                int deletedCount = 0;
++
++                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix))
++                {
++                    var blobClient = containerClient.GetBlobClient(blobItem.Name);
++                    if (await blobClient.DeleteIfExistsAsync())
++                    {
++                        deletedCount++;
++                    }
++                }
++
++                return deletedCount;
++            }
++            catch (Exception ex)
++            {
++                throw new Exception($"Error al eliminar archivos de la marca: {ex.Message}");
++            }
++        }
++
++        /// <summary>
++        /// Generar URL con SAS Token
++        /// </summary>
++        private string GenerateSasUrl(BlobClient blobClient)
++        {
++            var sasBuilder = new BlobSasBuilder
++            {
++                BlobContainerName = _containerName,
++                BlobName = blobClient.Name,
++                Resource = "b",
++                ExpiresOn = DateTimeOffset.UtcNow.AddYears(1)
++            };
++
++            sasBuilder.SetPermissions(BlobSasPermissions.Read);
++
++            var sasUri = blobClient.GenerateSasUri(sasBuilder);
++            return sasUri.ToString();
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/BackEndCSC/WepServiceBackEnd/SwaggerFileOperationFilter.cs b/BackEndCSC/WepServiceBackEnd/SwaggerFileOperationFilter.cs
+new file mode 100644
+index 0000000..fb293c2
+--- /dev/null
++++ b/BackEndCSC/WepServiceBackEnd/SwaggerFileOperationFilter.cs
+@@ -0,0 +1,69 @@
++﻿using Microsoft.OpenApi.Models;
++using Swashbuckle.AspNetCore.SwaggerGen;
++using Microsoft.AspNetCore.Mvc.ApiExplorer;
++
++namespace WebServiceBackEnd
++{
++    public class SwaggerFileOperationFilter : IOperationFilter
++    {
++        public void Apply(OpenApiOperation operation, OperationFilterContext context)
++        {
++            var hasFormFile = context.ApiDescription.ParameterDescriptions
++                .Any(p => p.Type == typeof(IFormFile) || p.Type == typeof(IFormFile[]));
++
++            if (!hasFormFile)
++                return;
++
++            operation.RequestBody = new OpenApiRequestBody
++            {
++                Content = new Dictionary<string, OpenApiMediaType>
++                {
++                    ["multipart/form-data"] = new OpenApiMediaType
++                    {
++                        Schema = GenerateSchema(context.ApiDescription.ParameterDescriptions)
++                    }
++                }
++            };
++        }
++
++        private OpenApiSchema GenerateSchema(IEnumerable<ApiParameterDescription> parameterDescriptions)
++        {
++            var schema = new OpenApiSchema
++            {
++                Type = "object",
++                Properties = new Dictionary<string, OpenApiSchema>(),
++                Required = new HashSet<string>()
++            };
++
++            foreach (var param in parameterDescriptions)
++            {
++                // Ignorar parámetros de ruta
++                if (param.Source?.Id == "Path")
++                    continue;
++
++                if (param.Type == typeof(IFormFile) || param.Type == typeof(IFormFile[]))
++                {
++                    schema.Properties.Add(param.Name, new OpenApiSchema
++                    {
++                        Type = "string",
++                        Format = "binary"
++                    });
++
++                    if (param.IsRequired)
++                    {
++                        schema.Required.Add(param.Name);
++                    }
++                }
++                else if (param.Source?.Id == "Form")
++                {
++                    schema.Properties.Add(param.Name, new OpenApiSchema
++                    {
++                        Type = "string"
++                    });
++                }
++            }
++
++            return schema;
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj b/BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj
+index c0c4901..b7df5db 100644
+--- a/BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj
++++ b/BackEndCSC/WepServiceBackEnd/WebServiceBackEnd.csproj
+@@ -7,6 +7,7 @@
+   </PropertyGroup>
+ 
+   <ItemGroup>
++    <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
+     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
+     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+diff --git a/FrontEndCSC/src/components/CM/MarcasTable.jsx b/FrontEndCSC/src/components/CM/MarcasTable.jsx
+index 993d01f..658285a 100644
+--- a/FrontEndCSC/src/components/CM/MarcasTable.jsx
++++ b/FrontEndCSC/src/components/CM/MarcasTable.jsx
+@@ -670,8 +670,24 @@ function MarcasTable({
+                     )}
+                   </td>
+                   <td className="px-6 py-4">
+-                    <div className="w-16 h-16 rounded-lg border-2 border-stone-200 bg-stone-50 flex items-center justify-center">
+-                      <FileText className="w-6 h-6 text-stone-400" />
++                    <div className="w-16 h-16 rounded-lg border-2 border-stone-200 bg-stone-50 flex items-center justify-center overflow-hidden">
++                      {marca.Marc_Diseno ? (
++                        <img
++                          src={marca.Marc_Diseno}
++                          alt={marca.Marc_Marca || "Diseño"}
++                          className="w-full h-full object-cover"
++                          onError={(e) => {
++                            e.target.style.display = "none";
++                            e.target.nextSibling.style.display = "flex";
++                          }}
++                        />
++                      ) : null}
++                      <FileText
++                        className="w-6 h-6 text-stone-400"
++                        style={{
++                          display: marca.Marc_Diseno ? "none" : "block",
++                        }}
++                      />
+                     </div>
+                   </td>
+                   <td className="px-6 py-4">
+-- 
+2.51.1.windows.1
+
