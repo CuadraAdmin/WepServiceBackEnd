@@ -1,6 +1,8 @@
-import { X, Save } from "lucide-react";
+import { X, Save, Upload, Trash2, Image as ImageIcon } from "lucide-react";
 import Alert from "../Globales/Alert";
 import Select from "../Globales/Select";
+import { useState, useEffect } from "react";
+import ApiConfig from "../Config/api.config";
 
 function ModalFormulario({
   show,
@@ -13,8 +15,113 @@ function ModalFormulario({
   error,
   setError,
   editingMarca,
+  token,
 }) {
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    setPreviewImage(formData.Marc_Diseno || null);
+  }, [formData.Marc_Diseno, show]);
+
   if (!show) return null;
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!editingMarca) {
+      setError("Debes guardar la marca antes de subir una imagen");
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith("image/")) {
+      setError("Solo se permiten archivos de imagen");
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("La imagen excede el tamaño máximo de 5MB");
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
+
+    setUploadingImage(true);
+    setError("");
+
+    try {
+      const formDataImg = new FormData();
+      formDataImg.append("file", file);
+
+      const response = await fetch(
+        ApiConfig.getUrl(
+          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload-diseno/${formData.Marc_Id}`
+        ),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formDataImg,
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setPreviewImage(data.url);
+        setFormData({ ...formData, Marc_Diseno: data.url });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al subir la imagen");
+        setTimeout(() => setError(""), 5000);
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!previewImage || !editingMarca) return;
+
+    if (!window.confirm("¿Estás seguro de eliminar esta imagen?")) return;
+
+    setUploadingImage(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        ApiConfig.getUrl(`${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/eliminar`),
+        {
+          method: "DELETE",
+          headers: {
+            ...ApiConfig.getHeaders(token),
+          },
+          body: JSON.stringify({ url: previewImage }),
+        }
+      );
+
+      if (response.ok) {
+        setPreviewImage(null);
+        setFormData({ ...formData, Marc_Diseno: "" });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al eliminar la imagen");
+        setTimeout(() => setError(""), 5000);
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -46,6 +153,81 @@ function ModalFormulario({
         </div>
 
         <form onSubmit={onSubmit} className="p-8 space-y-6">
+          {/* SECCIÓN DE IMAGEN DE DISEÑO - Solo visible en modo edición */}
+          {editingMarca && (
+            <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border-2 border-stone-200">
+              <label className="text-sm font-bold text-stone-700 mb-3 block">
+                Imagen de Diseño
+              </label>
+
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                {/* Preview de imagen */}
+                <div className="w-full md:w-48 h-48 rounded-xl border-2 border-stone-300 bg-white flex items-center justify-center overflow-hidden">
+                  {previewImage ? (
+                    <img
+                      src={previewImage}
+                      alt="Diseño de marca"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="flex flex-col items-center gap-2 text-stone-400"
+                    style={{ display: previewImage ? "none" : "flex" }}
+                  >
+                    <ImageIcon className="w-12 h-12" />
+                    <span className="text-xs">Sin imagen</span>
+                  </div>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex-1 flex flex-col gap-3">
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      disabled={uploadingImage}
+                    />
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50">
+                      {uploadingImage ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Subiendo...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5" />
+                          {previewImage ? "Cambiar Imagen" : "Subir Imagen"}
+                        </>
+                      )}
+                    </div>
+                  </label>
+
+                  {previewImage && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteImage}
+                      disabled={uploadingImage}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all disabled:opacity-50"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      Eliminar Imagen
+                    </button>
+                  )}
+
+                  <p className="text-xs text-stone-600 mt-2">
+                    Formatos: JPG, PNG, GIF. Máximo 5MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
             {/* EMPRESA - OBLIGATORIO */}
             <div className="md:col-span-2">
@@ -146,19 +328,8 @@ function ModalFormulario({
               />
             </div>
 
-            {/* DISEÑO */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">Diseño</label>
-              <input
-                type="text"
-                value={formData.Marc_Diseno}
-                onChange={(e) =>
-                  setFormData({ ...formData, Marc_Diseno: e.target.value })
-                }
-                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                placeholder="Diseño"
-              />
-            </div>
+            {/* DISEÑO - Campo oculto, se maneja con imagen */}
+            <input type="hidden" value={formData.Marc_Diseno} />
 
             {/* CLASE */}
             <div className="space-y-2">
