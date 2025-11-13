@@ -109,12 +109,19 @@ namespace WebServiceBackEnd.Services
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(fileName);
 
+                var metadata = new Dictionary<string, string>
+                {
+                    { "nombreoriginal", file.FileName }
+                };
+
                 using (var stream = file.OpenReadStream())
                 {
                     await blobClient.UploadAsync(stream, new BlobHttpHeaders
                     {
                         ContentType = file.ContentType
                     });
+
+                    await blobClient.SetMetadataAsync(metadata);
                 }
 
                 return GenerateSasUrl(blobClient);
@@ -140,12 +147,19 @@ namespace WebServiceBackEnd.Services
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(fileName);
 
+                var metadata = new Dictionary<string, string>
+                {
+                    { "nombreoriginal", file.FileName }
+                };
+
                 using (var stream = file.OpenReadStream())
                 {
                     await blobClient.UploadAsync(stream, new BlobHttpHeaders
                     {
                         ContentType = file.ContentType
                     });
+
+                    await blobClient.SetMetadataAsync(metadata);
                 }
 
                 return GenerateSasUrl(blobClient);
@@ -167,19 +181,27 @@ namespace WebServiceBackEnd.Services
                 string rutaBase = await ObtenerRutaBaseAsync(marcaId);
 
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-                var prefix = $"{rutaBase}/Archivos/"; // Cambiado para solo buscar en carpeta Archivos
+                var prefix = $"{rutaBase}/Archivos/";
 
-                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix))
+                await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix, traits: BlobTraits.Metadata))
                 {
                     var blobClient = containerClient.GetBlobClient(blobItem.Name);
                     var properties = await blobClient.GetPropertiesAsync();
 
-                    var pathParts = blobItem.Name.Split('/');
-                    var nombreArchivo = pathParts.Length > 3 ? pathParts[3] : blobItem.Name;
+                    string nombreOriginal = "archivo";
+                    if (blobItem.Metadata != null && blobItem.Metadata.ContainsKey("nombreoriginal"))
+                    {
+                        nombreOriginal = blobItem.Metadata["nombreoriginal"];
+                    }
+                    else
+                    {
+                        var pathParts = blobItem.Name.Split('/');
+                        nombreOriginal = pathParts.Length > 3 ? pathParts[3] : blobItem.Name;
+                    }
 
                     archivos.Add(new ArchivoMarcaBE
                     {
-                        Nombre = nombreArchivo,
+                        Nombre = nombreOriginal, 
                         Url = GenerateSasUrl(blobClient),
                         TipoArchivo = "Archivos",
                         ContentType = properties.Value.ContentType,
