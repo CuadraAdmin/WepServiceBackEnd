@@ -653,6 +653,7 @@ function Marcas({ token, userData }) {
         error={error}
         setError={setError}
         editingMarca={editingMarca}
+        token={token}
       />
 
       {/* Modal Desactivar */}
@@ -683,9 +684,11 @@ function Marcas({ token, userData }) {
       {showFilesModal && selectedMarca && (
         <MarcasFiles
           marca={selectedMarca}
+          token={token}
           onClose={() => {
             setShowFilesModal(false);
             setSelectedMarca(null);
+            cargarMarcas();
           }}
         />
       )}

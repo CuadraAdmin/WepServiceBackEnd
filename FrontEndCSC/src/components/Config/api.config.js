@@ -52,6 +52,7 @@ class ApiConfig {
   // Endpoints de Marcas
   static ENDPOINTSMARCA = {
     MARCAS: "/api/Marcas",
+    ARCHIVOS: "/api/MarcasArchivos",
   };
 
   // Endpoints de Empresas
@@ -67,6 +68,20 @@ class ApiConfig {
     const headers = {
       "Content-Type": "application/json",
     };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Headers para multipart/form-data (sin Content-Type)
+   * El navegador lo establece automáticamente con el boundary correcto
+   */
+  static getMultipartHeaders(token = null) {
+    const headers = {};
 
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
