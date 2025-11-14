@@ -56,33 +56,26 @@ namespace WebServiceBackEnd.Services
                 string rutaAnterior = $"{datos.Value.EmpresaClave}/{nombreAnterior}_{marcaId}";
                 string rutaNueva = $"{datos.Value.EmpresaClave}/{datos.Value.MarcaNombre}_{marcaId}";
 
-                // Si los nombres son iguales, no hacer nada
                 if (rutaAnterior == rutaNueva)
                     return;
 
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
 
-                // Listar todos los archivos de la ruta anterior
                 await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: $"{rutaAnterior}/"))
                 {
                     var blobAnterior = containerClient.GetBlobClient(blobItem.Name);
 
-                    // Nueva ruta del archivo
                     var nuevaRuta = blobItem.Name.Replace(rutaAnterior, rutaNueva);
                     var blobNuevo = containerClient.GetBlobClient(nuevaRuta);
 
-                    // Copiar archivo a nueva ubicación
                     await blobNuevo.StartCopyFromUriAsync(blobAnterior.Uri);
 
-                    // Esperar a que termine la copia
                     var propiedades = await blobNuevo.GetPropertiesAsync();
                     while (propiedades.Value.CopyStatus == CopyStatus.Pending)
                     {
                         await Task.Delay(100);
                         propiedades = await blobNuevo.GetPropertiesAsync();
                     }
-
-                    // Eliminar archivo anterior
                     await blobAnterior.DeleteIfExistsAsync();
                 }
             }
