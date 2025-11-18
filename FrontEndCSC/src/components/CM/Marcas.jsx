@@ -147,7 +147,7 @@ function Marcas({ token, userData }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, imageHandlers) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -175,21 +175,52 @@ function Marcas({ token, userData }) {
       };
 
       let response;
+      let marcaId;
       if (editingMarca) {
         response = await ApiService.put(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${formData.Marc_Id}`,
           dataToSend,
           token
         );
+        marcaId = formData.Marc_Id;
       } else {
+        // CREAR MARCA
         response = await ApiService.post(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear`,
           dataToSend,
           token
         );
+
+        if (response.ok) {
+          const result = await response.json();
+          marcaId = result.id || result.marcaId || result.Marc_Id;
+        }
       }
 
       if (response.ok) {
+        if (imageHandlers && imageHandlers.hasImageChanges) {
+          try {
+            if (imageHandlers.deleteImage) {
+              await imageHandlers.deleteImage();
+            }
+
+            if (imageHandlers.uploadImage) {
+              const imageUrl = await imageHandlers.uploadImage(marcaId);
+              if (imageUrl) {
+                await ApiService.put(
+                  `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${marcaId}`,
+                  { ...dataToSend, Marc_Id: marcaId, Marc_Diseno: imageUrl },
+                  token
+                );
+              }
+            }
+          } catch (imageError) {
+            console.error("Error al procesar imagen:", imageError);
+            setError("Marca guardada pero hubo un error con la imagen");
+            setTimeout(() => setError(""), 8000);
+          }
+        }
+
         setSuccess(
           editingMarca
             ? "MARCA ACTUALIZADA EXITOSAMENTE"

@@ -17,49 +17,60 @@ function ModalFormulario({
   editingMarca,
   token,
 }) {
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageToDelete, setImageToDelete] = useState(false);
 
   useEffect(() => {
     setPreviewImage(formData.Marc_Diseno || null);
+    setImageFile(null);
+    setImageToDelete(false);
   }, [formData.Marc_Diseno, show]);
 
   if (!show) return null;
 
-  const handleImageUpload = async (e) => {
+  const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!editingMarca) {
-      setError("Debes guardar la marca antes de subir una imagen");
-      setTimeout(() => setError(""), 5000);
-      return;
-    }
-
-    // Validar tipo de archivo
     if (!file.type.startsWith("image/")) {
       setError("Solo se permiten archivos de imagen");
       setTimeout(() => setError(""), 5000);
       return;
     }
 
-    // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError("La imagen excede el tamaño máximo de 5MB");
       setTimeout(() => setError(""), 5000);
       return;
     }
 
-    setUploadingImage(true);
-    setError("");
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result);
+      setImageFile(file);
+      setImageToDelete(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteImage = () => {
+    if (!window.confirm("¿Estás seguro de eliminar esta imagen?")) return;
+    setPreviewImage(null);
+    setImageFile(null);
+    setImageToDelete(true);
+  };
+
+  const uploadImageAfterSave = async (marcaId) => {
+    if (!imageFile) return null;
 
     try {
       const formDataImg = new FormData();
-      formDataImg.append("file", file);
+      formDataImg.append("file", imageFile);
 
       const response = await fetch(
         ApiConfig.getUrl(
-          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload-diseno/${formData.Marc_Id}`
+          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload-diseno/${marcaId}`
         ),
         {
           method: "POST",
@@ -72,28 +83,17 @@ function ModalFormulario({
 
       if (response.ok) {
         const data = await response.json();
-        setPreviewImage(data.url);
-        setFormData({ ...formData, Marc_Diseno: data.url });
+        return data.url;
       } else {
-        const errorData = await response.json();
-        setError(errorData.mensaje || "Error al subir la imagen");
-        setTimeout(() => setError(""), 5000);
+        throw new Error("Error al subir la imagen");
       }
     } catch (error) {
-      setError("Error de conexión: " + error.message);
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setUploadingImage(false);
+      throw error;
     }
   };
 
-  const handleDeleteImage = async () => {
-    if (!previewImage || !editingMarca) return;
-
-    if (!window.confirm("¿Estás seguro de eliminar esta imagen?")) return;
-
-    setUploadingImage(true);
-    setError("");
+  const deleteImageIfNeeded = async () => {
+    if (!imageToDelete || !formData.Marc_Diseno) return;
 
     try {
       const response = await fetch(
@@ -103,24 +103,25 @@ function ModalFormulario({
           headers: {
             ...ApiConfig.getHeaders(token),
           },
-          body: JSON.stringify({ url: previewImage }),
+          body: JSON.stringify({ url: formData.Marc_Diseno }),
         }
       );
 
-      if (response.ok) {
-        setPreviewImage(null);
-        setFormData({ ...formData, Marc_Diseno: "" });
-      } else {
-        const errorData = await response.json();
-        setError(errorData.mensaje || "Error al eliminar la imagen");
-        setTimeout(() => setError(""), 5000);
+      if (!response.ok) {
+        console.error("Error al eliminar imagen anterior");
       }
     } catch (error) {
-      setError("Error de conexión: " + error.message);
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setUploadingImage(false);
+      console.error("Error al eliminar imagen:", error);
     }
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    await onSubmit(e, {
+      uploadImage: uploadImageAfterSave,
+      deleteImage: deleteImageIfNeeded,
+      hasImageChanges: imageFile !== null || imageToDelete,
+    });
   };
 
   return (
@@ -152,81 +153,66 @@ function ModalFormulario({
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="p-8 space-y-6">
-          {/* SECCIÓN DE IMAGEN DE DISEÑO - Solo visible en modo edición */}
-          {editingMarca && (
-            <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border-2 border-stone-200">
-              <label className="text-sm font-bold text-stone-700 mb-3 block">
-                Imagen de Diseño
-              </label>
+        <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
+          {/* IMAGEN DE DISEÑO */}
+          <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border-2 border-stone-200">
+            <label className="text-sm font-bold text-stone-700 mb-3 block">
+              Imagen de Diseño <span className="text-red-600">*</span>
+            </label>
 
-              <div className="flex flex-col md:flex-row gap-4 items-start">
-                {/* Preview de imagen */}
-                <div className="w-full md:w-48 h-48 rounded-xl border-2 border-stone-300 bg-white flex items-center justify-center overflow-hidden">
-                  {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="Diseño de marca"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
-                    />
-                  ) : null}
-                  <div
-                    className="flex flex-col items-center gap-2 text-stone-400"
-                    style={{ display: previewImage ? "none" : "flex" }}
-                  >
+            <div className="flex flex-col md:flex-row gap-4 items-start">
+              <div className="w-full md:w-48 h-48 rounded-xl border-2 border-stone-300 bg-white flex items-center justify-center overflow-hidden">
+                {previewImage ? (
+                  <img
+                    src={previewImage}
+                    alt="Diseño de marca"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-stone-400">
                     <ImageIcon className="w-12 h-12" />
                     <span className="text-xs">Sin imagen</span>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Botones de acción */}
-                <div className="flex-1 flex flex-col gap-3">
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={uploadingImage}
-                    />
-                    <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50">
-                      {uploadingImage ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Subiendo...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5" />
-                          {previewImage ? "Cambiar Imagen" : "Subir Imagen"}
-                        </>
-                      )}
-                    </div>
-                  </label>
+              <div className="flex-1 flex flex-col gap-3">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                    required={!previewImage && !editingMarca}
+                  />
+                  <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg">
+                    <Upload className="w-5 h-5" />
+                    {previewImage ? "Cambiar Imagen" : "Subir Imagen"}
+                  </div>
+                </label>
 
-                  {previewImage && (
-                    <button
-                      type="button"
-                      onClick={handleDeleteImage}
-                      disabled={uploadingImage}
-                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all disabled:opacity-50"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                      Eliminar Imagen
-                    </button>
+                {previewImage && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteImage}
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    Eliminar Imagen
+                  </button>
+                )}
+
+                <p className="text-xs text-stone-600 mt-2">
+                  Formatos: JPG, PNG, GIF. Máximo 5MB.
+                  {!editingMarca && (
+                    <span className="block text-amber-600 font-semibold mt-1">
+                      La imagen se subirá al guardar la marca
+                    </span>
                   )}
-
-                  <p className="text-xs text-stone-600 mt-2">
-                    Formatos: JPG, PNG, GIF. Máximo 5MB.
-                  </p>
-                </div>
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* EMPRESA - OBLIGATORIO */}
@@ -257,26 +243,38 @@ function ModalFormulario({
                     Marc_Consecutivo: e.target.value,
                   })
                 }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Consecutivo: e.target.value.trim(),
+                  })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Consecutivo"
               />
             </div>
 
-            {/* PAÍS */}
+            {/* PAÍS - OBLIGATORIO */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">País</label>
+              <label className="text-sm font-bold text-stone-700">
+                País <span className="text-red-600">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.Marc_Pais}
                 onChange={(e) =>
                   setFormData({ ...formData, Marc_Pais: e.target.value })
                 }
+                onBlur={(e) =>
+                  setFormData({ ...formData, Marc_Pais: e.target.value.trim() })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                placeholder="Pais"
+                placeholder="País"
+                required
               />
             </div>
 
-            {/* SOLICITUD NACIONAL (EXPEDIENTE) */}
+            {/* SOLICITUD NACIONAL */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
                 Solicitud Nacional (Expediente)
@@ -290,15 +288,21 @@ function ModalFormulario({
                     Marc_SolicitudNacional: e.target.value,
                   })
                 }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_SolicitudNacional: e.target.value.trim(),
+                  })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Expediente"
               />
             </div>
 
-            {/* REGISTRO */}
+            {/* REGISTRO - OBLIGATORIO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Registro
+                Registro <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -309,46 +313,76 @@ function ModalFormulario({
                     Marc_Registro: e.target.value,
                   })
                 }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Registro: e.target.value.trim(),
+                  })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Registro"
+                required
               />
             </div>
 
-            {/* MARCA */}
+            {/* MARCA - OBLIGATORIO */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">Marca</label>
+              <label className="text-sm font-bold text-stone-700">
+                Marca <span className="text-red-600">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.Marc_Marca}
                 onChange={(e) =>
-                  setFormData({ ...formData, Marc_Marca: e.target.value })
+                  setFormData({
+                    ...formData,
+                    Marc_Marca: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Marca: e.target.value.trim(),
+                  })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Nombre de la marca"
+                required
               />
             </div>
 
-            {/* DISEÑO - Campo oculto, se maneja con imagen */}
             <input type="hidden" value={formData.Marc_Diseno} />
 
-            {/* CLASE */}
+            {/* CLASE - OBLIGATORIO */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">Clase</label>
+              <label className="text-sm font-bold text-stone-700">
+                Clase <span className="text-red-600">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.Marc_Clase}
                 onChange={(e) =>
-                  setFormData({ ...formData, Marc_Clase: e.target.value })
+                  setFormData({
+                    ...formData,
+                    Marc_Clase: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Clase: e.target.value.trim(),
+                  })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Clase"
+                required
               />
             </div>
 
-            {/* TITULAR - 2 columnas */}
+            {/* TITULAR - OBLIGATORIO */}
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-bold text-stone-700">
-                Titular
+                Titular <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -359,8 +393,15 @@ function ModalFormulario({
                     Marc_Titular: e.target.value,
                   })
                 }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Titular: e.target.value.trim(),
+                  })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Titular"
+                required
               />
             </div>
 
@@ -371,7 +412,16 @@ function ModalFormulario({
                 type="text"
                 value={formData.Marc_Figura}
                 onChange={(e) =>
-                  setFormData({ ...formData, Marc_Figura: e.target.value })
+                  setFormData({
+                    ...formData,
+                    Marc_Figura: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Figura: e.target.value.trim(),
+                  })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Figura"
@@ -385,7 +435,16 @@ function ModalFormulario({
                 type="text"
                 value={formData.Marc_Titulo}
                 onChange={(e) =>
-                  setFormData({ ...formData, Marc_Titulo: e.target.value })
+                  setFormData({
+                    ...formData,
+                    Marc_Titulo: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Titulo: e.target.value.trim(),
+                  })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Título"
@@ -401,6 +460,9 @@ function ModalFormulario({
                 onChange={(e) =>
                   setFormData({ ...formData, Marc_Tipo: e.target.value })
                 }
+                onBlur={(e) =>
+                  setFormData({ ...formData, Marc_Tipo: e.target.value.trim() })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Tipo"
               />
@@ -415,6 +477,9 @@ function ModalFormulario({
                 onChange={(e) =>
                   setFormData({ ...formData, Marc_Rama: e.target.value })
                 }
+                onBlur={(e) =>
+                  setFormData({ ...formData, Marc_Rama: e.target.value.trim() })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Rama"
               />
@@ -427,14 +492,23 @@ function ModalFormulario({
                 type="text"
                 value={formData.Marc_Autor}
                 onChange={(e) =>
-                  setFormData({ ...formData, Marc_Autor: e.target.value })
+                  setFormData({
+                    ...formData,
+                    Marc_Autor: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Autor: e.target.value.trim(),
+                  })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Autor"
               />
             </div>
 
-            {/* OBSERVACIONES - 2 columnas */}
+            {/* OBSERVACIONES */}
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-bold text-stone-700">
                 Observaciones
@@ -445,6 +519,12 @@ function ModalFormulario({
                   setFormData({
                     ...formData,
                     Marc_Observaciones: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_Observaciones: e.target.value.trim(),
                   })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white resize-none"
@@ -502,10 +582,10 @@ function ModalFormulario({
               />
             </div>
 
-            {/* RENOVACION */}
+            {/* RENOVACION - OBLIGATORIO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Renovación
+                Renovación <span className="text-red-600">*</span>
               </label>
               <input
                 type="date"
@@ -517,6 +597,7 @@ function ModalFormulario({
                   })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+                required
               />
             </div>
 
@@ -537,7 +618,6 @@ function ModalFormulario({
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
               />
             </div>
-
             {/* PRÓXIMA TAREA */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
@@ -552,12 +632,17 @@ function ModalFormulario({
                     Marc_ProximaTarea: e.target.value,
                   })
                 }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_ProximaTarea: e.target.value.trim(),
+                  })
+                }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Próxima tarea"
               />
             </div>
-
-            {/* FECHA DE SEGUIMIENTO */}
+            {/* FECHA SEGUIMIENTO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
                 Fecha de Seguimiento
@@ -575,7 +660,7 @@ function ModalFormulario({
               />
             </div>
 
-            {/* FECHA DE AVISO */}
+            {/* FECHA AVISO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
                 Fecha de Aviso
@@ -594,7 +679,6 @@ function ModalFormulario({
             </div>
           </div>
 
-          {/* ALERTA DE ERROR DENTRO DEL MODAL */}
           {error && (
             <div className="mt-4">
               <Alert
