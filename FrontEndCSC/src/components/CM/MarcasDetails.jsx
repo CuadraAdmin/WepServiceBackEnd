@@ -5,6 +5,7 @@ import {
   Tag,
   ClipboardList,
   Building2,
+  Image as ImageIcon,
 } from "lucide-react";
 
 function MarcasDetails({ marca, onClose }) {
@@ -121,7 +122,7 @@ function MarcasDetails({ marca, onClose }) {
               </div>
             </div>
 
-            {/* Especificaciones del Producto */}
+            {/* Especificaciones del Producto CON DISEÑO */}
             <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200">
               <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200">
                 <div
@@ -137,40 +138,108 @@ function MarcasDetails({ marca, onClose }) {
                   Especificaciones del Producto
                 </h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-                <div className="lg:col-span-3">
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Marca
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Marca || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+
+              {/* Grid con diseño destacado */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Columna izquierda: Diseño */}
+                <div className="lg:col-span-1">
+                  <label className="text-xs font-bold text-stone-600 uppercase block mb-2">
                     Diseño
                   </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Diseno || "N/A"}
-                  </p>
+                  <div className="w-full aspect-square rounded-xl border-2 border-stone-200 bg-stone-50 flex items-center justify-center overflow-hidden shadow-sm">
+                    {marca.Marc_Diseno ? (
+                      <img
+                        src={marca.Marc_Diseno}
+                        alt={marca.Marc_Marca || "Diseño de marca"}
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="flex flex-col items-center justify-center gap-2 text-stone-400"
+                      style={{
+                        display: marca.Marc_Diseno ? "none" : "flex",
+                      }}
+                    >
+                      <ImageIcon className="w-12 h-12" />
+                      <span className="text-sm font-medium">Sin diseño</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Columna derecha: Información */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                      Marca
+                    </label>
+                    <p className="text-stone-900 font-medium">
+                      {marca.Marc_Marca || "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Clase
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Clase || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Figura
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Figura || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Tipo
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Tipo || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Título
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Titulo || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Rama
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Rama || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                        Autor
+                      </label>
+                      <p className="text-stone-900 font-medium">
+                        {marca.Marc_Autor || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Titular y Observaciones - Ancho completo */}
+              <div className="grid grid-cols-1 gap-4 mt-4 pt-4 border-t border-stone-200">
                 <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Clase
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Clase || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Figura
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Figura || "N/A"}
-                  </p>
-                </div>
-                <div className="lg:col-span-3">
                   <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
                     Titular
                   </label>
@@ -179,38 +248,6 @@ function MarcasDetails({ marca, onClose }) {
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Título
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Titulo || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Tipo
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Tipo || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Rama
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Rama || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Autor
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Autor || "N/A"}
-                  </p>
-                </div>
-                <div className="lg:col-span-2">
                   <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
                     Observaciones
                   </label>
