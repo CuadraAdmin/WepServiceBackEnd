@@ -122,7 +122,7 @@ function MarcasDetails({ marca, onClose }) {
               </div>
             </div>
 
-            {/* Especificaciones del Producto CON DISEÑO */}
+            {/* Especificaciones del Producto CON DISEÑO, TITULAR Y OBSERVACIONES */}
             <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200">
               <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200">
                 <div
@@ -234,26 +234,24 @@ function MarcasDetails({ marca, onClose }) {
                       </p>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Titular y Observaciones - Ancho completo */}
-              <div className="grid grid-cols-1 gap-4 mt-4 pt-4 border-t border-stone-200">
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Titular
-                  </label>
-                  <p className="text-stone-900 font-medium">
-                    {marca.Marc_Titular || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                    Observaciones
-                  </label>
-                  <p className="text-stone-900 font-medium break-words">
-                    {marca.Marc_Observaciones || "Sin observaciones"}
-                  </p>
+                  {/* TITULAR en la columna derecha */}
+                  <div className="pt-3 border-t border-stone-200">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                      Titular
+                    </label>
+                    <p className="text-stone-900 font-medium">
+                      {marca.Marc_Titular || "N/A"}
+                    </p>
+                  </div>
+                  {/* OBSERVACIONES en la columna derecha */}
+                  <div className="pt-3 border-t border-stone-200">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                      Observaciones
+                    </label>
+                    <p className="text-stone-900 font-medium break-words">
+                      {marca.Marc_Observaciones || "Sin observaciones"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -368,7 +366,7 @@ function MarcasDetails({ marca, onClose }) {
         <div className="p-6 border-t-2 border-stone-200 bg-white rounded-b-3xl shrink-0">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 text-white rounded-xl font-semibold shadow-lg"
+            className="w-full px-6 py-3 text-white rounded-xl font-semibold shadow-lg hover:scale-105 transition-all"
             style={{
               background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
             }}
