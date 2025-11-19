@@ -21,13 +21,14 @@ namespace WebServiceBackEnd.BP.CM
         {
             return await _marcaTareasDA.ObtenerPorId(id);
         }
-        public async Task<List<dynamic>> ListarActivos()
+        public async Task<List<dynamic>> ListarActivos(int idMarca)
         {
             var filtros = new MarcaTareasBE
             {
                 Accion = 1,
                 MarcTare_FiltroEstatus = true,
-                MarcTare_Estatus = true
+                MarcTare_Estatus = true,
+                Marc_Id=idMarca
             };
             return await _marcaTareasDA.ListarConFiltros(filtros);
         }

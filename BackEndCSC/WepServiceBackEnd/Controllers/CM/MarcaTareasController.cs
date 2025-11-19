@@ -31,12 +31,12 @@ namespace WebServiceBackEnd.Controllers.CM
             }
         }
 
-        [HttpGet("listar/activos")]
-        public async Task<IActionResult> ListarActivos()
+        [HttpGet("listar/activosPorMarca/{idMarca}")]
+        public async Task<IActionResult> ListarActivosPorMarca(int idMarca)
         {
             try
             {
-                var tareas = await _marcaTareasBP.ListarActivos();
+                var tareas = await _marcaTareasBP.ListarActivos(idMarca);
                 return Ok(tareas);
             }
             catch (Exception ex)
