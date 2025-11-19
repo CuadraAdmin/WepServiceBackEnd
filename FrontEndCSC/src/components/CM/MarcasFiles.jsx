@@ -29,8 +29,18 @@ function MarcasFiles({ marca, onClose, token }) {
     if (marca?.Marc_Id) {
       cargarArchivos();
     }
+    // Bloquear scroll del body
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [marca]);
-
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
   const cargarArchivos = async () => {
     setLoading(true);
     setError("");
