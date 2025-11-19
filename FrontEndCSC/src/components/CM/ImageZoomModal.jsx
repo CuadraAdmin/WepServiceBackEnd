@@ -52,22 +52,31 @@ function ImageZoomModal({ image, onClose }) {
         style={{ height: "85vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header del modal - Altura fija */}
+        {/* Header del modal - Responsive */}
         <div
-          className="p-4 rounded-t-2xl flex items-center justify-between flex-shrink-0"
+          className="p-4 rounded-t-2xl flex flex-col gap-3 flex-shrink-0"
           style={{
             background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
           }}
         >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Eye className="w-5 h-5 text-white flex-shrink-0" />
-            <h3 className="text-lg font-bold text-white truncate">
-              {image.nombre}
-            </h3>
+          {/* Primera fila: Título y botón cerrar */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Eye className="w-5 h-5 text-white flex-shrink-0" />
+              <h3 className="text-lg font-bold text-white truncate">
+                {image.nombre}
+              </h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
           </div>
 
-          {/* Controles de zoom y rotación */}
-          <div className="flex items-center gap-2 mr-4">
+          {/* Segunda fila: Controles de zoom y rotación */}
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
               onClick={() => setImageZoom(Math.max(0.5, imageZoom - 0.25))}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -100,13 +109,6 @@ function ImageZoomModal({ image, onClose }) {
               Restablecer
             </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
         </div>
 
         {/* Contenedor de imagen con tamaño fijo y scrol propio */}
