@@ -14,6 +14,7 @@ import { exportToExcel } from "./exportUtils";
 import ApiConfig from "../Config/api.config";
 import { usePermissions } from "../../hooks/usePermissions";
 import ApiService from "../../Services/ApiService";
+import MarcaTareasModal from "./MarcaTareasModal";
 
 function Marcas({ token, userData }) {
   const [marcas, setMarcas] = useState([]);
@@ -32,6 +33,7 @@ function Marcas({ token, userData }) {
   const [marcaToDelete, setMarcaToDelete] = useState(null);
   const [marcaToActivate, setMarcaToActivate] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [showTasksModal, setShowTasksModal] = useState(false);
 
   // Estado para filtros avanzados
   const [advancedFilters, setAdvancedFilters] = useState(null);
@@ -45,7 +47,10 @@ function Marcas({ token, userData }) {
     token,
     Usua_Id
   );
-
+  const handleViewTasks = (marca) => {
+    setSelectedMarca(marca);
+    setShowTasksModal(true);
+  };
   const extractErrorMessage = (errorMessage) => {
     if (!errorMessage) return "Error desconocido";
 
@@ -668,6 +673,7 @@ function Marcas({ token, userData }) {
               setShowDetailsModal(true);
             }}
             hasPermission={hasPermission}
+            onViewTasks={handleViewTasks}
           />
         )}
       </div>
@@ -730,6 +736,19 @@ function Marcas({ token, userData }) {
           marca={selectedMarca}
           onClose={() => {
             setShowDetailsModal(false);
+            setSelectedMarca(null);
+          }}
+        />
+      )}
+
+      {/* Modal Tareas */}
+      {showTasksModal && selectedMarca && (
+        <MarcaTareasModal
+          marca={selectedMarca}
+          token={token}
+          userData={userData}
+          onClose={() => {
+            setShowTasksModal(false);
             setSelectedMarca(null);
           }}
         />

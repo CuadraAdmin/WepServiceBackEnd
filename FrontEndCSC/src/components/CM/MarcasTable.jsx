@@ -11,7 +11,7 @@ import {
 import Badge from "../Globales/Badge";
 import ImageZoomModal from "./ImageZoomModal";
 import { useState, useMemo, useEffect, useRef } from "react";
-
+import { ListTodo } from "lucide-react";
 function MarcasTable({
   marcas,
   onEdit,
@@ -20,6 +20,7 @@ function MarcasTable({
   onViewFiles,
   onViewDetails,
   hasPermission,
+  onViewTasks,
 }) {
   const [showFilters, setShowFilters] = useState({});
   const [filters, setFilters] = useState({
@@ -764,6 +765,16 @@ function MarcasTable({
                     )}
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        {hasPermission("Marcas.GestionAcciones") && (
+                          <button
+                            onClick={() => onViewTasks(marca)}
+                            className="p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors"
+                            title="Ver Acciones"
+                          >
+                            <ListTodo className="w-5 h-5" />
+                          </button>
+                        )}
+
                         {hasPermission("Marcas.Detalles") && (
                           <button
                             onClick={() => onViewDetails(marca)}
