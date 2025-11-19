@@ -53,6 +53,7 @@ class ApiConfig {
   static ENDPOINTSMARCA = {
     MARCAS: "/api/Marcas",
     ARCHIVOS: "/api/MarcasArchivos",
+    TAREAS: "/api/MarcaTareas",
   };
 
   // Endpoints de Empresas
