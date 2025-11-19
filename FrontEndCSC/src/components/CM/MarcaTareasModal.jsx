@@ -40,6 +40,12 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     if (marca?.Marc_Id) {
       cargarTareas();
     }
+
+    // Bloquear scroll del body
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [marca]);
 
   const cargarTareas = async () => {

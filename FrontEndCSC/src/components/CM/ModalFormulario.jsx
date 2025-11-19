@@ -25,6 +25,14 @@ function ModalFormulario({
     setPreviewImage(formData.Marc_Diseno || null);
     setImageFile(null);
     setImageToDelete(false);
+
+    // Bloquear scroll del body
+    if (show) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [formData.Marc_Diseno, show]);
 
   if (!show) return null;

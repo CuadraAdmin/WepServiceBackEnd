@@ -7,8 +7,16 @@ import {
   Building2,
   Image as ImageIcon,
 } from "lucide-react";
+import { useEffect } from "react";
 
 function MarcasDetails({ marca, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("es-MX");

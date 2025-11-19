@@ -1,6 +1,16 @@
 import { AlertCircle, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 
 function ModalDesactivar({ show, onClose, onConfirm, marca, loading }) {
+  useEffect(() => {
+    if (show) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [show]);
+
   if (!show || !marca) return null;
 
   return (
