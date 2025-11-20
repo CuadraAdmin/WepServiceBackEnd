@@ -727,6 +727,7 @@ function Marcas({ token, userData }) {
             setSelectedMarca(null);
             cargarMarcas();
           }}
+          hasPermission={hasPermission}
         />
       )}
 
