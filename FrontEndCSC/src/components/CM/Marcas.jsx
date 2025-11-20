@@ -409,9 +409,7 @@ function Marcas({ token, userData }) {
     setTimeout(() => setSuccess(""), 4000);
   };
 
-  // Función para aplicar filtros avanzados
   const applyAdvancedFilters = (marca, filters) => {
-    // Filtro por empresas
     if (
       filters.empresas.length > 0 &&
       !filters.empresas.includes(marca.Empr_Nombre)
@@ -419,7 +417,6 @@ function Marcas({ token, userData }) {
       return false;
     }
 
-    // Filtro por marcas
     if (
       filters.marcas.length > 0 &&
       !filters.marcas.includes(marca.Marc_Marca)
@@ -427,7 +424,6 @@ function Marcas({ token, userData }) {
       return false;
     }
 
-    // Filtro por registros
     if (
       filters.registros.length > 0 &&
       !filters.registros.includes(marca.Marc_Registro)
@@ -435,7 +431,6 @@ function Marcas({ token, userData }) {
       return false;
     }
 
-    // Filtro por fecha específica (año, mes, día)
     if (filters.fechaAno || filters.fechaMes || filters.fechaDia) {
       if (!marca.Marc_Renovacion) return false;
 
@@ -464,30 +459,39 @@ function Marcas({ token, userData }) {
       }
     }
 
-    // Filtro por rango de fechas (tiene prioridad sobre fecha específica si ambos están presentes)
     if (filters.fechaRangoDesde || filters.fechaRangoHasta) {
       if (!marca.Marc_Renovacion) return false;
 
-      const fechaRenovacion = new Date(marca.Marc_Renovacion);
+      const fechaStr = marca.Marc_Renovacion.split("T")[0];
+      const [year, month, day] = fechaStr.split("-");
+      const fechaRenovacion = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day)
+      );
 
-      // Filtro "Desde"
       if (filters.fechaRangoDesde) {
-        const fechaDesde = new Date(filters.fechaRangoDesde);
-        // Resetear horas para comparar solo fechas
-        fechaDesde.setHours(0, 0, 0, 0);
-        fechaRenovacion.setHours(0, 0, 0, 0);
+        const [desdeYear, desdeMonth, desdeDay] =
+          filters.fechaRangoDesde.split("-");
+        const fechaDesde = new Date(
+          parseInt(desdeYear),
+          parseInt(desdeMonth) - 1,
+          parseInt(desdeDay)
+        );
 
         if (fechaRenovacion < fechaDesde) {
           return false;
         }
       }
 
-      // Filtro "Hasta"
       if (filters.fechaRangoHasta) {
-        const fechaHasta = new Date(filters.fechaRangoHasta);
-        // Resetear horas para comparar solo fechas
-        fechaHasta.setHours(23, 59, 59, 999);
-        fechaRenovacion.setHours(0, 0, 0, 0);
+        const [hastaYear, hastaMonth, hastaDay] =
+          filters.fechaRangoHasta.split("-");
+        const fechaHasta = new Date(
+          parseInt(hastaYear),
+          parseInt(hastaMonth) - 1,
+          parseInt(hastaDay)
+        );
 
         if (fechaRenovacion > fechaHasta) {
           return false;
