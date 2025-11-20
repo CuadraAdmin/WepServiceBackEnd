@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import ApiConfig from "../Config/api.config";
 
-function MarcasFiles({ marca, onClose, token }) {
+function MarcasFiles({ marca, onClose, token, hasPermission }) {
   const [archivos, setArchivos] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,18 +29,12 @@ function MarcasFiles({ marca, onClose, token }) {
     if (marca?.Marc_Id) {
       cargarArchivos();
     }
-    // Bloquear scroll del body
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [marca]);
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
+
   const cargarArchivos = async () => {
     setLoading(true);
     setError("");
@@ -119,6 +113,12 @@ function MarcasFiles({ marca, onClose, token }) {
   };
 
   const handlePreview = async (archivo) => {
+    if (!hasPermission("Marcas.Archivos.Visualizar")) {
+      setError("No tienes permisos para visualizar archivos");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     setPreviewLoading(true);
     setImageZoom(1);
     setImageRotation(0);
@@ -148,6 +148,12 @@ function MarcasFiles({ marca, onClose, token }) {
   };
 
   const handleFileUpload = async (e, tipoArchivo = "documento") => {
+    if (!hasPermission("Marcas.Archivos.Subir")) {
+      setError("No tienes permisos para subir archivos");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
@@ -211,6 +217,12 @@ function MarcasFiles({ marca, onClose, token }) {
   };
 
   const handleDelete = async (url, nombre) => {
+    if (!hasPermission("Marcas.Archivos.Eliminar")) {
+      setError("No tienes permisos para eliminar archivos");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     if (!window.confirm(`¿Estás seguro de eliminar "${nombre}"?`)) return;
 
     setError("");
@@ -239,6 +251,12 @@ function MarcasFiles({ marca, onClose, token }) {
   };
 
   const handleDownload = (url, nombre) => {
+    if (!hasPermission("Marcas.Archivos.Descargar")) {
+      setError("No tienes permisos para descargar archivos");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     const link = document.createElement("a");
     link.href = url;
     link.download = nombre || "archivo";
@@ -282,43 +300,45 @@ function MarcasFiles({ marca, onClose, token }) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="mb-6">
-              <label className="block w-full border-2 border-dashed border-stone-300 rounded-2xl p-8 hover:border-stone-400 transition-colors cursor-pointer bg-stone-50 hover:bg-stone-100">
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <div className="flex flex-col items-center gap-3">
-                  <div
-                    className="p-4 rounded-2xl shadow-lg"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.2) 100%)",
-                    }}
-                  >
-                    {uploading ? (
-                      <Loader2 className="w-8 h-8 text-stone-700 animate-spin" />
-                    ) : (
-                      <Upload className="w-8 h-8 text-stone-700" />
-                    )}
+            {hasPermission("Marcas.Archivos.Subir") && (
+              <div className="mb-6">
+                <label className="block w-full border-2 border-dashed border-stone-300 rounded-2xl p-8 hover:border-stone-400 transition-colors cursor-pointer bg-stone-50 hover:bg-stone-100">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                  <div className="flex flex-col items-center gap-3">
+                    <div
+                      className="p-4 rounded-2xl shadow-lg"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.2) 100%)",
+                      }}
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-8 h-8 text-stone-700 animate-spin" />
+                      ) : (
+                        <Upload className="w-8 h-8 text-stone-700" />
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-stone-900">
+                        {uploading
+                          ? "Subiendo archivos..."
+                          : "Hacer clic para seleccionar archivos"}
+                      </p>
+                      <p className="text-sm text-stone-600 mt-1">
+                        Formatos: PDF, Word, Excel, imágenes (Máx. 10MB por
+                        archivo)
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-stone-900">
-                      {uploading
-                        ? "Subiendo archivos..."
-                        : "Hacer clic para seleccionar archivos"}
-                    </p>
-                    <p className="text-sm text-stone-600 mt-1">
-                      Formatos: PDF, Word, Excel, imágenes (Máx. 10MB por
-                      archivo)
-                    </p>
-                  </div>
-                </div>
-              </label>
-            </div>
+                </label>
+              </div>
+            )}
 
             {/* Error Alert */}
             {error && (
@@ -365,7 +385,10 @@ function MarcasFiles({ marca, onClose, token }) {
                             background:
                               "linear-gradient(135deg, rgba(107, 83, 69, 0.1) 0%, rgba(139, 111, 71, 0.15) 100%)",
                           }}
-                          onClick={() => handlePreview(archivo)}
+                          onClick={() =>
+                            hasPermission("Marcas.Archivos.Visualizar") &&
+                            handlePreview(archivo)
+                          }
                         >
                           <div className="text-stone-700">
                             {getFileIcon(archivo.ContentType)}
@@ -374,7 +397,10 @@ function MarcasFiles({ marca, onClose, token }) {
 
                         <div
                           className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => handlePreview(archivo)}
+                          onClick={() =>
+                            hasPermission("Marcas.Archivos.Visualizar") &&
+                            handlePreview(archivo)
+                          }
                         >
                           <p className="font-semibold text-stone-900 truncate hover:text-stone-700">
                             {archivo.Nombre}
@@ -395,33 +421,38 @@ function MarcasFiles({ marca, onClose, token }) {
                         </div>
 
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {canPreview(archivo.ContentType) && (
+                          {canPreview(archivo.ContentType) &&
+                            hasPermission("Marcas.Archivos.Visualizar") && (
+                              <button
+                                onClick={() => handlePreview(archivo)}
+                                className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg transition-colors"
+                                title="Vista previa"
+                              >
+                                <Eye className="w-5 h-5" />
+                              </button>
+                            )}
+                          {hasPermission("Marcas.Archivos.Descargar") && (
                             <button
-                              onClick={() => handlePreview(archivo)}
-                              className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg transition-colors"
-                              title="Vista previa"
+                              onClick={() =>
+                                handleDownload(archivo.Url, archivo.Nombre)
+                              }
+                              className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                              title="Descargar"
                             >
-                              <Eye className="w-5 h-5" />
+                              <Download className="w-5 h-5" />
                             </button>
                           )}
-                          <button
-                            onClick={() =>
-                              handleDownload(archivo.Url, archivo.Nombre)
-                            }
-                            className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                            title="Descargar"
-                          >
-                            <Download className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDelete(archivo.Url, archivo.Nombre)
-                            }
-                            className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          {hasPermission("Marcas.Archivos.Eliminar") && (
+                            <button
+                              onClick={() =>
+                                handleDelete(archivo.Url, archivo.Nombre)
+                              }
+                              className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -533,16 +564,20 @@ function MarcasFiles({ marca, onClose, token }) {
                   <p className="text-stone-600 font-medium mb-2">
                     Vista previa no disponible para este tipo de archivo
                   </p>
-                  <button
-                    onClick={() => handleDownload(preview.url, preview.nombre)}
-                    className="px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 transition-all shadow-lg mt-4"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    }}
-                  >
-                    Descargar archivo
-                  </button>
+                  {hasPermission("Marcas.Archivos.Descargar") && (
+                    <button
+                      onClick={() =>
+                        handleDownload(preview.url, preview.nombre)
+                      }
+                      className="px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 transition-all shadow-lg mt-4"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                      }}
+                    >
+                      Descargar archivo
+                    </button>
+                  )}
                 </div>
               )}
             </div>
