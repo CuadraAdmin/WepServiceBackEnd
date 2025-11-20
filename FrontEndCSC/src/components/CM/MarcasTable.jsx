@@ -145,21 +145,45 @@ function MarcasTable({
       }
     }
 
+    // ✅ FILTRO DE FECHAS CORREGIDO
     if (filters.Marc_Renovacion_Min || filters.Marc_Renovacion_Max) {
-      const fechaRenovacion = marca.Marc_Renovacion
-        ? new Date(marca.Marc_Renovacion)
-        : null;
+      if (!marca.Marc_Renovacion) {
+        return false;
+      }
+
+      // Crear fecha normalizada desde el string ISO
+      const fechaStr = marca.Marc_Renovacion.split("T")[0]; // Obtener solo YYYY-MM-DD
+      const [year, month, day] = fechaStr.split("-");
+      const fechaRenovacion = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day)
+      );
 
       if (filters.Marc_Renovacion_Min) {
-        const fechaMin = new Date(filters.Marc_Renovacion_Min);
-        if (!fechaRenovacion || fechaRenovacion < fechaMin) {
+        const fechaMinStr = filters.Marc_Renovacion_Min;
+        const [minYear, minMonth, minDay] = fechaMinStr.split("-");
+        const fechaMin = new Date(
+          parseInt(minYear),
+          parseInt(minMonth) - 1,
+          parseInt(minDay)
+        );
+
+        if (fechaRenovacion < fechaMin) {
           return false;
         }
       }
 
       if (filters.Marc_Renovacion_Max) {
-        const fechaMax = new Date(filters.Marc_Renovacion_Max);
-        if (!fechaRenovacion || fechaRenovacion > fechaMax) {
+        const fechaMaxStr = filters.Marc_Renovacion_Max;
+        const [maxYear, maxMonth, maxDay] = fechaMaxStr.split("-");
+        const fechaMax = new Date(
+          parseInt(maxYear),
+          parseInt(maxMonth) - 1,
+          parseInt(maxDay)
+        );
+
+        if (fechaRenovacion > fechaMax) {
           return false;
         }
       }
