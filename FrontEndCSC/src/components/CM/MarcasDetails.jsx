@@ -6,16 +6,43 @@ import {
   ClipboardList,
   Building2,
   Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import ApiService from "../../Services/ApiService";
+import ApiConfig from "../Config/api.config";
 
-function MarcasDetails({ marca, onClose }) {
+function MarcasDetails({ marca, onClose, token }) {
+  const [acciones, setAcciones] = useState([]);
+  const [loadingAcciones, setLoadingAcciones] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
+    if (marca?.Marc_Id && token) {
+      cargarAcciones();
+    }
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, []);
+  }, [marca]);
+
+  const cargarAcciones = async () => {
+    setLoadingAcciones(true);
+    try {
+      const response = await ApiService.get(
+        `${ApiConfig.ENDPOINTSMARCA.TAREAS}/listar/activosPorMarca/${marca.Marc_Id}`,
+        token
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setAcciones(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar acciones:", error);
+    } finally {
+      setLoadingAcciones(false);
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -130,7 +157,7 @@ function MarcasDetails({ marca, onClose }) {
               </div>
             </div>
 
-            {/* Especificaciones del Producto CON DISEÑO, TITULAR Y OBSERVACIONES */}
+            {/* Especificaciones del Producto */}
             <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200">
               <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200">
                 <div
@@ -147,9 +174,7 @@ function MarcasDetails({ marca, onClose }) {
                 </h3>
               </div>
 
-              {/* Grid con diseño destacado */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Columna izquierda: Diseño */}
                 <div className="lg:col-span-1">
                   <label className="text-xs font-bold text-stone-600 uppercase block mb-2">
                     Diseño
@@ -178,7 +203,6 @@ function MarcasDetails({ marca, onClose }) {
                   </div>
                 </div>
 
-                {/* Columna derecha: Información */}
                 <div className="lg:col-span-2 space-y-4">
                   <div>
                     <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
@@ -242,7 +266,6 @@ function MarcasDetails({ marca, onClose }) {
                       </p>
                     </div>
                   </div>
-                  {/* TITULAR en la columna derecha */}
                   <div className="pt-3 border-t border-stone-200">
                     <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
                       Titular
@@ -251,7 +274,6 @@ function MarcasDetails({ marca, onClose }) {
                       {marca.Marc_Titular || "N/A"}
                     </p>
                   </div>
-                  {/* OBSERVACIONES en la columna derecha */}
                   <div className="pt-3 border-t border-stone-200">
                     <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
                       Observaciones
@@ -264,10 +286,10 @@ function MarcasDetails({ marca, onClose }) {
               </div>
             </div>
 
-            {/* Fechas y Siguientes Acciones */}
+            {/* Fechas y Acciones - Ambas cards con altura fija igual */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Fechas */}
-              <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200">
+              <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200 md:h-72">
                 <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200">
                   <div
                     className="p-2 rounded-lg"
@@ -280,53 +302,69 @@ function MarcasDetails({ marca, onClose }) {
                   </div>
                   <h3 className="text-lg font-bold text-stone-900">Fechas</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
                       Fecha Solicitud
                     </label>
-                    <p className="text-stone-900 font-medium">
+                    <p className="text-stone-900 font-medium text-sm">
                       {formatDate(marca.Marc_FechaSolicitud)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
                       Fecha Registro
                     </label>
-                    <p className="text-stone-900 font-medium">
+                    <p className="text-stone-900 font-medium text-sm">
                       {formatDate(marca.Marc_FechaRegistro)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
                       Dure
                     </label>
-                    <p className="text-stone-900 font-medium">
+                    <p className="text-stone-900 font-medium text-sm">
                       {formatDate(marca.Marc_Dure)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
                       Renovación
                     </label>
-                    <p className="text-stone-900 font-medium">
+                    <p className="text-stone-900 font-medium text-sm">
                       {formatDate(marca.Marc_Renovacion)}
                     </p>
                   </div>
-                  <div className="col-span-2">
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                  <div>
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
                       Oposición
                     </label>
-                    <p className="text-stone-900 font-medium">
+                    <p className="text-stone-900 font-medium text-sm">
                       {formatDate(marca.Marc_Oposicion)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
+                      Seguimiento
+                    </label>
+                    <p className="text-stone-900 font-medium text-sm">
+                      {formatDate(marca.Marc_FechaSeguimiento)}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1">
+                      Fecha de Aviso
+                    </label>
+                    <p className="text-stone-900 font-medium text-sm">
+                      {formatDate(marca.Marc_FechaAviso)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Siguientes Acciones */}
-              <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200">
-                <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200">
+              {/* Acciones - Card con scroll interno */}
+              <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200 md:h-72 flex flex-col">
+                <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-stone-200 shrink-0">
                   <div
                     className="p-2 rounded-lg"
                     style={{
@@ -337,34 +375,47 @@ function MarcasDetails({ marca, onClose }) {
                     <ClipboardList className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-stone-900">
-                    Siguientes Acciones
+                    Acciones ({acciones.length})
                   </h3>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                      Próxima Tarea
-                    </label>
-                    <p className="text-stone-900 font-medium">
-                      {marca.Marc_ProximaTarea || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                      Fecha de Seguimiento
-                    </label>
-                    <p className="text-stone-900 font-medium">
-                      {formatDate(marca.Marc_FechaSeguimiento)}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
-                      Fecha de Aviso
-                    </label>
-                    <p className="text-stone-900 font-medium">
-                      {formatDate(marca.Marc_FechaAviso)}
-                    </p>
-                  </div>
+
+                {/* Scroll interno que ocupa todo el espacio */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  {loadingAcciones ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
+                    </div>
+                  ) : acciones.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-stone-500">
+                      <ClipboardList className="w-8 h-8 mb-2 text-stone-300" />
+                      <p className="text-sm font-medium">
+                        No hay acciones pendientes
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pr-1">
+                      {acciones.map((accion) => (
+                        <div
+                          key={accion.MarcTare_Id}
+                          className="p-3 bg-stone-50 rounded-xl border border-stone-200 hover:border-stone-300 transition-colors"
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className="w-4 h-4 rounded-full border-2 border-amber-500 bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-stone-900 break-words">
+                                {accion.MarcTare_Descripcion}
+                              </p>
+                              <p className="text-xs text-stone-500 mt-1">
+                                {formatDate(accion.MarcTare_FechaCreacion)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

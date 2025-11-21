@@ -735,10 +735,10 @@ function Marcas({ token, userData }) {
         />
       )}
 
-      {/* Modal Detalles */}
       {showDetailsModal && selectedMarca && (
         <MarcasDetails
           marca={selectedMarca}
+          token={token}
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedMarca(null);
