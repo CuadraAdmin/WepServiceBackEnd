@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using WebServiceBackEnd.BE.CM;
-using WebServiceBackEnd.BP.CM;
 
 namespace WebServiceBackEnd.DA.CM
 {

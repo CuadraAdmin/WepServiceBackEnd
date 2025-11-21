@@ -1,4 +1,4 @@
-﻿namespace WebServiceBackEnd.BP.CM
+﻿namespace WebServiceBackEnd.BE.CM
 {
     public class MarcaClaseBE
     {
