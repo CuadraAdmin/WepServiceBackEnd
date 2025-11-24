@@ -848,7 +848,7 @@ function Perfil({ token, userData }) {
             <div className="p-8">
               <p className="text-center text-stone-600 mb-6 leading-relaxed">
                 ¿Estás seguro de que deseas desactivar el perfil{" "}
-                <span className="font-bold text-stone-900 block mt-2 text-lg">
+                <span className="font-bold text-stone-900 block mt-2 text-lg break-words">
                   "{perfilToDelete.perf_Nombre}"
                 </span>
                 ?
@@ -905,7 +905,7 @@ function Perfil({ token, userData }) {
             <div className="p-8">
               <p className="text-center text-stone-600 mb-6 leading-relaxed">
                 ¿Estás seguro de que deseas activar el perfil{" "}
-                <span className="font-bold text-stone-900 block mt-2 text-lg">
+                <span className="font-bold text-stone-900 block mt-2 text-lg break-words">
                   "{perfilToActivate.perf_Nombre}"
                 </span>
                 ?
