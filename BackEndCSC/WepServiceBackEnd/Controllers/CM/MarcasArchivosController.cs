@@ -192,6 +192,34 @@ namespace WebServiceBackEnd.Controllers.CM
                 return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
             }
         }
+        /// <summary>
+        /// Descargar imagen pasando por el backend (evita CORS)
+        /// </summary>
+        [HttpGet("descargar-imagen")]
+        public async Task<IActionResult> DescargarImagen([FromQuery] string url)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var imageBytes = await httpClient.GetByteArrayAsync(url);
+
+                // Obtener extensión de la URL
+                var extension = Path.GetExtension(new Uri(url).LocalPath);
+                var contentType = extension.ToLower() switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    _ => "application/octet-stream"
+                };
+
+                return File(imageBytes, contentType, $"diseño-marca{extension}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = $"Error al descargar imagen: {ex.Message}" });
+            }
+        }
     }
     // Clase auxiliar para recibir la URL
     public class EliminarArchivoRequest
