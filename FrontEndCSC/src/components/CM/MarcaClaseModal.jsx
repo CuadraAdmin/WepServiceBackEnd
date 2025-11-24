@@ -76,35 +76,39 @@ function MarcaClaseModal({ clave, onClose, token }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-lg w-full shadow-2xl"
+        className="bg-white rounded-3xl max-w-lg w-full shadow-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
-          className="p-6 rounded-t-3xl flex items-center justify-between"
+          className="p-4 md:p-6 rounded-t-3xl flex items-center justify-between gap-3"
           style={{
             background: "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
           }}
         >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-xl">
-              <Layers className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+            <div className="p-2 md:p-3 bg-white/20 rounded-xl flex-shrink-0">
+              <Layers className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Detalle de Clase</h2>
-              <p className="text-white/90 text-sm">Clase: {clave}</p>
+            <div className="min-w-0">
+              <h2 className="text-lg md:text-xl font-bold text-white truncate">
+                Detalle de Clase
+              </h2>
+              <p className="text-white/90 text-xs md:text-sm truncate">
+                Clase: {clave}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            className="p-2 hover:bg-white/20 rounded-xl transition-colors flex-shrink-0"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-12 h-12 border-4 border-stone-300 border-t-stone-700 rounded-full animate-spin mb-4"></div>
@@ -125,7 +129,7 @@ function MarcaClaseModal({ clave, onClose, token }) {
               <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 border border-stone-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div
-                    className="p-2 rounded-lg"
+                    className="p-2 rounded-lg flex-shrink-0"
                     style={{
                       background:
                         "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
@@ -137,7 +141,7 @@ function MarcaClaseModal({ clave, onClose, token }) {
                     Clave
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-stone-900 ml-11">
+                <p className="text-xl md:text-2xl font-bold text-stone-900 ml-11 break-words">
                   {clase.MarcClas_Clave || "N/A"}
                 </p>
               </div>
@@ -145,14 +149,14 @@ function MarcaClaseModal({ clave, onClose, token }) {
               {/* Descripción */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-blue-500">
+                  <div className="p-2 rounded-lg bg-blue-500 flex-shrink-0">
                     <Info className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-xs font-bold text-blue-700 uppercase">
                     Descripción
                   </span>
                 </div>
-                <p className="text-stone-800 font-medium ml-11 leading-relaxed text-justify">
+                <p className="text-stone-800 font-medium ml-11 leading-relaxed text-justify break-words">
                   {clase.MarcClas_Descripcion || "Sin descripción"}
                 </p>
               </div>
@@ -161,7 +165,7 @@ function MarcaClaseModal({ clave, onClose, token }) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-stone-200 bg-stone-50 rounded-b-3xl">
+        <div className="p-4 md:p-6 border-t-2 border-stone-200 bg-stone-50 rounded-b-3xl">
           <button
             onClick={onClose}
             className="w-full px-6 py-3 text-white rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg"
