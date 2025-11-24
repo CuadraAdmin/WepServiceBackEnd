@@ -1,4 +1,11 @@
-import { X, Save, Upload, Trash2, Image as ImageIcon } from "lucide-react";
+import {
+  X,
+  Save,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
+  Download,
+} from "lucide-react";
 import Alert from "../Globales/Alert";
 import Select from "../Globales/Select";
 import { useState, useEffect } from "react";
@@ -97,6 +104,41 @@ function ModalFormulario({
       }
     } catch (error) {
       throw error;
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    try {
+      const downloadUrl = ApiConfig.getUrl(
+        `${
+          ApiConfig.ENDPOINTSMARCA.ARCHIVOS
+        }/descargar-imagen?url=${encodeURIComponent(previewImage)}`
+      );
+
+      const response = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al descargar la imagen");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `diseño-${formData.Marc_Marca || "marca"}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar:", error);
+      setError("Error al descargar la imagen");
+      setTimeout(() => setError(""), 5000);
     }
   };
 
@@ -200,14 +242,25 @@ function ModalFormulario({
                 </label>
 
                 {previewImage && (
-                  <button
-                    type="button"
-                    onClick={handleDeleteImage}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                    Eliminar Imagen
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleDeleteImage}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      Eliminar Imagen
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadImage}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-50 text-green-600 font-semibold hover:bg-green-100 transition-all"
+                    >
+                      <Download className="w-5 h-5" />
+                      Descargar Imagen
+                    </button>
+                  </>
                 )}
 
                 <p className="text-xs text-stone-600 mt-2">
