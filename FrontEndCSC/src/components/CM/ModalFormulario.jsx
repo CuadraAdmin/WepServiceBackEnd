@@ -240,7 +240,7 @@ function ModalFormulario({
             {/* CONSECUTIVO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Consecutivo
+                Consecutivo <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -259,6 +259,7 @@ function ModalFormulario({
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Consecutivo"
+                required
               />
             </div>
 
@@ -285,7 +286,8 @@ function ModalFormulario({
             {/* SOLICITUD NACIONAL */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Solicitud Nacional (Expediente)
+                Solicitud Nacional (Expediente){" "}
+                <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -304,6 +306,7 @@ function ModalFormulario({
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Expediente"
+                required
               />
             </div>
 
@@ -368,13 +371,19 @@ function ModalFormulario({
               </label>
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={formData.Marc_Clase}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    Marc_Clase: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Solo permitir números
+                  if (/^\d*$/.test(value)) {
+                    setFormData({
+                      ...formData,
+                      Marc_Clase: value,
+                    });
+                  }
+                }}
                 onBlur={(e) =>
                   setFormData({
                     ...formData,
@@ -626,7 +635,7 @@ function ModalFormulario({
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
               />
             </div>
-            {/* PRÓXIMA TAREA */}
+            {/* PRÓXIMA TAREA
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
                 Próxima Tarea
@@ -650,6 +659,8 @@ function ModalFormulario({
                 placeholder="Próxima tarea"
               />
             </div>
+            */}
+
             {/* FECHA SEGUIMIENTO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">

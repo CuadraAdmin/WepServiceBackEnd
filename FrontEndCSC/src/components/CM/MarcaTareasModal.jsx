@@ -37,16 +37,25 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     Usua_Id
   );
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
     if (marca?.Marc_Id) {
       cargarTareas();
     }
 
-    // Bloquear scroll del body
-    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, [marca]);
+  }, [marca, onClose]);
 
   const cargarTareas = async () => {
     setLoading(true);

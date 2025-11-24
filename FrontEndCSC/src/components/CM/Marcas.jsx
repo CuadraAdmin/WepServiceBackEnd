@@ -678,6 +678,7 @@ function Marcas({ token, userData }) {
             }}
             hasPermission={hasPermission}
             onViewTasks={handleViewTasks}
+            token={token}
           />
         )}
       </div>
