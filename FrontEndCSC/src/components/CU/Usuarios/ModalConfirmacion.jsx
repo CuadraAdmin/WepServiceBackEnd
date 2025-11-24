@@ -67,7 +67,7 @@ const ModalConfirmacion = ({
         <div className="p-8">
           <p className="text-center text-stone-600 mb-6 leading-relaxed">
             ¿Estás seguro de que deseas {message} al usuario{" "}
-            <span className="font-bold text-stone-900 block mt-2 text-lg">
+            <span className="font-bold text-stone-900 block mt-2 text-lg break-words">
               "{usuario.usua_Nombre}"
             </span>
             ?
