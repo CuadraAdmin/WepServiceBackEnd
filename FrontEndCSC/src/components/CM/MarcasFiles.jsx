@@ -14,6 +14,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import ApiConfig from "../Config/api.config";
+import ImageZoomModal from "./ImageZoomModal";
 
 function MarcasFiles({ marca, onClose, token, hasPermission }) {
   const [archivos, setArchivos] = useState([]);
@@ -24,16 +25,33 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
   const [imageRotation, setImageRotation] = useState(0);
+  const [zoomImage, setZoomImage] = useState(null);
 
   useEffect(() => {
     if (marca?.Marc_Id) {
       cargarArchivos();
     }
     document.body.style.overflow = "hidden";
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        if (zoomImage) {
+          closeZoomModal();
+        } else if (preview) {
+          closePreview();
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
     return () => {
       document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, [marca]);
+  }, [marca, zoomImage, preview]);
 
   const cargarArchivos = async () => {
     setLoading(true);
@@ -119,6 +137,16 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
       return;
     }
 
+    // Si es una imagen, abrir modal de zoom
+    if (archivo.ContentType?.startsWith("image/")) {
+      setZoomImage({
+        url: archivo.Url,
+        nombre: archivo.Nombre,
+      });
+      return;
+    }
+
+    // Para otros archivos (PDF, etc), usar el preview normal
     setPreviewLoading(true);
     setImageZoom(1);
     setImageRotation(0);
@@ -128,11 +156,7 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
         nombre: archivo.Nombre,
         url: archivo.Url,
         contentType: archivo.ContentType,
-        tipo: archivo.ContentType?.startsWith("image/")
-          ? "image"
-          : archivo.ContentType?.includes("pdf")
-          ? "pdf"
-          : "other",
+        tipo: archivo.ContentType?.includes("pdf") ? "pdf" : "other",
       });
     } catch (error) {
       setError("Error al cargar la vista previa");
@@ -145,6 +169,10 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
     setPreview(null);
     setImageZoom(1);
     setImageRotation(0);
+  };
+
+  const closeZoomModal = () => {
+    setZoomImage(null);
   };
 
   const handleFileUpload = async (e, tipoArchivo = "documento") => {
@@ -250,20 +278,45 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
     }
   };
 
-  const handleDownload = (url, nombre) => {
+  const handleDownload = async (url, nombre) => {
     if (!hasPermission("Marcas.Archivos.Descargar")) {
       setError("No tienes permisos para descargar archivos");
       setTimeout(() => setError(""), 3000);
       return;
     }
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = nombre || "archivo";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const downloadUrl = ApiConfig.getUrl(
+        `${
+          ApiConfig.ENDPOINTSMARCA.ARCHIVOS
+        }/descargar-imagen?url=${encodeURIComponent(url)}`
+      );
+
+      const response = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al descargar el archivo");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = nombre || "archivo";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error al descargar:", error);
+      setError("Error al descargar el archivo");
+      setTimeout(() => setError(""), 3000);
+    }
   };
 
   return (
@@ -495,38 +548,6 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
                 </h3>
               </div>
 
-              {/* Controles para imágenes */}
-              {preview.tipo === "image" && (
-                <div className="flex items-center gap-2 mr-4">
-                  <button
-                    onClick={() =>
-                      setImageZoom(Math.max(0.5, imageZoom - 0.25))
-                    }
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    title="Alejar"
-                  >
-                    <ZoomOut className="w-5 h-5 text-white" />
-                  </button>
-                  <span className="text-white text-sm font-medium min-w-[60px] text-center">
-                    {Math.round(imageZoom * 100)}%
-                  </span>
-                  <button
-                    onClick={() => setImageZoom(Math.min(3, imageZoom + 0.25))}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    title="Acercar"
-                  >
-                    <ZoomIn className="w-5 h-5 text-white" />
-                  </button>
-                  <button
-                    onClick={() => setImageRotation((imageRotation + 90) % 360)}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    title="Rotar"
-                  >
-                    <RotateCw className="w-5 h-5 text-white" />
-                  </button>
-                </div>
-              )}
-
               <button
                 onClick={closePreview}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -540,17 +561,6 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
               {previewLoading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-12 h-12 text-stone-400 animate-spin" />
-                </div>
-              ) : preview.tipo === "image" ? (
-                <div className="h-full flex items-center justify-center p-4 overflow-auto">
-                  <img
-                    src={preview.url}
-                    alt={preview.nombre}
-                    className="max-w-full h-auto object-contain transition-all duration-300"
-                    style={{
-                      transform: `scale(${imageZoom}) rotate(${imageRotation}deg)`,
-                    }}
-                  />
                 </div>
               ) : preview.tipo === "pdf" ? (
                 <iframe
@@ -583,6 +593,10 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
             </div>
           </div>
         </div>
+      )}
+      {/* Modal de Zoom para Imágenes */}
+      {zoomImage && (
+        <ImageZoomModal image={zoomImage} onClose={closeZoomModal} />
       )}
     </>
   );

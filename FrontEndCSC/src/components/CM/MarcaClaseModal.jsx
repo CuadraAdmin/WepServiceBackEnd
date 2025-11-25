@@ -138,7 +138,7 @@ function MarcaClaseModal({ clave, onClose, token }) {
                     <Layers className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-xs font-bold text-stone-600 uppercase">
-                    Clave
+                    Clase
                   </span>
                 </div>
                 <p className="text-xl md:text-2xl font-bold text-stone-900 ml-11 break-words">
@@ -147,12 +147,18 @@ function MarcaClaseModal({ clave, onClose, token }) {
               </div>
 
               {/* Descripción */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200">
+              <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 border border-stone-200">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-blue-500 flex-shrink-0">
+                  <div
+                    className="p-2 rounded-lg flex-shrink-0"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                    }}
+                  >
                     <Info className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-xs font-bold text-blue-700 uppercase">
+                  <span className="text-xs font-bold text-stone-600 uppercase">
                     Descripción
                   </span>
                 </div>
