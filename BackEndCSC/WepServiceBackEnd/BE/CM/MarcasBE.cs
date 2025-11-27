@@ -38,5 +38,11 @@
         // Propiedades auxiliares para operaciones
         public int? Accion { get; set; }
         public bool Marc_FiltroEstatus { get; set; }
+
+        //para notificacion
+        public int DiasRestantes { get; set; }
+        public string? TipoPeriodo { get; set; }
+        public List<string> Tareas { get; set; } = new List<string>(); 
+
     }
 }

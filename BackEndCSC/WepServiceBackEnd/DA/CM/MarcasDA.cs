@@ -421,5 +421,65 @@ namespace WebServiceBackEnd.DA.CM
                 throw new Exception($"Error al obtener empresa y marca: {ex.Message}");
             }
         }
+
+        public async Task<List<MarcasBE>> ObtenerMarcasParaNotificacion()
+        {
+            var diccionarioMarcas = new Dictionary<int, MarcasBE>();
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+                    SqlCommand cmd = new SqlCommand("cm.usp_Marcas_ObtenerParaNotificacion", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int marcaId = reader.GetInt32(reader.GetOrdinal("Marc_Id"));
+
+                            if (!diccionarioMarcas.ContainsKey(marcaId))
+                            {
+                                diccionarioMarcas[marcaId] = new MarcasBE
+                                {
+                                    Marc_Id = marcaId,
+                                    Marc_Marca = reader.GetString(reader.GetOrdinal("Marc_Marca")),
+                                    Marc_Registro = reader.GetString(reader.GetOrdinal("Marc_Registro")),
+                                    Marc_FechaAviso = reader.IsDBNull(reader.GetOrdinal("Marc_FechaAviso"))
+                                        ? null
+                                        : reader.GetDateTime(reader.GetOrdinal("Marc_FechaAviso")),
+                                    DiasRestantes = reader.GetInt32(reader.GetOrdinal("DiasRestantes")),
+                                    TipoPeriodo = reader.GetString(reader.GetOrdinal("TipoPeriodo")),
+                                    objEmpresaBE = new EmpresaBE
+                                    {
+                                        Empr_Clave = reader.GetString(reader.GetOrdinal("Empr_Clave")),
+                                        Empr_Nombre = reader.GetString(reader.GetOrdinal("Empr_Nombre"))
+                                    },
+                                    Tareas = new List<string>()
+                                };
+                            }
+
+                            // Agregar tarea si existe
+                            if (!reader.IsDBNull(reader.GetOrdinal("MarcTare_Descripcion")))
+                            {
+                                string tarea = reader.GetString(reader.GetOrdinal("MarcTare_Descripcion"));
+                                if (!diccionarioMarcas[marcaId].Tareas.Contains(tarea))
+                                {
+                                    diccionarioMarcas[marcaId].Tareas.Add(tarea);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return diccionarioMarcas.Values.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener marcas para notificación: {ex.Message}");
+            }
+        }
     }
 }

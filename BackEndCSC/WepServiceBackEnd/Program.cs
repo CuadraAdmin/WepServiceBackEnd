@@ -12,6 +12,8 @@ builder.Services.AddControllers();
 
 // IMPORTANTE: Registrar BlobStorageService
 builder.Services.AddScoped<BlobStorageService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddHostedService<NotificationJobService>();
 
 builder.Services.AddCors(options =>
 {
