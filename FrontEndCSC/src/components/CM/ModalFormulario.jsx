@@ -5,11 +5,14 @@ import {
   Trash2,
   Image as ImageIcon,
   Download,
+  AlertCircle,
+  Bell,
 } from "lucide-react";
 import Alert from "../Globales/Alert";
 import Select from "../Globales/Select";
 import { useState, useEffect } from "react";
 import ApiConfig from "../Config/api.config";
+import NotificacionesForm from "./NotificacionesForm";
 
 function ModalFormulario({
   show,
@@ -23,10 +26,13 @@ function ModalFormulario({
   setError,
   editingMarca,
   token,
+  userData,
 }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imageToDelete, setImageToDelete] = useState(false);
+  const [showNotificaciones, setShowNotificaciones] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   useEffect(() => {
     setPreviewImage(formData.Marc_Diseno || null);
@@ -165,8 +171,70 @@ function ModalFormulario({
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    // Validar campos obligatorios básicos
+    if (!formData.Empr_Id) errors.push("Debe seleccionar una empresa");
+    if (!formData.Marc_Consecutivo?.trim())
+      errors.push("El consecutivo es obligatorio");
+    if (!formData.Marc_Pais?.trim()) errors.push("El país es obligatorio");
+    if (!formData.Marc_SolicitudNacional?.trim())
+      errors.push("La solicitud nacional es obligatoria");
+    if (!formData.Marc_Registro?.trim())
+      errors.push("El registro es obligatorio");
+    if (!formData.Marc_Marca?.trim())
+      errors.push("El nombre de la marca es obligatorio");
+    if (!formData.Marc_Clase?.trim()) errors.push("La clase es obligatoria");
+    if (!formData.Marc_Titular?.trim())
+      errors.push("El titular es obligatorio");
+    if (!formData.Marc_Renovacion)
+      errors.push("La fecha de renovación es obligatoria");
+
+    // Validar imagen
+    if (!previewImage && !editingMarca) {
+      errors.push("Debe subir una imagen de diseño");
+    }
+
+    // Validar fechas de notificación
+    if (!formData.Marc_FechaAviso) {
+      errors.push(
+        "La fecha de aviso es obligatoria para el sistema de notificaciones"
+      );
+    }
+    if (!formData.Marc_FechaSeguimiento) {
+      errors.push(
+        "La fecha de seguimiento es obligatoria para el sistema de notificaciones"
+      );
+    }
+
+    return errors;
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    // Validar formulario
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setError(errors[0]); // Mostrar el primer error
+
+      // Auto-abrir notificaciones si faltan fechas
+      if (!formData.Marc_FechaAviso || !formData.Marc_FechaSeguimiento) {
+        setShowNotificaciones(true);
+      }
+
+      // Scroll al top del modal para ver el error
+      const modalContent = document.querySelector(".overflow-y-auto");
+      if (modalContent) {
+        modalContent.scrollTop = 0;
+      }
+
+      return;
+    }
+
+    setValidationErrors([]);
     await onSubmit(e, {
       uploadImage: uploadImageAfterSave,
       deleteImage: deleteImageIfNeeded,
@@ -204,6 +272,34 @@ function ModalFormulario({
         </div>
 
         <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
+          {/* MOSTRAR ERRORES DE VALIDACIÓN */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-red-900 mb-2">
+                    Errores de validación:
+                  </h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValidationErrors([]);
+                    setError("");
+                  }}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
           {/* IMAGEN DE DISEÑO */}
           <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border-2 border-stone-200">
             <label className="text-sm font-bold text-stone-700 mb-3 block">
@@ -713,42 +809,59 @@ function ModalFormulario({
               />
             </div>
             */}
-
-            {/* FECHA SEGUIMIENTO */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">
-                Fecha de Seguimiento
-              </label>
-              <input
-                type="date"
-                value={formData.Marc_FechaSeguimiento || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    Marc_FechaSeguimiento: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-              />
+          </div>
+          {/* SECCIÓN DE NOTIFICACIONES - SIN COLORES LLAMATIVOS */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="border rounded-xl p-4 bg-stone-50 border-stone-300">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-stone-600" />
+                    <h3 className="font-semibold text-stone-800">
+                      Sistema de Notificaciones
+                    </h3>
+                    {(!formData.Marc_FechaAviso ||
+                      !formData.Marc_FechaSeguimiento) && (
+                      <span className="text-xs px-2 py-0.5 bg-stone-600 text-white rounded font-medium">
+                        Requerido
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-600 mt-1">
+                    Se enviarán notificaciones 30, 15 y 1 día antes de la fecha
+                    de aviso
+                  </p>
+                  {(!formData.Marc_FechaAviso ||
+                    !formData.Marc_FechaSeguimiento) && (
+                    <p className="text-xs text-stone-700 font-medium mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Debes configurar las fechas de notificación antes de
+                      guardar
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowNotificaciones(!showNotificaciones)}
+                  className="px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-800 transition-colors text-sm font-medium"
+                >
+                  {showNotificaciones ? "Ocultar" : "Gestionar"}
+                </button>
+              </div>
             </div>
 
-            {/* FECHA AVISO */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">
-                Fecha de Aviso
-              </label>
-              <input
-                type="date"
-                value={formData.Marc_FechaAviso || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    Marc_FechaAviso: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
+            {showNotificaciones && (
+              <NotificacionesForm
+                marcaId={formData.Marc_Id}
+                formData={formData}
+                setFormData={setFormData}
+                userData={userData}
+                token={token}
+                onSave={() => {
+                  console.log("Notificaciones guardadas");
+                }}
               />
-            </div>
+            )}
           </div>
 
           {error && (

@@ -55,6 +55,7 @@ class ApiConfig {
     ARCHIVOS: "/api/MarcasArchivos",
     TAREAS: "/api/MarcaTareas",
     CLASES: "/api/MarcaClases",
+    NOTIFICACIONES: "/api/MarcaNotificaciones",
   };
 
   // Endpoints de Empresas

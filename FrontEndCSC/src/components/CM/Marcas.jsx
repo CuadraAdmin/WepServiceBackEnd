@@ -696,6 +696,7 @@ function Marcas({ token, userData }) {
         setError={setError}
         editingMarca={editingMarca}
         token={token}
+        userData={userData}
       />
 
       {/* Modal Desactivar */}
