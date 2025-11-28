@@ -110,33 +110,38 @@ function MultiSelectConBusqueda({
             {selected.length === 0 ? (
               <span className="text-stone-400">{placeholder}</span>
             ) : (
-              getSelectedLabels().map((label, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-sm"
-                  style={{
-                    background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-                  }}
-                >
-                  {label}
-                  {!disabled && (
-                    <span
-                      onClick={(e) => removeOption(selected[index], e)}
-                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors cursor-pointer inline-flex items-center justify-center"
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          removeOption(selected[index], e);
-                        }
-                      }}
-                    >
-                      <X className="w-3 h-3" />
-                    </span>
-                  )}
-                </span>
-              ))
+              selected.map((value) => {
+                const option = options.find((opt) => opt.value === value);
+                if (!option) return null;
+
+                return (
+                  <span
+                    key={value}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                    }}
+                  >
+                    {option.label}
+                    {!disabled && (
+                      <span
+                        onClick={(e) => removeOption(value, e)}
+                        className="hover:bg-white/20 rounded-full p-0.5 transition-colors cursor-pointer inline-flex items-center justify-center"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            removeOption(value, e);
+                          }
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    )}
+                  </span>
+                );
+              })
             )}
           </div>
           <ChevronDown
