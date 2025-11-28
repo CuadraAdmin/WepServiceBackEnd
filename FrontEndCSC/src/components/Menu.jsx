@@ -1,11 +1,20 @@
 import { useState } from "react";
-import { User, Home, Users, Shield, Layout, Tag } from "lucide-react";
+import {
+  User,
+  Home,
+  Users,
+  Shield,
+  Layout,
+  Tag,
+  Building2,
+} from "lucide-react";
 import Navbar from "./Navbar";
 import Permisos from "./CU/Permisos/Permisos";
 import Usuario from "./CU/Usuarios/Usuario";
 import Perfil from "./CU/Perfiles/Perfil";
 import Marcas from "./CM/Marcas";
 import { usePermissions } from "../hooks/usePermissions";
+import Empresas from "./Empresas/Empresas";
 
 function Menu({ userData, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -51,6 +60,12 @@ function Menu({ userData, onLogout }) {
       path: "marcas",
       visible: hasPermission("Marcas.Ver"),
     },
+    {
+      icon: Building2,
+      label: "Empresas",
+      path: "empresas",
+      visible: hasPermission("Empresas.Ver"),
+    },
   ];
 
   const visibleMenuItems = menuItems.filter((item) => item.visible);
@@ -72,6 +87,8 @@ function Menu({ userData, onLogout }) {
 
       case "marcas":
         return <Marcas token={userData?.token} userData={userData} />;
+      case "empresas":
+        return <Empresas token={userData?.token} userData={userData} />;
 
       case "inicio":
       default:
