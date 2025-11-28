@@ -57,7 +57,7 @@ function MarcasAdvancedFilters({
     fechaDia: "",
     fechaRangoDesde: "",
     fechaRangoHasta: "",
-    estatus: [],
+    estadoRenovacion: [],
   });
 
   const empresasOptions = [
@@ -79,8 +79,12 @@ function MarcasAdvancedFilters({
     .map((reg) => ({ value: reg, label: reg }));
 
   const estatusOptions = [
-    { value: "true", label: "Activo" },
-    { value: "false", label: "Inactivo" },
+    { value: "Vencida", label: "Vencida" },
+    { value: "Urgente", label: "Urgente" },
+    { value: "Próximo", label: "Próximo" },
+    { value: "Atención", label: "Atención" },
+    { value: "Normal", label: "Normal" },
+    { value: "Sin fecha", label: "Sin fecha" },
   ];
 
   const monthsOptions = [
@@ -118,7 +122,7 @@ function MarcasAdvancedFilters({
       fechaDia: "",
       fechaRangoDesde: "",
       fechaRangoHasta: "",
-      estatus: [],
+      estadoRenovacion: [],
     });
     onClearFilters();
   };
@@ -132,7 +136,7 @@ function MarcasAdvancedFilters({
     filters.fechaDia !== "" ||
     filters.fechaRangoDesde !== "" ||
     filters.fechaRangoHasta !== "" ||
-    filters.estatus.length > 0;
+    filters.estadoRenovacion.length > 0;
 
   // Solo hacer aparecer los filtros si showFilters es true
   if (!showFilters) return null;
@@ -256,12 +260,14 @@ function MarcasAdvancedFilters({
 
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
-              Estatus
+              Estado Renovación
             </label>
             <MultiSelectConBusqueda
               options={estatusOptions}
-              selected={filters.estatus}
-              onChange={(values) => setFilters({ ...filters, estatus: values })}
+              selected={filters.estadoRenovacion}
+              onChange={(values) =>
+                setFilters({ ...filters, estadoRenovacion: values })
+              }
               placeholder="Seleccionar..."
               color="#6b5345"
               showSearch={false}

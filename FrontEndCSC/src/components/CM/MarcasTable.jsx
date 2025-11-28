@@ -33,6 +33,7 @@ function MarcasTable({
     Marc_Clase: "",
     Marc_Titular: "",
     Marc_Estatus: "",
+    Marc_EstadoRenovacion: "",
     Marc_Renovacion_Min: "",
     Marc_Renovacion_Max: "",
   });
@@ -115,12 +116,63 @@ function MarcasTable({
       Marc_Clase: "",
       Marc_Titular: "",
       Marc_Estatus: "",
+      Marc_EstadoRenovacion: "",
       Marc_Renovacion_Min: "",
       Marc_Renovacion_Max: "",
     });
     setShowFilters({});
   };
+  // Agregar al inicio del componente, después de los imports
+  const calcularEstadoRenovacion = (fechaRenovacion) => {
+    if (!fechaRenovacion)
+      return {
+        texto: "Sin fecha",
+        color: "bg-gray-100 text-gray-700",
+        border: "border-gray-200",
+      };
 
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaRenov = new Date(fechaRenovacion);
+    fechaRenov.setHours(0, 0, 0, 0);
+
+    const diasDiferencia = Math.ceil(
+      (fechaRenov - hoy) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diasDiferencia < 0) {
+      return {
+        texto: "Vencida",
+        color: "bg-red-600 text-white",
+        border: "border-red-600",
+      };
+    } else if (diasDiferencia <= 1) {
+      return {
+        texto: "Urgente",
+        color: "bg-red-500 text-white",
+        border: "border-red-500",
+      };
+    } else if (diasDiferencia <= 15) {
+      return {
+        texto: "Próximo",
+        color: "bg-yellow-400 text-yellow-900",
+        border: "border-yellow-400",
+      };
+    } else if (diasDiferencia <= 29) {
+      return {
+        texto: "Atención",
+        color: "bg-blue-400 text-blue-900",
+        border: "border-blue-400",
+      };
+    } else {
+      return {
+        texto: "Normal",
+        color: "bg-green-500 text-white",
+        border: "border-green-500",
+      };
+    }
+  };
   const filteredMarcas = marcas.filter((marca) => {
     if (filters.Empr_Nombre && marca.Empr_Nombre !== filters.Empr_Nombre) {
       return false;
@@ -148,7 +200,12 @@ function MarcasTable({
         return false;
       }
     }
-
+    if (filters.Marc_EstadoRenovacion !== "") {
+      const estadoActual = calcularEstadoRenovacion(marca.Marc_Renovacion);
+      if (estadoActual.texto !== filters.Marc_EstadoRenovacion) {
+        return false;
+      }
+    }
     if (filters.Marc_Renovacion_Min || filters.Marc_Renovacion_Max) {
       if (!marca.Marc_Renovacion) {
         return false;
@@ -545,68 +602,69 @@ function MarcasTable({
                   <th className="px-6 py-3 text-left text-xs font-semibold text-white">
                     <div className="flex items-center">
                       <span className="py-1 px-2.5 text-sm text-white">
-                        Estado
+                        Estado Renovación
                       </span>
                       <div
                         className="relative"
-                        ref={(el) => (dropdownRefs.current.Marc_Estatus = el)}
+                        ref={(el) =>
+                          (dropdownRefs.current.Marc_EstadoRenovacion = el)
+                        }
                       >
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFilter("Marc_Estatus");
+                            toggleFilter("Marc_EstadoRenovacion");
                           }}
                           className="size-7.5 inline-flex justify-center items-center rounded-lg text-white border border-transparent hover:border-white/20 transition-colors ml-2"
                         >
                           <Filter className="w-3.5 h-3.5" />
                         </button>
-                        {showFilters.Marc_Estatus && (
+                        {showFilters.Marc_EstadoRenovacion && (
                           <div
-                            className="absolute top-full left-0 mt-2 z-50 w-40 bg-white border border-stone-200 shadow-lg rounded-lg overflow-hidden"
+                            className="absolute top-full left-0 mt-2 z-50 w-48 bg-white border border-stone-200 shadow-lg rounded-lg overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div
                               onMouseDown={(e) => {
                                 e.preventDefault();
-                                handleFilterChange("Marc_Estatus", "");
+                                handleFilterChange("Marc_EstadoRenovacion", "");
                                 setTimeout(() => setShowFilters({}), 0);
                               }}
                               className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
-                                filters.Marc_Estatus === ""
+                                filters.Marc_EstadoRenovacion === ""
                                   ? "bg-blue-50 text-blue-600 font-semibold"
                                   : "text-stone-900 hover:bg-stone-50"
                               }`}
                             >
-                              Todos
+                              Todos los estados
                             </div>
-                            <div
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleFilterChange("Marc_Estatus", "true");
-                                setTimeout(() => setShowFilters({}), 0);
-                              }}
-                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
-                                filters.Marc_Estatus === "true"
-                                  ? "bg-blue-50 text-blue-600 font-semibold"
-                                  : "text-stone-900 hover:bg-stone-50"
-                              }`}
-                            >
-                              Activo
-                            </div>
-                            <div
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleFilterChange("Marc_Estatus", "false");
-                                setTimeout(() => setShowFilters({}), 0);
-                              }}
-                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
-                                filters.Marc_Estatus === "false"
-                                  ? "bg-blue-50 text-blue-600 font-semibold"
-                                  : "text-stone-900 hover:bg-stone-50"
-                              }`}
-                            >
-                              Inactivo
-                            </div>
+                            {[
+                              "Vencida",
+                              "Urgente",
+                              "Próximo",
+                              "Atención",
+                              "Normal",
+                              "Sin fecha",
+                            ].map((estado) => (
+                              <div
+                                key={estado}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleFilterChange(
+                                    "Marc_EstadoRenovacion",
+                                    estado
+                                  );
+                                  setTimeout(() => setShowFilters({}), 0);
+                                }}
+                                className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                  filters.Marc_EstadoRenovacion === estado
+                                    ? "bg-blue-50 text-blue-600 font-semibold"
+                                    : "text-stone-900 hover:bg-stone-50"
+                                }`}
+                              >
+                                {estado}
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -690,7 +748,7 @@ function MarcasTable({
                 {filteredMarcas.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={hasPermission("Marcas.Archivos") ? "10" : "9"}
+                      colSpan={hasPermission("Marcas.Archivos") ? "11" : "10"}
                       className="px-6 py-12 text-center"
                     >
                       <div className="flex flex-col items-center gap-3">
@@ -789,9 +847,19 @@ function MarcasTable({
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge active={marca.Marc_Estatus}>
-                          {marca.Marc_Estatus ? "ACTIVO" : "INACTIVO"}
-                        </Badge>
+                        {(() => {
+                          const estado = calcularEstadoRenovacion(
+                            marca.Marc_Renovacion
+                          );
+                          return (
+                            <span
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-2 border-2 ${estado.color} ${estado.border}`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-current animate-pulse"></span>
+                              {estado.texto}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-stone-700 font-medium">

@@ -365,7 +365,57 @@ function Marcas({ token, userData }) {
     });
     setShowModal(true);
   };
+  // Agregar esta función en Marcas.jsx
+  const calcularEstadoRenovacion = (fechaRenovacion) => {
+    if (!fechaRenovacion)
+      return {
+        texto: "Sin fecha",
+        color: "bg-gray-100 text-gray-700",
+        border: "border-gray-200",
+      };
 
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaRenov = new Date(fechaRenovacion);
+    fechaRenov.setHours(0, 0, 0, 0);
+
+    const diasDiferencia = Math.ceil(
+      (fechaRenov - hoy) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diasDiferencia < 0) {
+      return {
+        texto: "Vencida",
+        color: "bg-red-600 text-white",
+        border: "border-red-600",
+      };
+    } else if (diasDiferencia <= 1) {
+      return {
+        texto: "Urgente",
+        color: "bg-red-500 text-white",
+        border: "border-red-500",
+      };
+    } else if (diasDiferencia <= 15) {
+      return {
+        texto: "Próximo",
+        color: "bg-yellow-400 text-yellow-900",
+        border: "border-yellow-400",
+      };
+    } else if (diasDiferencia <= 29) {
+      return {
+        texto: "Atención",
+        color: "bg-blue-400 text-blue-900",
+        border: "border-blue-400",
+      };
+    } else {
+      return {
+        texto: "Normal",
+        color: "bg-green-500 text-white",
+        border: "border-green-500",
+      };
+    }
+  };
   const resetForm = () => {
     setFormData({
       Marc_Id: 0,
@@ -500,9 +550,9 @@ function Marcas({ token, userData }) {
     }
 
     // Filtro por estatus
-    if (filters.estatus.length > 0) {
-      const marcaEstatus = marca.Marc_Estatus ? "true" : "false";
-      if (!filters.estatus.includes(marcaEstatus)) {
+    if (filters.estadoRenovacion.length > 0) {
+      const estadoActual = calcularEstadoRenovacion(marca.Marc_Renovacion);
+      if (!filters.estadoRenovacion.includes(estadoActual.texto)) {
         return false;
       }
     }
@@ -520,8 +570,16 @@ function Marcas({ token, userData }) {
     // Filtro de estatus básico
     const matchesStatus =
       filterStatus === "all" ||
-      (filterStatus === "active" && marca.Marc_Estatus) ||
-      (filterStatus === "inactive" && !marca.Marc_Estatus);
+      (() => {
+        const estado = calcularEstadoRenovacion(marca.Marc_Renovacion);
+        if (filterStatus === "vencida") return estado.texto === "Vencida";
+        if (filterStatus === "urgente") return estado.texto === "Urgente";
+        if (filterStatus === "proximo") return estado.texto === "Próximo";
+        if (filterStatus === "atencion") return estado.texto === "Atención";
+        if (filterStatus === "normal") return estado.texto === "Normal";
+        if (filterStatus === "sinfecha") return estado.texto === "Sin fecha";
+        return true;
+      })();
 
     // Filtros avanzados
     const matchesAdvanced =
@@ -618,8 +676,12 @@ function Marcas({ token, userData }) {
                 className="flex-1 md:flex-initial px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
               >
                 <option value="all">Todas</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
+                <option value="vencida">Vencida</option>
+                <option value="urgente">Urgente</option>
+                <option value="proximo">Próximo</option>
+                <option value="atencion">Atención</option>
+                <option value="normal">Normal</option>
+                <option value="sinfecha">Sin fecha</option>
               </select>
             </div>
           </div>

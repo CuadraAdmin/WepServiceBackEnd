@@ -120,12 +120,20 @@ function MultiSelectConBusqueda({
                 >
                   {label}
                   {!disabled && (
-                    <button
+                    <span
                       onClick={(e) => removeOption(selected[index], e)}
-                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors cursor-pointer inline-flex items-center justify-center"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          removeOption(selected[index], e);
+                        }
+                      }}
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </span>
                   )}
                 </span>
               ))
