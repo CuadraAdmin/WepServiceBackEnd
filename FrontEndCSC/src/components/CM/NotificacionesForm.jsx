@@ -65,42 +65,58 @@ function NotificacionesForm({
 
   // Validar formato de WhatsApp
   const validarWhatsApp = (numero) => {
-    const numeroLimpio = numero.replace(/[\s-]/g, "");
-    const regex = /^\+[1-9]\d{9,14}$/;
+    const numeroLimpio = numero.replace(/[\s-]/g, "").trim();
 
-    if (!regex.test(numeroLimpio)) {
+    // Debe empezar con +
+    if (!numeroLimpio.startsWith("+")) {
       return {
         valido: false,
-        mensaje: "Formato inválido. Debe ser: +52XXXXXXXXXX (sin espacios)",
+        mensaje: "Debe empezar con +",
+      };
+    }
+
+    // Extraer solo los dígitos (sin el +)
+    const soloDigitos = numeroLimpio.slice(1);
+
+    if (!/^\d+$/.test(soloDigitos)) {
+      return {
+        valido: false,
+        mensaje: "Solo debe contener números después del +",
       };
     }
 
     if (numeroLimpio.startsWith("+52")) {
-      // Validar longitud: debe ser 13 dígitos (+52 + 1 + 10 dígitos)
-      if (numeroLimpio.length === 13) {
+      const digitosDespuesDe52 = soloDigitos.slice(2); // Quitar el "52"
+
+      // Debe tener exactamente 11 dígitos después de +52 (1 + 10 dígitos)
+      if (digitosDespuesDe52.length === 11) {
         return { valido: true, numeroCorregido: numeroLimpio };
       }
 
-      // Si tiene 12 dígitos (+52 + 10), agregar el "1"
-      if (numeroLimpio.length === 12) {
+      // Si tiene 10 dígitos (falta el 1), agregarlo
+      if (digitosDespuesDe52.length === 10) {
         return {
           valido: true,
-          numeroCorregido:
-            numeroLimpio.slice(0, 3) + "1" + numeroLimpio.slice(3),
+          numeroCorregido: "+521" + digitosDespuesDe52,
           mensaje: "Se agregará '1' después del +52",
         };
       }
 
-      // Si tiene más o menos dígitos, es inválido
       return {
         valido: false,
-        mensaje: `Número inválido. Tiene ${
-          numeroLimpio.length - 3
-        } dígitos después de +52, debe tener 10 (formato: +5214771234567)`,
+        mensaje: `Número inválido. Tiene ${digitosDespuesDe52.length} dígitos después de +52, debe tener 11 (1 + 10 dígitos)`,
       };
     }
 
-    return { valido: true, numeroCorregido: numeroLimpio };
+    // Para otros países, aceptar entre 10 y 15 dígitos
+    if (soloDigitos.length >= 10 && soloDigitos.length <= 15) {
+      return { valido: true, numeroCorregido: numeroLimpio };
+    }
+
+    return {
+      valido: false,
+      mensaje: "Formato inválido",
+    };
   };
 
   const formatearWhatsApp = (numero) => {
