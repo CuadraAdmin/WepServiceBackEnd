@@ -28,7 +28,10 @@ namespace WebServiceBackEnd.Services
             {
                 try
                 {
-                    _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Iniciando verificación de notificaciones...");
+                    var mexicoZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)");
+                    var horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
+
+                    _logger.LogInformation($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] Iniciando verificación de notificaciones...");
 
                     bool huboEnviosExitosos = false;
 
@@ -115,12 +118,14 @@ namespace WebServiceBackEnd.Services
                     if (huboEnviosExitosos)
                     {
                         _ejecucionExitosaHoy = true;
-                        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Verificación completada exitosamente. Próxima ejecución mañana a las 10:00 AM.");
+                        horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
+                        _logger.LogInformation($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] Verificación completada exitosamente. Próxima ejecución mañana a las 10:00 AM.");
                         await EsperarHastaHoraProgramada(stoppingToken);
                     }
                     else
                     {
-                        _logger.LogWarning($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] No se pudieron enviar todas las notificaciones. Reintentando en 1 hora...");
+                        horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
+                        _logger.LogWarning($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] No se pudieron enviar todas las notificaciones. Reintentando en 1 hora...");
                         await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
                     }
                 }
@@ -140,9 +145,10 @@ namespace WebServiceBackEnd.Services
             var ahoraUtc = DateTime.UtcNow;
             var ahoraMexico = TimeZoneInfo.ConvertTimeFromUtc(ahoraUtc, mexicoZone);
 
-            //var proximaEjecucion = new DateTime(ahoraMexico.Year, ahoraMexico.Month, ahoraMexico.Day, 10, 0, 0);
-            // EN DESARROLLO - Cambiar después
-            var proximaEjecucion = ahoraMexico.AddMinutes(2); // Ejecutar en 2 minutos
+            var proximaEjecucion = new DateTime(ahoraMexico.Year, ahoraMexico.Month, ahoraMexico.Day, 10, 0, 0);
+
+
+            //var proximaEjecucion = ahoraMexico.AddMinutes(2); // Ejecutar en 2 minutos
             if (ahoraMexico >= proximaEjecucion)
             {
                 proximaEjecucion = proximaEjecucion.AddDays(1);
