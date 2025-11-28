@@ -88,9 +88,9 @@ namespace WebServiceBackEnd.Services
             if (marca.Tareas != null && marca.Tareas.Any())
             {
                 htmlTareas = @"
-                <div class='tareas'>
-                    <h3>📋 Tareas/Acciones Pendientes:</h3>
-                    <ul>";
+        <div class='tareas'>
+            <h3>Acciones:</h3>
+            <ul>";
 
                 foreach (var tarea in marca.Tareas)
                 {
@@ -100,57 +100,65 @@ namespace WebServiceBackEnd.Services
                 htmlTareas += "</ul></div>";
             }
 
+            string fechaRenovacion = marca.Marc_Renovacion.HasValue
+                ? marca.Marc_Renovacion.Value.ToString("dd/MM/yyyy")
+                : "No especificada";
+
+            string fechaAviso = marca.Marc_FechaAviso.HasValue
+                ? marca.Marc_FechaAviso.Value.ToString("dd/MM/yyyy")
+                : "No especificada";
+
             return $@"
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                        .header {{ background: linear-gradient(135deg, #6b5345 0%, #8b6f47 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; }}
-                        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-                        .alert {{ background: #fff3cd; border-left: 4px solid {colorAlerta}; padding: 15px; margin: 20px 0; }}
-                        .info-marca {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-                        .info-marca p {{ margin: 10px 0; }}
-                        .info-marca strong {{ color: #6b5345; }}
-                        .tareas {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-                        .tareas h3 {{ color: #6b5345; margin-top: 0; }}
-                        .tareas ul {{ margin: 10px 0; padding-left: 20px; }}
-                        .tareas li {{ margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; }}
-                        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-                        .urgente {{ color: {colorAlerta}; font-weight: bold; font-size: 18px; }}
-                    </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <div class='header'>
-                            <h2>⚠️ Notificación de Renovación de Marca</h2>
-                        </div>
-                        <div class='content'>
-                            <div class='alert'>
-                                <p class='urgente'>⏰ ATENCIÓN: Faltan {urgencia} para la renovación</p>
-                            </div>
-                            
-                            <div class='info-marca'>
-                                <h3>📊 Información de la Marca</h3>
-                                <p><strong>🏢 Empresa:</strong> {marca.objEmpresaBE?.Empr_Clave} - {marca.objEmpresaBE?.Empr_Nombre}</p>
-                                <p><strong>🏷️ Marca:</strong> {marca.Marc_Marca}</p>
-                                <p><strong>📄 Registro:</strong> {marca.Marc_Registro}</p>
-                                <p><strong>⏳ Días restantes:</strong> {marca.DiasRestantes} días</p>
-                            </div>
-                            
-                            {htmlTareas}
-                            
-                            <p style='margin-top: 20px; color: #666;'>Por favor, tome las acciones necesarias para renovar la marca antes de la fecha límite.</p>
-                        </div>
-                        <div class='footer'>
-                            <p>Sistema de Gestión de Marcas - CSC</p>
-                            <p>Este es un mensaje automático, no responder.</p>
-                        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #6b5345 0%, #8b6f47 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .alert {{ background: #fff3cd; border-left: 4px solid {colorAlerta}; padding: 15px; margin: 20px 0; }}
+                .info-marca {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .info-marca p {{ margin: 10px 0; }}
+                .info-marca strong {{ color: #6b5345; }}
+                .tareas {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .tareas h3 {{ color: #6b5345; margin-top: 0; }}
+                .tareas ul {{ margin: 10px 0; padding-left: 20px; }}
+                .tareas li {{ margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; }}
+                .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                .urgente {{ color: {colorAlerta}; font-weight: bold; font-size: 18px; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>Notificación de Marca</h2>
+                </div>
+                <div class='content'>
+                    
+                    
+                    <div class='info-marca'>
+                        <h3>📊 Información de la Marca</h3>
+                        <p><strong>🏢 Empresa:</strong> {marca.objEmpresaBE?.Empr_Clave} - {marca.objEmpresaBE?.Empr_Nombre}</p>
+                        <p><strong>🏷️ Marca:</strong> {marca.Marc_Marca}</p>
+                        <p><strong>📄 Registro:</strong> {marca.Marc_Registro}</p>
+                        <p><strong>📅 Fecha de Renovación:</strong> {fechaRenovacion}</p>
+                        <p><strong>🔔 Fecha de Aviso:</strong> {fechaAviso}</p>
+                        <p><strong>⏳ Días restantes:</strong> {marca.DiasRestantes} días</p>
                     </div>
-                </body>
-                </html>
-            ";
+                    
+                    {htmlTareas}
+                    
+                    <p style='margin-top: 20px; color: #666;'>Por favor, tome las acciones necesarias para renovar la marca antes de la fecha límite.</p>
+                </div>
+                <div class='footer'>
+                    <p>Sistema de Gestión de Marcas - CSC</p>
+                    <p>Este es un mensaje automático, no responder.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    ";
         }
 
         public string GenerarMensajeWhatsApp(MarcasBE marca)
@@ -163,16 +171,26 @@ namespace WebServiceBackEnd.Services
                 _ => $"{marca.DiasRestantes} días"
             };
 
-            string mensaje = $@"⚠️ *RENOVACIÓN DE MARCA*
+            string fechaRenovacion = marca.Marc_Renovacion.HasValue
+                ? marca.Marc_Renovacion.Value.ToString("dd/MM/yyyy")
+                : "No especificada";
+
+            string fechaAviso = marca.Marc_FechaAviso.HasValue
+                ? marca.Marc_FechaAviso.Value.ToString("dd/MM/yyyy")
+                : "No especificada";
+
+            string mensaje = $@"⚠️ *NOTIFICACIÓN DE MARCA*
 
 🏢 *Empresa:* {marca.objEmpresaBE?.Empr_Clave} - {marca.objEmpresaBE?.Empr_Nombre}
 🏷️ *Marca:* {marca.Marc_Marca}
 📄 *Registro:* {marca.Marc_Registro}
+📅 *Fecha de Renovación:* {fechaRenovacion}
+🔔 *Fecha de Aviso:* {fechaAviso}
 ⏰ *Tiempo restante:* {urgencia}";
 
             if (marca.Tareas != null && marca.Tareas.Any())
             {
-                mensaje += "\n\n📋 *Tareas Pendientes:*";
+                mensaje += "\n\n*Acciones:*";
                 foreach (var tarea in marca.Tareas)
                 {
                     mensaje += $"\n• {tarea}";

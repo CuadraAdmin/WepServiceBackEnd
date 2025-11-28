@@ -450,6 +450,9 @@ namespace WebServiceBackEnd.DA.CM
                                     Marc_FechaAviso = reader.IsDBNull(reader.GetOrdinal("Marc_FechaAviso"))
                                         ? null
                                         : reader.GetDateTime(reader.GetOrdinal("Marc_FechaAviso")),
+                                    Marc_Renovacion = reader.IsDBNull(reader.GetOrdinal("Marc_Renovacion"))
+                                        ? null
+                                        : reader.GetDateTime(reader.GetOrdinal("Marc_Renovacion")),
                                     DiasRestantes = reader.GetInt32(reader.GetOrdinal("DiasRestantes")),
                                     TipoPeriodo = reader.GetString(reader.GetOrdinal("TipoPeriodo")),
                                     objEmpresaBE = new EmpresaBE
