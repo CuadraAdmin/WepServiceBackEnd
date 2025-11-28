@@ -135,21 +135,24 @@ namespace WebServiceBackEnd.Services
 
         private async Task EsperarHastaHoraProgramada(CancellationToken stoppingToken)
         {
-            var ahora = DateTime.Now;
-            var proximaEjecucion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 10, 0, 0); // 10:00 AM
+            // Zona horaria de México Central
+            var mexicoZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)");
+            var ahoraUtc = DateTime.UtcNow;
+            var ahoraMexico = TimeZoneInfo.ConvertTimeFromUtc(ahoraUtc, mexicoZone);
 
-            // Si ya pasó las 10:00 AM de hoy, programar para mañana
-            if (ahora >= proximaEjecucion)
+            //var proximaEjecucion = new DateTime(ahoraMexico.Year, ahoraMexico.Month, ahoraMexico.Day, 10, 0, 0);
+            // EN DESARROLLO - Cambiar después
+            var proximaEjecucion = ahoraMexico.AddMinutes(2); // Ejecutar en 2 minutos
+            if (ahoraMexico >= proximaEjecucion)
             {
                 proximaEjecucion = proximaEjecucion.AddDays(1);
             }
 
-            // Resetear flag cuando cambie el día
-            _ejecucionExitosaHoy = false;
+            // Convertir a UTC para comparar
+            var proximaEjecucionUtc = TimeZoneInfo.ConvertTimeToUtc(proximaEjecucion, mexicoZone);
+            var tiempoEspera = proximaEjecucionUtc - ahoraUtc;
 
-            var tiempoEspera = proximaEjecucion - ahora;
-
-            _logger.LogInformation($"Próxima ejecución programada para: {proximaEjecucion:yyyy-MM-dd HH:mm:ss} (en {tiempoEspera.TotalHours:F2} horas)");
+            _logger.LogInformation($"Hora México: {ahoraMexico:HH:mm:ss}, Próxima ejecución: {proximaEjecucion:yyyy-MM-dd HH:mm:ss} México (en {tiempoEspera.TotalHours:F2} horas)");
 
             await Task.Delay(tiempoEspera, stoppingToken);
         }
