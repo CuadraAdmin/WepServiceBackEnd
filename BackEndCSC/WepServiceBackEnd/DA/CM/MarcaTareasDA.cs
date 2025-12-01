@@ -78,6 +78,7 @@ namespace WebServiceBackEnd.DA.CM
                                 MarcTare_Id = reader.GetInt32(reader.GetOrdinal("MarcTare_Id")),
                                 Marc_Id = reader.GetInt32(reader.GetOrdinal("Marc_Id")),
                                 MarcTare_Descripcion = reader.IsDBNull(reader.GetOrdinal("MarcTare_Descripcion")) ? null : reader.GetString(reader.GetOrdinal("MarcTare_Descripcion")),
+                                MarcTare_FechaIniciacion = reader.IsDBNull(reader.GetOrdinal("MarcTare_FechaIniciacion")) ? null : reader.GetDateTime(reader.GetOrdinal("MarcTare_FechaIniciacion")),
                                 MarcTare_FechaFinalizacion = reader.IsDBNull(reader.GetOrdinal("MarcTare_FechaFinalizacion")) ? null : reader.GetDateTime(reader.GetOrdinal("MarcTare_FechaFinalizacion")),
                                 MarcTare_Estatus = reader.GetBoolean(reader.GetOrdinal("MarcTare_Estatus")),
                                 MarcTare_CreadoPor = reader.IsDBNull(reader.GetOrdinal("MarcTare_CreadoPor")) ? null : reader.GetString(reader.GetOrdinal("MarcTare_CreadoPor")),
@@ -109,6 +110,7 @@ namespace WebServiceBackEnd.DA.CM
 
                     cmd.Parameters.AddWithValue("@Marc_Id", tarea.Marc_Id);
                     cmd.Parameters.AddWithValue("@MarcTare_Descripcion", string.IsNullOrEmpty(tarea.MarcTare_Descripcion) ? DBNull.Value : tarea.MarcTare_Descripcion);
+                    cmd.Parameters.AddWithValue("@MarcTare_FechaIniciacion", tarea.MarcTare_FechaIniciacion.HasValue ? tarea.MarcTare_FechaIniciacion.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@MarcTare_CreadoPor", string.IsNullOrEmpty(tarea.MarcTare_CreadoPor) ? DBNull.Value : tarea.MarcTare_CreadoPor);
                     cmd.Parameters.AddWithValue("@MarcTare_Estatus", tarea.MarcTare_Estatus);
 
@@ -142,6 +144,7 @@ namespace WebServiceBackEnd.DA.CM
 
                     cmd.Parameters.AddWithValue("@MarcTare_Id", tarea.MarcTare_Id);
                     cmd.Parameters.AddWithValue("@MarcTare_Descripcion", string.IsNullOrEmpty(tarea.MarcTare_Descripcion) ? DBNull.Value : tarea.MarcTare_Descripcion);
+                    cmd.Parameters.AddWithValue("@MarcTare_FechaIniciacion", tarea.MarcTare_FechaIniciacion.HasValue ? tarea.MarcTare_FechaIniciacion.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@MarcTare_Estatus", tarea.MarcTare_Estatus);
                     cmd.Parameters.AddWithValue("@MarcTare_ModificadoPor", string.IsNullOrEmpty(tarea.MarcTare_ModificadoPor) ? DBNull.Value : tarea.MarcTare_ModificadoPor);
 
@@ -154,7 +157,6 @@ namespace WebServiceBackEnd.DA.CM
                 throw new Exception($"Error al actualizar tarea: {ex.Message}");
             }
         }
-
         public async Task<bool> ActualizarFechaFinalizacion(int id)
         {
             try
