@@ -342,7 +342,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
 
                   <div>
                     <label className="text-xs md:text-sm font-bold text-stone-700 mb-2 block">
-                      Fecha de Iniciación
+                      Fecha de Termino
                     </label>
                     <div className="relative">
                       <input
@@ -446,7 +446,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                   <div className="flex items-center gap-1.5">
                                     <CalendarCheck className="w-3.5 h-3.5 flex-shrink-0" />
                                     <span className="whitespace-nowrap font-medium">
-                                      Fecha de inicio :
+                                      Fecha de Termino :
                                     </span>
                                     <span className="whitespace-nowrap">
                                       {formatDateOnly(
