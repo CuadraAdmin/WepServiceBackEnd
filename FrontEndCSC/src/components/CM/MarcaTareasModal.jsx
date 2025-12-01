@@ -356,7 +356,6 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                         }
                         className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white"
                       />
-                      <CalendarCheck className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
                     </div>
                   </div>
 
