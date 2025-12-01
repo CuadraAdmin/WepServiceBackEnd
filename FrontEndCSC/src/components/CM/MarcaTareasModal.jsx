@@ -11,6 +11,7 @@ import {
   FileText,
   User,
   Clock,
+  CalendarCheck,
 } from "lucide-react";
 import ApiService from "../../Services/ApiService";
 import ApiConfig from "../Config/api.config";
@@ -26,6 +27,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
   const [editingTarea, setEditingTarea] = useState(null);
   const [formData, setFormData] = useState({
     MarcTare_Descripcion: "",
+    MarcTare_FechaIniciacion: new Date().toISOString().split("T")[0],
   });
 
   const nombreUsuario = userData?.usuario?.usua_Usuario || "Sistema";
@@ -36,6 +38,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     token,
     Usua_Id
   );
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
 
@@ -96,6 +99,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
       const dataToSend = {
         Marc_Id: marca.Marc_Id,
         MarcTare_Descripcion: formData.MarcTare_Descripcion.trim(),
+        MarcTare_FechaIniciacion: formData.MarcTare_FechaIniciacion || null,
         MarcTare_Estatus: true,
         ...(editingTarea
           ? { MarcTare_ModificadoPor: nombreUsuario }
@@ -198,6 +202,9 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     setEditingTarea(tarea);
     setFormData({
       MarcTare_Descripcion: tarea.MarcTare_Descripcion || "",
+      MarcTare_FechaIniciacion: tarea.MarcTare_FechaIniciacion
+        ? new Date(tarea.MarcTare_FechaIniciacion).toISOString().split("T")[0]
+        : "",
     });
     setShowForm(true);
   };
@@ -205,6 +212,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
   const resetForm = () => {
     setFormData({
       MarcTare_Descripcion: "",
+      MarcTare_FechaIniciacion: new Date().toISOString().split("T")[0],
     });
     setEditingTarea(null);
     setShowForm(false);
@@ -218,6 +226,15 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+    });
+  };
+
+  const formatDateOnly = (date) => {
+    if (!date) return null;
+    return new Date(date).toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -323,6 +340,26 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                     />
                   </div>
 
+                  <div>
+                    <label className="text-xs md:text-sm font-bold text-stone-700 mb-2 block">
+                      Fecha de Iniciación
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={formData.MarcTare_FechaIniciacion}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            MarcTare_FechaIniciacion: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white"
+                      />
+                      <CalendarCheck className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
+                    </div>
+                  </div>
+
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -404,6 +441,23 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
 
                             {/* Información Compacta */}
                             <div className="space-y-1.5">
+                              {/* Fecha de Iniciación */}
+                              {tarea.MarcTare_FechaIniciacion && (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-purple-600">
+                                  <div className="flex items-center gap-1.5">
+                                    <CalendarCheck className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span className="whitespace-nowrap font-medium">
+                                      Fecha de inicio :
+                                    </span>
+                                    <span className="whitespace-nowrap">
+                                      {formatDateOnly(
+                                        tarea.MarcTare_FechaIniciacion
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Creado */}
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-600">
                                 <div className="flex items-center gap-1.5">
@@ -413,12 +467,6 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                   </span>
                                   <span className="font-medium truncate">
                                     {tarea.MarcTare_CreadoPor}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-stone-500">
-                                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span className="whitespace-nowrap">
-                                    {formatDate(tarea.MarcTare_FechaCreacion)}
                                   </span>
                                 </div>
                               </div>

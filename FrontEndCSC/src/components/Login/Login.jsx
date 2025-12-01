@@ -62,9 +62,7 @@ function Login() {
       }
     } catch (err) {
       console.error(" Error al hacer login:", err);
-      setError(
-        "Error al conectar con el servidor. Verifica que la API esté corriendo."
-      );
+      setError("Error de conexión Verifique la conexión a Internet");
     } finally {
       setLoading(false);
     }
