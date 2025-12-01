@@ -33,6 +33,8 @@ function ModalFormulario({
   const [imageToDelete, setImageToDelete] = useState(false);
   const [showNotificaciones, setShowNotificaciones] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [contactos, setContactos] = useState([]);
+  const [contactosOriginales, setContactosOriginales] = useState([]);
 
   useEffect(() => {
     setPreviewImage(formData.Marc_Diseno || null);
@@ -47,6 +49,62 @@ function ModalFormulario({
       document.body.style.overflow = "unset";
     };
   }, [formData.Marc_Diseno, show]);
+
+  useEffect(() => {
+    const cargarContactosExistentes = async () => {
+      if (editingMarca && editingMarca.Marc_Id > 0) {
+        try {
+          const response = await fetch(
+            ApiConfig.getUrl(
+              `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/listar/${editingMarca.Marc_Id}`
+            ),
+            {
+              method: "GET",
+              headers: ApiConfig.getHeaders(token),
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const contactosFormateados = data.map((notif) => {
+              let telefono =
+                notif.marcNoti_TelefonoWhatsApp ||
+                notif.MarcNoti_TelefonoWhatsApp ||
+                "";
+
+              // REMOVER EL "1" SI EXISTE PARA MOSTRARLO EN EL FRONTEND
+              if (telefono.startsWith("+521")) {
+                telefono = "+52" + telefono.slice(4); // +5214771234567 → +524771234567
+              }
+
+              return {
+                id: notif.marcNoti_Id || notif.MarcNoti_Id,
+                nombre: notif.marcNoti_Nombre || notif.MarcNoti_Nombre || "",
+                correo: notif.marcNoti_Correo || notif.MarcNoti_Correo || "",
+                telefonoWhatsApp: telefono,
+              };
+            });
+            setContactos(contactosFormateados);
+            setContactosOriginales(contactosFormateados); // GUARDAR ORIGINALES
+
+            if (contactosFormateados.length > 0) {
+              setShowNotificaciones(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error al cargar contactos:", error);
+        }
+      } else {
+        setContactos([]);
+        setContactosOriginales([]); // LIMPIAR ORIGINALES
+        setShowNotificaciones(false);
+      }
+    };
+
+    if (show) {
+      cargarContactosExistentes();
+    }
+  }, [editingMarca, show, token]);
 
   if (!show) return null;
 
@@ -208,38 +266,60 @@ function ModalFormulario({
       );
     }
 
+    // VALIDAR CONTACTOS - NUEVO
+    if (contactos.length === 0) {
+      errors.push("Debe agregar al menos 1 contacto de notificación");
+    }
+
+    contactos.forEach((contacto, index) => {
+      if (!contacto.nombre?.trim()) {
+        errors.push(`Contacto #${index + 1}: El nombre es obligatorio`);
+      }
+      if (!contacto.correo?.trim()) {
+        errors.push(`Contacto #${index + 1}: El correo es obligatorio`);
+      }
+      if (!contacto.telefonoWhatsApp?.trim()) {
+        errors.push(`Contacto #${index + 1}: El WhatsApp es obligatorio`);
+      }
+    });
+
     return errors;
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar formulario
     const errors = validateForm();
     if (errors.length > 0) {
       setValidationErrors(errors);
-      setError(errors[0]); // Mostrar el primer error
+      setError(errors[0]);
 
-      // Auto-abrir notificaciones si faltan fechas
       if (!formData.Marc_FechaAviso || !formData.Marc_FechaSeguimiento) {
         setShowNotificaciones(true);
       }
 
-      // Scroll al top del modal para ver el error
       const modalContent = document.querySelector(".overflow-y-auto");
       if (modalContent) {
         modalContent.scrollTop = 0;
       }
-
+      setTimeout(() => {
+        setValidationErrors([]);
+        setError("");
+      }, 8000);
       return;
     }
 
     setValidationErrors([]);
-    await onSubmit(e, {
-      uploadImage: uploadImageAfterSave,
-      deleteImage: deleteImageIfNeeded,
-      hasImageChanges: imageFile !== null || imageToDelete,
-    });
+    await onSubmit(
+      e,
+      {
+        uploadImage: uploadImageAfterSave,
+        deleteImage: deleteImageIfNeeded,
+        hasImageChanges: imageFile !== null || imageToDelete,
+      },
+      contactos, // Contactos actuales
+      contactosOriginales // NUEVO: Contactos originales
+    );
   };
 
   return (
@@ -857,9 +937,8 @@ function ModalFormulario({
                 setFormData={setFormData}
                 userData={userData}
                 token={token}
-                onSave={() => {
-                  console.log("Notificaciones guardadas");
-                }}
+                contactos={contactos}
+                setContactos={setContactos}
               />
             )}
           </div>

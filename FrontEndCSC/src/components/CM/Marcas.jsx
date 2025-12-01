@@ -152,7 +152,12 @@ function Marcas({ token, userData }) {
     }
   };
 
-  const handleSubmit = async (e, imageHandlers) => {
+  const handleSubmit = async (
+    e,
+    imageHandlers,
+    contactosParam,
+    contactosOriginalesParam = []
+  ) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -181,6 +186,7 @@ function Marcas({ token, userData }) {
 
       let response;
       let marcaId;
+
       if (editingMarca) {
         response = await ApiService.put(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${formData.Marc_Id}`,
@@ -189,7 +195,6 @@ function Marcas({ token, userData }) {
         );
         marcaId = formData.Marc_Id;
       } else {
-        // CREAR MARCA
         response = await ApiService.post(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear`,
           dataToSend,
@@ -203,6 +208,7 @@ function Marcas({ token, userData }) {
       }
 
       if (response.ok) {
+        // Procesar imagen
         if (imageHandlers && imageHandlers.hasImageChanges) {
           try {
             if (imageHandlers.deleteImage) {
@@ -221,8 +227,72 @@ function Marcas({ token, userData }) {
             }
           } catch (imageError) {
             console.error("Error al procesar imagen:", imageError);
-            setError("Marca guardada pero hubo un error con la imagen");
-            setTimeout(() => setError(""), 8000);
+          }
+        }
+
+        // ELIMINAR CONTACTOS QUE YA NO ESTÁN (NUEVO)
+        if (editingMarca && contactosOriginalesParam.length > 0) {
+          try {
+            const idsActuales = contactosParam
+              .filter((c) => c.id)
+              .map((c) => c.id);
+
+            const contactosAEliminar = contactosOriginalesParam.filter(
+              (original) => !idsActuales.includes(original.id)
+            );
+
+            for (const contacto of contactosAEliminar) {
+              await ApiService.delete(
+                `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/eliminar/${contacto.id}?modificadoPor=${nombreUsuario}`,
+                token
+              );
+            }
+          } catch (deleteError) {
+            console.error("Error al eliminar contactos:", deleteError);
+          }
+        }
+
+        // GUARDAR/ACTUALIZAR CONTACTOS
+        if (contactosParam && contactosParam.length > 0) {
+          for (const contacto of contactosParam) {
+            // Formatear teléfono: agregar "1" si es +52 con 10 dígitos
+            let telefonoFormateado = contacto.telefonoWhatsApp;
+            if (telefonoFormateado.startsWith("+52")) {
+              const digitosDespuesDe52 = telefonoFormateado.slice(3);
+              if (digitosDespuesDe52.length === 10) {
+                telefonoFormateado = "+521" + digitosDespuesDe52;
+              }
+            }
+
+            if (contacto.id && editingMarca) {
+              // ACTUALIZAR existente
+              await ApiService.put(
+                `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/actualizar/${contacto.id}`,
+                {
+                  marc_Id: marcaId,
+                  marcNoti_Nombre: contacto.nombre,
+                  marcNoti_Correo: contacto.correo,
+                  marcNoti_TelefonoWhatsApp: telefonoFormateado, // Usar formateado
+                  marcNoti_Estatus: true,
+                  marcNoti_ModificadoPor: nombreUsuario,
+                },
+                token
+              );
+            } else {
+              // CREAR nuevo
+              await ApiService.post(
+                `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/crear`,
+                {
+                  marc_Id: marcaId,
+                  marcNoti_Nombre: contacto.nombre,
+                  marcNoti_Correo: contacto.correo,
+                  marcNoti_TelefonoWhatsApp: telefonoFormateado, // Usar formateado
+                  marcNoti_Estatus: true,
+                  marcNoti_CreadoPor: nombreUsuario,
+                },
+                token
+              );
+            }
           }
         }
 
