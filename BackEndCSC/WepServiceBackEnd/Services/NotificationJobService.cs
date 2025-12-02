@@ -21,8 +21,7 @@ namespace WebServiceBackEnd.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Esperar hasta la próxima ejecución programada (10:00 AM)
-            await EsperarHastaHoraProgramada(stoppingToken);
+            _logger.LogInformation("Servicio de notificaciones iniciado - Se ejecutará cada 30 minutos");
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -32,8 +31,6 @@ namespace WebServiceBackEnd.Services
                     var horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
 
                     _logger.LogInformation($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] Iniciando verificación de notificaciones...");
-
-                    bool huboEnviosExitosos = false;
 
                     using (var scope = _serviceProvider.CreateScope())
                     {
@@ -47,11 +44,6 @@ namespace WebServiceBackEnd.Services
 
                         _logger.LogInformation($"Marcas encontradas para notificar: {marcas.Count}");
 
-                        if (marcas.Count == 0)
-                        {
-                            huboEnviosExitosos = true; // No hay marcas = éxito (nada que enviar)
-                        }
-
                         foreach (var marca in marcas)
                         {
                             _logger.LogInformation($"Procesando marca: {marca.Marc_Marca} (ID: {marca.Marc_Id}) - {marca.DiasRestantes} días restantes");
@@ -63,22 +55,17 @@ namespace WebServiceBackEnd.Services
 
                             foreach (var contacto in contactosActivos)
                             {
-                                bool correoExitoso = false;
-                                bool whatsappExitoso = false;
-
                                 try
                                 {
                                     if (await YaSeEnvioNotificacion(connectionString, marca.Marc_Id, contacto.MarcNoti_Id, marca.TipoPeriodo))
                                     {
                                         _logger.LogInformation($"Notificación ya enviada para {contacto.MarcNoti_Nombre} - Periodo: {marca.TipoPeriodo}");
-                                        huboEnviosExitosos = true; // Ya se envió = éxito
                                         continue;
                                     }
 
                                     // Enviar correo
                                     var htmlCorreo = notificationService.GenerarCorreoRenovacion(marca);
-
-                                    correoExitoso = await notificationService.EnviarCorreoAsync(
+                                    bool correoExitoso = await notificationService.EnviarCorreoAsync(
                                         contacto.MarcNoti_Correo,
                                         $"⚠️ Renovación de Marca - {marca.Marc_Marca}",
                                         htmlCorreo
@@ -88,19 +75,12 @@ namespace WebServiceBackEnd.Services
 
                                     // Enviar WhatsApp
                                     var mensajeWA = notificationService.GenerarMensajeWhatsApp(marca);
-
-                                    whatsappExitoso = await notificationService.EnviarWhatsAppAsync(
+                                    bool whatsappExitoso = await notificationService.EnviarWhatsAppAsync(
                                         contacto.MarcNoti_TelefonoWhatsApp,
                                         mensajeWA
                                     );
 
                                     _logger.LogInformation($"WhatsApp enviado a {contacto.MarcNoti_TelefonoWhatsApp}: {(whatsappExitoso ? "EXITOSO" : "FALLIDO")}");
-
-                                    // Si al menos uno fue exitoso, marcamos como éxito
-                                    if (correoExitoso || whatsappExitoso)
-                                    {
-                                        huboEnviosExitosos = true;
-                                    }
 
                                     await RegistrarNotificacionLog(connectionString, marca.Marc_Id, contacto.MarcNoti_Id, "Correo", marca.TipoPeriodo, correoExitoso, null);
                                     await RegistrarNotificacionLog(connectionString, marca.Marc_Id, contacto.MarcNoti_Id, "WhatsApp", marca.TipoPeriodo, whatsappExitoso, null);
@@ -114,30 +94,18 @@ namespace WebServiceBackEnd.Services
                         }
                     }
 
-                    // Decidir siguiente ejecución
-                    if (huboEnviosExitosos)
-                    {
-                        _ejecucionExitosaHoy = true;
-                        horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
-                        _logger.LogInformation($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] Verificación completada exitosamente. Próxima ejecución mañana a las 10:00 AM.");
-                        await EsperarHastaHoraProgramada(stoppingToken);
-                    }
-                    else
-                    {
-                        horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
-                        _logger.LogWarning($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] No se pudieron enviar todas las notificaciones. Reintentando en 1 hora...");
-                        await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-                    }
+                    horaMexico = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, mexicoZone);
+                    _logger.LogInformation($"[{horaMexico:yyyy-MM-dd HH:mm:ss} MX] Verificación completada. Próxima ejecución en 30 minutos.");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"ERROR CRÍTICO en job de notificaciones: {ex.Message}\n{ex.StackTrace}");
-                    _logger.LogInformation("Reintentando en 1 hora...");
-                    await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
                 }
+
+                // Esperar 30 minutos antes de la siguiente ejecución
+                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
             }
         }
-
         private async Task EsperarHastaHoraProgramada(CancellationToken stoppingToken)
         {
             // Zona horaria de México Central
