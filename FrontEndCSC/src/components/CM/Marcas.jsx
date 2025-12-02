@@ -16,7 +16,7 @@ import { usePermissions } from "../../hooks/usePermissions";
 import ApiService from "../../Services/ApiService";
 import MarcaTareasModal from "./MarcaTareasModal";
 import { FileUp } from "lucide-react"; // Agregar FileUp a los imports de lucide-react
-import MarcasImport from "./MarcasImport"; // Agregar este import
+//import MarcasImport from "./MarcasImport"; // Agregar este import
 
 function Marcas({ token, userData }) {
   const [marcas, setMarcas] = useState([]);
@@ -934,8 +934,7 @@ function Marcas({ token, userData }) {
           }}
         />
       )}
-      {/* Modal Importar */}
-      {showImportModal && (
+      {/* Modal Importar {showImportModal && (
         <MarcasImport
           onClose={() => setShowImportModal(false)}
           onSuccess={handleImportSuccess}
@@ -943,7 +942,7 @@ function Marcas({ token, userData }) {
           userData={userData}
           empresasOptions={empresasOptions}
         />
-      )}
+      )} */}
     </div>
   );
 }

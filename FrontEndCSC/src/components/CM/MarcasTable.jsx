@@ -901,13 +901,42 @@ function MarcasTable({
                       </td>
                       <td className="px-6 py-4">
                         {marca.Marc_Clase ? (
-                          <button
-                            onClick={() => setSelectedClase(marca.Marc_Clase)}
-                            className="px-3 items-center py-1.5 bg-stone-100 hover:bg-blue-100 text-stone-700 hover:text-blue-700 rounded-lg font-medium text-sm transition-colors"
-                            title="Ver detalles"
-                          >
-                            {marca.Marc_Clase}
-                          </button>
+                          (() => {
+                            const clases = marca.Marc_Clase.split(",")
+                              .map((c) => c.trim())
+                              .filter((c) => c);
+                            const mostrarClases = clases.slice(0, 3);
+                            const clasesRestantes =
+                              clases.length > 3 ? clases.length - 3 : 0;
+
+                            return (
+                              <div className="flex flex-wrap gap-1">
+                                {mostrarClases.map((clase, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() =>
+                                      setSelectedClase(marca.Marc_Clase)
+                                    }
+                                    className="px-2 py-1 bg-stone-100 hover:bg-blue-100 text-stone-700 hover:text-blue-700 rounded-lg font-medium text-xs transition-colors"
+                                    title="Ver detalles de todas las clases"
+                                  >
+                                    {clase}
+                                  </button>
+                                ))}
+                                {clasesRestantes > 0 && (
+                                  <button
+                                    onClick={() =>
+                                      setSelectedClase(marca.Marc_Clase)
+                                    }
+                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors"
+                                    title={`Ver todas (${clases.length} clases)`}
+                                  >
+                                    +{clasesRestantes}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()
                         ) : (
                           <span className="text-stone-400">N/A</span>
                         )}
@@ -1032,7 +1061,7 @@ function MarcasTable({
       {/* Modal de Clase */}
       {selectedClase && (
         <MarcaClaseModal
-          clave={selectedClase}
+          claves={selectedClase} // ✅ CORRECTO
           token={token}
           onClose={() => setSelectedClase(null)}
         />
