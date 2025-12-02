@@ -103,7 +103,7 @@ namespace WebServiceBackEnd.Services
                 }
 
                 // Esperar 30 minutos antes de la siguiente ejecución
-                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
             }
         }
         private async Task EsperarHastaHoraProgramada(CancellationToken stoppingToken)
