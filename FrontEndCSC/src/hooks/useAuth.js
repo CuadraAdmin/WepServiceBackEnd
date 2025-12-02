@@ -74,10 +74,10 @@ export const useAuth = () => {
         if (parsedSession.token && parsedSession.usuario) {
           const payload = JSON.parse(atob(parsedSession.token.split(".")[1]));
           const expirationTime = payload.exp * 1000;
-          console.log(
-            "Tiempo de expiración del token:",
-            new Date(expirationTime)
-          );
+          //console.log(
+          //  "Tiempo de expiración del token:",
+          //  new Date(expirationTime)
+          //);
           if (Date.now() >= expirationTime) {
             clearSession();
           } else {
