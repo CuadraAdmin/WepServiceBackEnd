@@ -15,6 +15,8 @@ import ApiConfig from "../Config/api.config";
 import { usePermissions } from "../../hooks/usePermissions";
 import ApiService from "../../Services/ApiService";
 import MarcaTareasModal from "./MarcaTareasModal";
+import { FileUp } from "lucide-react"; // Agregar FileUp a los imports de lucide-react
+import MarcasImport from "./MarcasImport"; // Agregar este import
 
 function Marcas({ token, userData }) {
   const [marcas, setMarcas] = useState([]);
@@ -35,6 +37,7 @@ function Marcas({ token, userData }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterEstatus, setFilterEstatus] = useState("all");
   const [showTasksModal, setShowTasksModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Estado para filtros avanzados
   const [advancedFilters, setAdvancedFilters] = useState(null);
@@ -77,6 +80,13 @@ function Marcas({ token, userData }) {
     }
 
     return errorMessage;
+  };
+
+  const handleImportSuccess = async () => {
+    await cargarMarcas();
+    setSuccess("MARCAS IMPORTADAS EXITOSAMENTE");
+    setShowImportModal(false);
+    setTimeout(() => setSuccess(""), 4000);
   };
 
   const [formData, setFormData] = useState({
@@ -699,6 +709,18 @@ function Marcas({ token, userData }) {
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
+              {/* Botón Importar */}
+              {hasPermission("Marcas.Agregar") && (
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg hover:scale-105 active:scale-95"
+                >
+                  <FileUp className="w-5 h-5" />
+                  <span className="hidden sm:inline">Importar Excel</span>
+                </button>
+              )}
+
+              {/* Botón Exportar */}
               <button
                 onClick={handleExportToExcel}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-all shadow-lg hover:scale-105 active:scale-95"
@@ -706,6 +728,8 @@ function Marcas({ token, userData }) {
                 <FileDown className="w-5 h-5" />
                 <span className="hidden sm:inline">Exportar Excel</span>
               </button>
+
+              {/* Botón Nueva Marca */}
               {hasPermission("Marcas.Agregar") && (
                 <button
                   onClick={() => setShowModal(true)}
@@ -908,6 +932,16 @@ function Marcas({ token, userData }) {
             setShowTasksModal(false);
             setSelectedMarca(null);
           }}
+        />
+      )}
+      {/* Modal Importar */}
+      {showImportModal && (
+        <MarcasImport
+          onClose={() => setShowImportModal(false)}
+          onSuccess={handleImportSuccess}
+          token={token}
+          userData={userData}
+          empresasOptions={empresasOptions}
         />
       )}
     </div>

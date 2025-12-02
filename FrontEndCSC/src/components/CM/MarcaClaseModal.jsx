@@ -1,20 +1,71 @@
-import {
-  X,
-  Layers,
-  Info,
-  Calendar,
-  User,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import { X, Layers, Info, XCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import ApiService from "../../Services/ApiService";
 import ApiConfig from "../Config/api.config";
 
-function MarcaClaseModal({ clave, onClose, token }) {
-  const [clase, setClase] = useState(null);
+function MarcaClaseModal({ claves, onClose, token }) {
+  const [clases, setClases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const cargarClases = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    // Separar claves si vienen separadas por comas
+    const clavesArray =
+      typeof claves === "string"
+        ? claves
+            .split(",")
+            .map((c) => c.trim())
+            .filter((c) => c)
+        : Array.isArray(claves)
+        ? claves
+        : [claves];
+
+    if (clavesArray.length === 0) {
+      setError("No hay clases para cargar");
+      setLoading(false);
+      return;
+    }
+
+    const clasesObtenidas = [];
+
+    try {
+      // Hacer una petición por cada clave
+      for (const clave of clavesArray) {
+        try {
+          const response = await ApiService.get(
+            `${ApiConfig.ENDPOINTSMARCA.CLASES}/obtenerPorClave/${clave}`,
+            token
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            clasesObtenidas.push(data);
+          } else {
+            clasesObtenidas.push({
+              MarcClas_Clave: clave,
+              MarcClas_Descripcion: null,
+              error: "No se encontró información",
+            });
+          }
+        } catch (err) {
+          clasesObtenidas.push({
+            MarcClas_Clave: clave,
+            MarcClas_Descripcion: null,
+            error: err.message,
+          });
+        }
+      }
+
+      setClases(clasesObtenidas);
+    } catch (error) {
+      setError("Error al cargar las clases: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [claves, token]); // Ahora claves y token están en las dependencias
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -27,48 +78,26 @@ function MarcaClaseModal({ clave, onClose, token }) {
 
     document.addEventListener("keydown", handleEscape);
 
-    if (clave && token) {
-      cargarClase();
+    if (claves && token) {
+      cargarClases();
     }
 
     return () => {
       document.body.style.overflow = "unset";
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [clave, onClose]);
+  }, [claves, token, cargarClases, onClose]); // Incluir cargarClases y onClose
 
-  const cargarClase = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await ApiService.get(
-        `${ApiConfig.ENDPOINTSMARCA.CLASES}/obtenerPorClave/${clave}`,
-        token
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setClase(data);
-      } else {
-        setError("No se encontró información para esta clase");
-      }
-    } catch (error) {
-      setError("Error al cargar la información: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("es-MX", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // Calcular clavesArray para el render
+  const clavesArray =
+    typeof claves === "string"
+      ? claves
+          .split(",")
+          .map((c) => c.trim())
+          .filter((c) => c)
+      : Array.isArray(claves)
+      ? claves
+      : [claves];
 
   return (
     <div
@@ -76,7 +105,7 @@ function MarcaClaseModal({ clave, onClose, token }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-lg w-full shadow-2xl max-h-[90vh] flex flex-col"
+        className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -92,10 +121,14 @@ function MarcaClaseModal({ clave, onClose, token }) {
             </div>
             <div className="min-w-0">
               <h2 className="text-lg md:text-xl font-bold text-white truncate">
-                Detalle de Clase
+                {clavesArray.length > 1
+                  ? `Detalle de ${clavesArray.length} Clases`
+                  : "Detalle de Clase"}
               </h2>
               <p className="text-white/90 text-xs md:text-sm truncate">
-                Clase: {clave}
+                {clavesArray.length > 1
+                  ? `Clases: ${clavesArray.join(", ")}`
+                  : `Clase: ${clavesArray[0]}`}
               </p>
             </div>
           </div>
@@ -123,51 +156,86 @@ function MarcaClaseModal({ clave, onClose, token }) {
               </div>
               <p className="text-stone-600 font-medium text-center">{error}</p>
             </div>
-          ) : clase ? (
+          ) : clases.length > 0 ? (
             <div className="space-y-4">
-              {/* Clave */}
-              <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 border border-stone-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className="p-2 rounded-lg flex-shrink-0"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    }}
-                  >
-                    <Layers className="w-4 h-4 text-white" />
+              {clases.map((clase, index) => (
+                <div
+                  key={index}
+                  className={`bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 border-2 transition-all hover:shadow-md ${
+                    clase.error
+                      ? "border-red-200 bg-red-50"
+                      : "border-stone-200"
+                  }`}
+                >
+                  {/* Clave */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="p-2 rounded-lg flex-shrink-0"
+                      style={{
+                        background: clase.error
+                          ? "linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)"
+                          : "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                      }}
+                    >
+                      <Layers
+                        className={`w-4 h-4 ${
+                          clase.error ? "text-red-600" : "text-white"
+                        }`}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-bold text-stone-600 uppercase block">
+                        Clase
+                      </span>
+                      <p className="text-xl md:text-2xl font-bold text-stone-900 break-words">
+                        {clase.MarcClas_Clave || "N/A"}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-stone-600 uppercase">
-                    Clase
-                  </span>
-                </div>
-                <p className="text-xl md:text-2xl font-bold text-stone-900 ml-11 break-words">
-                  {clase.MarcClas_Clave || "N/A"}
-                </p>
-              </div>
 
-              {/* Descripción */}
-              <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 border border-stone-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className="p-2 rounded-lg flex-shrink-0"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
-                    }}
-                  >
-                    <Info className="w-4 h-4 text-white" />
+                  {/* Descripción o Error */}
+                  <div className="bg-white rounded-xl p-3 border border-stone-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div
+                        className="p-2 rounded-lg flex-shrink-0"
+                        style={{
+                          background: clase.error
+                            ? "linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)"
+                            : "linear-gradient(135deg, #6b5345 0%, #8b6f47 100%)",
+                        }}
+                      >
+                        <Info
+                          className={`w-4 h-4 ${
+                            clase.error ? "text-red-600" : "text-white"
+                          }`}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-stone-600 uppercase">
+                        Descripción
+                      </span>
+                    </div>
+                    {clase.error ? (
+                      <p className="text-red-700 font-medium ml-11 flex items-center gap-2">
+                        <XCircle className="w-4 h-4 flex-shrink-0" />
+                        {clase.error}
+                      </p>
+                    ) : (
+                      <p className="text-stone-800 font-medium ml-11 leading-relaxed text-justify break-words">
+                        {clase.MarcClas_Descripcion || "Sin descripción"}
+                      </p>
+                    )}
                   </div>
-                  <span className="text-xs font-bold text-stone-600 uppercase">
-                    Descripción
-                  </span>
                 </div>
-                <p className="text-stone-800 font-medium ml-11 leading-relaxed text-justify break-words">
-                  {clase.MarcClas_Descripcion || "Sin descripción"}
-                </p>
-              </div>
+              ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <XCircle className="w-12 h-12 text-stone-300 mb-3" />
+              <p className="text-stone-500 font-medium">
+                No se encontraron clases
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
