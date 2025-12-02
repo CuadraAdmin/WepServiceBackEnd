@@ -734,6 +734,77 @@ function MarcasTable({
                     </div>
                   </th>
 
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white">
+                    <div className="flex items-center">
+                      <span className="py-1 px-2.5 text-sm text-white">
+                        Estatus
+                      </span>
+                      <div
+                        className="relative"
+                        ref={(el) => (dropdownRefs.current.Marc_Estatus = el)}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFilter("Marc_Estatus");
+                          }}
+                          className="size-7.5 inline-flex justify-center items-center rounded-lg text-white border border-transparent hover:border-white/20 transition-colors ml-2"
+                        >
+                          <Filter className="w-3.5 h-3.5" />
+                        </button>
+                        {showFilters.Marc_Estatus && (
+                          <div
+                            className="absolute top-full left-0 mt-2 z-50 w-48 bg-white border border-stone-200 shadow-lg rounded-lg overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleFilterChange("Marc_Estatus", "");
+                                setTimeout(() => setShowFilters({}), 0);
+                              }}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                filters.Marc_Estatus === ""
+                                  ? "bg-blue-50 text-blue-600 font-semibold"
+                                  : "text-stone-900 hover:bg-stone-50"
+                              }`}
+                            >
+                              Todos los estatus
+                            </div>
+                            <div
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleFilterChange("Marc_Estatus", "true");
+                                setTimeout(() => setShowFilters({}), 0);
+                              }}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                filters.Marc_Estatus === "true"
+                                  ? "bg-blue-50 text-blue-600 font-semibold"
+                                  : "text-stone-900 hover:bg-stone-50"
+                              }`}
+                            >
+                              Activas
+                            </div>
+                            <div
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleFilterChange("Marc_Estatus", "false");
+                                setTimeout(() => setShowFilters({}), 0);
+                              }}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                filters.Marc_Estatus === "false"
+                                  ? "bg-blue-50 text-blue-600 font-semibold"
+                                  : "text-stone-900 hover:bg-stone-50"
+                              }`}
+                            >
+                              Inactivas
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </th>
+
                   {hasPermission("Marcas.Archivos") && (
                     <th className="px-6 py-3 text-left text-xs font-semibold text-white">
                       Archivos
@@ -748,7 +819,7 @@ function MarcasTable({
                 {filteredMarcas.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={hasPermission("Marcas.Archivos") ? "11" : "10"}
+                      colSpan={hasPermission("Marcas.Archivos") ? "12" : "11"}
                       className="px-6 py-12 text-center"
                     >
                       <div className="flex flex-col items-center gap-3">
@@ -865,6 +936,17 @@ function MarcasTable({
                         <span className="text-stone-700 font-medium">
                           {formatDate(marca.Marc_Renovacion)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {marca.Marc_Estatus ? (
+                          <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border-2 border-green-300">
+                            ACTIVA
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border-2 border-red-300">
+                            INACTIVA
+                          </span>
+                        )}
                       </td>
                       {hasPermission("Marcas.Archivos") && (
                         <td className="px-6 py-4">

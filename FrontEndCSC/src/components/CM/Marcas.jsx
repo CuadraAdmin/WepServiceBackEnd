@@ -33,6 +33,7 @@ function Marcas({ token, userData }) {
   const [marcaToDelete, setMarcaToDelete] = useState(null);
   const [marcaToActivate, setMarcaToActivate] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterEstatus, setFilterEstatus] = useState("all");
   const [showTasksModal, setShowTasksModal] = useState(false);
 
   // Estado para filtros avanzados
@@ -637,7 +638,7 @@ function Marcas({ token, userData }) {
       marca.Marc_Titular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.Marc_Registro?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Filtro de estatus básico
+    // Filtro de estatus básico (estado de renovación)
     const matchesStatus =
       filterStatus === "all" ||
       (() => {
@@ -651,11 +652,17 @@ function Marcas({ token, userData }) {
         return true;
       })();
 
+    // Filtro de estatus activo/inactivo
+    const matchesEstatus =
+      filterEstatus === "all" ||
+      (filterEstatus === "activas" && marca.Marc_Estatus === true) ||
+      (filterEstatus === "inactivas" && marca.Marc_Estatus === false);
+
     // Filtros avanzados
     const matchesAdvanced =
       !advancedFilters || applyAdvancedFilters(marca, advancedFilters);
 
-    return matchesSearch && matchesStatus && matchesAdvanced;
+    return matchesSearch && matchesStatus && matchesEstatus && matchesAdvanced;
   });
 
   // Calcular si hay filtros activos para el botón
@@ -739,7 +746,7 @@ function Marcas({ token, userData }) {
                 onClearFilters={() => setAdvancedFilters(null)}
               />
 
-              {/* Select de Estatus */}
+              {/* Select de Estado de Renovación */}
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -752,6 +759,17 @@ function Marcas({ token, userData }) {
                 <option value="atencion">Atención</option>
                 <option value="normal">Normal</option>
                 <option value="sinfecha">Sin fecha</option>
+              </select>
+
+              {/* Select de Estatus Activo/Inactivo */}
+              <select
+                value={filterEstatus}
+                onChange={(e) => setFilterEstatus(e.target.value)}
+                className="flex-1 md:flex-initial px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
+              >
+                <option value="all">Todos los estatus</option>
+                <option value="activas">Activas</option>
+                <option value="inactivas">Inactivas</option>
               </select>
             </div>
           </div>
