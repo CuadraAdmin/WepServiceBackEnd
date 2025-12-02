@@ -408,7 +408,8 @@ function MarcasDetails({ marca, onClose, token }) {
                                 {accion.MarcTare_Descripcion}
                               </p>
                               <p className="text-xs text-stone-500 mt-1">
-                                {formatDate(accion.MarcTare_FechaCreacion)}
+                                {"Fecha Creación: " +
+                                  formatDate(accion.MarcTare_FechaCreacion)}
                               </p>
                             </div>
                           </div>

@@ -31,7 +31,7 @@ export const usePermissions = (token, userId) => {
       if (response.ok) {
         const data = await response.json();
         setPermissions(data);
-        console.log("Permisos cargados:", data);
+        //console.log("Permisos cargados:", data);
       } else {
         throw new Error("Error al cargar permisos");
       }
