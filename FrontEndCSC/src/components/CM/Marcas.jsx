@@ -722,7 +722,7 @@ function Marcas({ token, userData }) {
             </div>
           </div>
 
-          {/* NUEVA BARRA DE BÚSQUEDA CON FILTROS Y SELECT DE ESTATUS */}
+          {/* BARRA DE BÚSQUEDA Y FILTROS */}
           <div className="flex flex-col md:flex-row gap-3">
             {/* Barra de búsqueda */}
             <div className="relative flex-1">
@@ -736,8 +736,8 @@ function Marcas({ token, userData }) {
               />
             </div>
 
-            {/* Fila de Filtros y Select - En línea en móvil, separados en PC */}
-            <div className="flex gap-3 md:contents">
+            {/* Filtros y Selects - En misma línea en PC, separados en móvil */}
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3">
               {/* Botón de Filtros Avanzados */}
               <FilterButton
                 showFilters={showFilters}
@@ -750,7 +750,7 @@ function Marcas({ token, userData }) {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="flex-1 md:flex-initial px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
+                className="flex-1 md:w-auto min-w-[120px] px-3 md:px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50 text-sm"
               >
                 <option value="all">Todas</option>
                 <option value="vencida">Vencida</option>
@@ -765,7 +765,7 @@ function Marcas({ token, userData }) {
               <select
                 value={filterEstatus}
                 onChange={(e) => setFilterEstatus(e.target.value)}
-                className="flex-1 md:flex-initial px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50"
+                className="flex-1 md:w-auto min-w-[120px] px-3 md:px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-white shadow-sm font-semibold text-stone-700 cursor-pointer hover:bg-stone-50 text-sm"
               >
                 <option value="all">Todos los estatus</option>
                 <option value="activas">Activas</option>
