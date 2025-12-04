@@ -27,23 +27,23 @@ namespace WebServiceBackEnd.BP.CM
                 if (notificacion.Marc_Id <= 0)
                     throw new ArgumentException("El ID de marca es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Nombre))
-                    throw new ArgumentException("El nombre es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Nombre))
+                //    throw new ArgumentException("El nombre es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Correo))
-                    throw new ArgumentException("El correo es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Correo))
+                //    throw new ArgumentException("El correo es obligatorio");
 
-                // Validar formato de correo
-                if (!IsValidEmail(notificacion.MarcNoti_Correo))
-                    throw new ArgumentException("El formato del correo no es válido");
+                //// Validar formato de correo
+                //if (!IsValidEmail(notificacion.MarcNoti_Correo))
+                //    throw new ArgumentException("El formato del correo no es válido");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_TelefonoWhatsApp))
-                    throw new ArgumentException("El teléfono de WhatsApp es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_TelefonoWhatsApp))
+                //    throw new ArgumentException("El teléfono de WhatsApp es obligatorio");
 
-                // Validar formato de teléfono (debe tener al menos 10 dígitos)
-                string telefonoLimpio = new string(notificacion.MarcNoti_TelefonoWhatsApp.Where(char.IsDigit).ToArray());
-                if (telefonoLimpio.Length < 10)
-                    throw new ArgumentException("El teléfono debe tener al menos 10 dígitos");
+                //// Validar formato de teléfono (debe tener al menos 10 dígitos)
+                //string telefonoLimpio = new string(notificacion.MarcNoti_TelefonoWhatsApp.Where(char.IsDigit).ToArray());
+                //if (telefonoLimpio.Length < 10)
+                //    throw new ArgumentException("El teléfono debe tener al menos 10 dígitos");
 
                 return await _marcaNotificacionDA.Crear(notificacion);
             }
@@ -67,23 +67,23 @@ namespace WebServiceBackEnd.BP.CM
                 if (notificacion.MarcNoti_Id <= 0)
                     throw new ArgumentException("El ID de la notificación es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Nombre))
-                    throw new ArgumentException("El nombre es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Nombre))
+                //    throw new ArgumentException("El nombre es obligatorio");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Correo))
-                    throw new ArgumentException("El correo es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_Correo))
+                //    throw new ArgumentException("El correo es obligatorio");
 
-                // Validar formato de correo
-                if (!IsValidEmail(notificacion.MarcNoti_Correo))
-                    throw new ArgumentException("El formato del correo no es válido");
+                //// Validar formato de correo
+                //if (!IsValidEmail(notificacion.MarcNoti_Correo))
+                //    throw new ArgumentException("El formato del correo no es válido");
 
-                if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_TelefonoWhatsApp))
-                    throw new ArgumentException("El teléfono de WhatsApp es obligatorio");
+                //if (string.IsNullOrWhiteSpace(notificacion.MarcNoti_TelefonoWhatsApp))
+                //    throw new ArgumentException("El teléfono de WhatsApp es obligatorio");
 
-                // Validar formato de teléfono
-                string telefonoLimpio = new string(notificacion.MarcNoti_TelefonoWhatsApp.Where(char.IsDigit).ToArray());
-                if (telefonoLimpio.Length < 10)
-                    throw new ArgumentException("El teléfono debe tener al menos 10 dígitos");
+                //// Validar formato de teléfono
+                //string telefonoLimpio = new string(notificacion.MarcNoti_TelefonoWhatsApp.Where(char.IsDigit).ToArray());
+                //if (telefonoLimpio.Length < 10)
+                //    throw new ArgumentException("El teléfono debe tener al menos 10 dígitos");
 
                 return await _marcaNotificacionDA.Actualizar(notificacion);
             }
