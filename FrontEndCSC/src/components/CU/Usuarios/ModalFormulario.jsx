@@ -27,22 +27,20 @@ const ModalFormulario = ({
       setValidationError("El campo Nombre Completo es requerido");
       return false;
     }
-    if (!formData.usua_Correo || formData.usua_Correo.trim() === "") {
-      setValidationError("El campo Correo Electrónico es requerido");
-      return false;
+    // Validar correo solo si se proporciona
+    if (formData.usua_Correo && formData.usua_Correo.trim() !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.usua_Correo)) {
+        setValidationError("El correo debe contener @ y un dominio válido");
+        return false;
+      }
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.usua_Correo)) {
-      setValidationError("El correo debe contener @ y un dominio válido");
-      return false;
-    }
-    if (!formData.usua_Telefono || formData.usua_Telefono.trim() === "") {
-      setValidationError("El campo Teléfono es requerido");
-      return false;
-    }
-    if (formData.usua_Telefono.length < 10) {
-      setValidationError("El teléfono debe tener 10 dígitos");
-      return false;
+    // Validar teléfono solo si se proporciona
+    if (formData.usua_Telefono && formData.usua_Telefono.trim() !== "") {
+      if (formData.usua_Telefono.length < 10) {
+        setValidationError("El teléfono debe tener 10 dígitos");
+        return false;
+      }
     }
     if (!editingUsuario) {
       if (!formData.usua_Contrasena || formData.usua_Contrasena.trim() === "") {
@@ -147,7 +145,6 @@ const ModalFormulario = ({
               <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Correo Electrónico
-                <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -160,7 +157,6 @@ const ModalFormulario = ({
                   })
                 }
                 autoComplete="new-email"
-                required
                 pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                 title="Ingrese un correo válido"
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
@@ -171,7 +167,6 @@ const ModalFormulario = ({
               <label className="text-sm font-bold text-stone-700 flex items-center gap-2">
                 <Phone className="w-4 h-4" />
                 Teléfono
-                <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -185,7 +180,6 @@ const ModalFormulario = ({
                   });
                 }}
                 autoComplete="off"
-                required
                 pattern="[0-9]{10}"
                 maxLength={10}
                 title="Ingrese un teléfono de 10 dígitos"
