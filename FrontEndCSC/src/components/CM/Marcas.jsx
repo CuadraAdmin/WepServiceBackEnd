@@ -16,7 +16,7 @@ import { usePermissions } from "../../hooks/usePermissions";
 import ApiService from "../../Services/ApiService";
 import MarcaTareasModal from "./MarcaTareasModal";
 import { FileUp } from "lucide-react"; // Agregar FileUp a los imports de lucide-react
-//import MarcasImport from "./MarcasImport"; // Agregar este import
+import MarcasImport from "./MarcasImport"; // Agregar este import
 
 function Marcas({ token, userData }) {
   const [marcas, setMarcas] = useState([]);
@@ -85,7 +85,7 @@ function Marcas({ token, userData }) {
   const handleImportSuccess = async () => {
     await cargarMarcas();
     setSuccess("MARCAS IMPORTADAS EXITOSAMENTE");
-    setShowImportModal(false);
+    //setShowImportModal(false);
     setTimeout(() => setSuccess(""), 4000);
   };
 
@@ -710,7 +710,7 @@ function Marcas({ token, userData }) {
 
             <div className="flex items-center gap-2 ml-auto">
               {/* Botón Importar */}
-              {hasPermission("Marcas.Agregar") && (
+              {hasPermission("Marcas.ImportarInformacion") && (
                 <button
                   onClick={() => setShowImportModal(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg hover:scale-105 active:scale-95"
@@ -934,7 +934,8 @@ function Marcas({ token, userData }) {
           }}
         />
       )}
-      {/* Modal Importar {showImportModal && (
+      {/* Modal Importar */}
+      {showImportModal && (
         <MarcasImport
           onClose={() => setShowImportModal(false)}
           onSuccess={handleImportSuccess}
@@ -942,7 +943,7 @@ function Marcas({ token, userData }) {
           userData={userData}
           empresasOptions={empresasOptions}
         />
-      )} */}
+      )}
     </div>
   );
 }
