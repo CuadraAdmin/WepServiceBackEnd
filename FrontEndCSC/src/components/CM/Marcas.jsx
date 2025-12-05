@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tag, Plus, Search, FileDown } from "lucide-react";
 import Alert from "../Globales/Alert";
 import MarcasTable from "./MarcasTable";
@@ -38,11 +38,10 @@ function Marcas({ token, userData }) {
   const [filterEstatus, setFilterEstatus] = useState("all");
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-
   // Estado para filtros avanzados
   const [advancedFilters, setAdvancedFilters] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-
+  const initialLoadDone = useRef(false);
   const usuario = userData?.usuario || {};
   const nombreUsuario = usuario.usua_Usuario || "Sistema";
   const Usua_Id = usuario.usua_Id;
@@ -118,9 +117,10 @@ function Marcas({ token, userData }) {
   });
 
   useEffect(() => {
-    if (Usua_Id && !permissionsLoading) {
+    if (Usua_Id && !permissionsLoading && !initialLoadDone.current) {
       cargarMarcas();
       cargarEmpresas();
+      initialLoadDone.current = true;
     }
   }, [Usua_Id, permissionsLoading]);
 

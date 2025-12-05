@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ApiConfig from "../components/Config/api.config";
 
 /**
@@ -8,10 +8,12 @@ export const usePermissions = (token, userId) => {
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
-    if (token && userId) {
+    if (token && userId && !initialLoadDone.current) {
       loadPermissions();
+      initialLoadDone.current = true;
     }
   }, [token, userId]);
 
