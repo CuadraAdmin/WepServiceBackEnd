@@ -39,7 +39,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al listar marcas: {ex.Message}");
+                throw new Exception($"Error al listar marcas: {ex.Message}");
             }
         }
 
@@ -68,7 +68,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al obtener marca: {ex.Message}");
+                throw new Exception($"Error al obtener marca: {ex.Message}");
             }
         }
 
@@ -92,7 +92,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al crear marca: {ex.Message}");
+                throw new Exception($"Error al crear marca: {ex.Message}");
             }
         }
 
@@ -127,7 +127,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al actualizar marca: {ex.Message}");
+                throw new Exception($"Error al actualizar marca: {ex.Message}");
             }
         }
 
@@ -156,7 +156,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al eliminar marca: {ex.Message}");
+                throw new Exception($"Error al eliminar marca: {ex.Message}");
             }
         }
 
@@ -185,7 +185,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al activar marca: {ex.Message}");
+                throw new Exception($"Error  al activar marca: {ex.Message}");
             }
         }
 
@@ -219,7 +219,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al listar marcas con filtros: {ex.Message}");
+                throw new Exception($"Error al listar marcas con filtros: {ex.Message}");
             }
         }
 
@@ -254,7 +254,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al obtener marcas por permisos: {ex.Message}");
+                throw new Exception($"Error al obtener marcas por permisos: {ex.Message}");
             }
         }
 
@@ -284,7 +284,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al obtener marcas por empresa: {ex.Message}");
+                throw new Exception($"Error al obtener marcas por empresa: {ex.Message}");
             }
         }
 
@@ -314,7 +314,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al buscar marcas por nombre: {ex.Message}");
+                throw new Exception($"Error al buscar marcas por nombre: {ex.Message}");
             }
         }
 
@@ -344,7 +344,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al buscar marcas por registro: {ex.Message}");
+                throw new Exception($"Error al buscar marcas por registro: {ex.Message}");
             }
         }
 
@@ -366,7 +366,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al obtener marcas activas: {ex.Message}");
+                throw new Exception($"Error  al obtener marcas activas: {ex.Message}");
             }
         }
 
@@ -388,7 +388,7 @@ namespace WebServiceBackEnd.BP.CM
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error en BP al obtener marcas inactivas: {ex.Message}");
+                throw new Exception($"Error al obtener marcas inactivas: {ex.Message}");
             }
         }
     }
