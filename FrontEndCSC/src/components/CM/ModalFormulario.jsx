@@ -249,28 +249,31 @@ function ModalFormulario({
     if (!formData.Marc_Renovacion)
       errors.push("La fecha de renovación es obligatoria");
 
-    // Validar imagen
-    if (!previewImage && !editingMarca) {
-      errors.push("Debe subir una imagen de diseño");
-    }
+    // ✅ IMAGEN YA NO ES OBLIGATORIA
+    // if (!previewImage && !editingMarca) {
+    //   errors.push("Debe subir una imagen de diseño");
+    // }
 
-    // Validar fechas de notificación
+    // Validar fechas de notificación - SOLO FECHA DE AVISO ES OBLIGATORIA
     if (!formData.Marc_FechaAviso) {
       errors.push(
         "La fecha de aviso es obligatoria para el sistema de notificaciones"
       );
     }
-    if (!formData.Marc_FechaSeguimiento) {
-      errors.push(
-        "La fecha de seguimiento es obligatoria para el sistema de notificaciones"
-      );
-    }
 
-    // VALIDAR CONTACTOS - NUEVO
+    // ✅ FECHA DE SEGUIMIENTO YA NO ES OBLIGATORIA
+    // if (!formData.Marc_FechaSeguimiento) {
+    //   errors.push(
+    //     "La fecha de seguimiento es obligatoria para el sistema de notificaciones"
+    //   );
+    // }
+
+    // ✅ VALIDAR QUE HAYA AL MENOS 1 CONTACTO (ESTO SE MANTIENE)
     if (contactos.length === 0) {
       errors.push("Debe agregar al menos 1 contacto de notificación");
     }
 
+    // ✅ VALIDAR CAMPOS DE CADA CONTACTO
     contactos.forEach((contacto, index) => {
       if (!contacto.nombre?.trim()) {
         errors.push(`Contacto #${index + 1}: El nombre es obligatorio`);
@@ -278,9 +281,10 @@ function ModalFormulario({
       if (!contacto.correo?.trim()) {
         errors.push(`Contacto #${index + 1}: El correo es obligatorio`);
       }
-      if (!contacto.telefonoWhatsApp?.trim()) {
-        errors.push(`Contacto #${index + 1}: El WhatsApp es obligatorio`);
-      }
+      // ✅ WHATSAPP YA NO ES OBLIGATORIO
+      // if (!contacto.telefonoWhatsApp?.trim()) {
+      //   errors.push(`Contacto #${index + 1}: El WhatsApp es obligatorio`);
+      // }
     });
 
     return errors;
@@ -409,7 +413,6 @@ function ModalFormulario({
                     accept="image/*"
                     onChange={handleImageSelect}
                     className="hidden"
-                    required={!previewImage && !editingMarca}
                   />
                   <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg">
                     <Upload className="w-5 h-5" />
@@ -600,18 +603,12 @@ function ModalFormulario({
               </label>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
                 value={formData.Marc_Clase}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  // Solo permitir números
-                  if (/^\d*$/.test(value)) {
-                    setFormData({
-                      ...formData,
-                      Marc_Clase: value,
-                    });
-                  }
+                  setFormData({
+                    ...formData,
+                    Marc_Clase: e.target.value,
+                  });
                 }}
                 onBlur={(e) =>
                   setFormData({
@@ -620,9 +617,14 @@ function ModalFormulario({
                   })
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                placeholder="Clase"
+                placeholder="25, 35, 45"
                 required
               />
+              {/* ✅ MENSAJE DE AYUDA */}
+              <p className="text-xs text-stone-600 mt-1">
+                Si son varias clases, sepárelas con comas:{" "}
+                <span className="font-semibold">12, 14, 32</span>
+              </p>
             </div>
 
             {/* TITULAR - OBLIGATORIO */}
@@ -836,12 +838,14 @@ function ModalFormulario({
               <input
                 type="date"
                 value={formData.Marc_Renovacion || ""}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nuevaFecha = e.target.value;
                   setFormData({
                     ...formData,
-                    Marc_Renovacion: e.target.value,
-                  })
-                }
+                    Marc_Renovacion: nuevaFecha,
+                    Marc_FechaAviso: nuevaFecha,
+                  });
+                }}
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 required
               />

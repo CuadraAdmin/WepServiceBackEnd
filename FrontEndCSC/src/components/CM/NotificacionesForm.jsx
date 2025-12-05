@@ -1,14 +1,11 @@
 import {
   Mail,
-  Phone,
   Plus,
   Trash2,
   Calendar,
   UserCheck,
-  X,
   AlertCircle,
 } from "lucide-react";
-import { useState } from "react";
 
 function NotificacionesForm({
   marcaId,
@@ -19,61 +16,13 @@ function NotificacionesForm({
   contactos,
   setContactos,
 }) {
-  const [whatsappErrors, setWhatsappErrors] = useState({});
-
-  // Validar formato de WhatsApp - SIMPLIFICADO
-  const validarWhatsApp = (numero) => {
-    const numeroLimpio = numero.replace(/[\s-]/g, "").trim();
-
-    if (!numeroLimpio.startsWith("+")) {
-      return {
-        valido: false,
-        mensaje: "Debe empezar con +",
-      };
-    }
-
-    const soloDigitos = numeroLimpio.slice(1);
-
-    if (!/^\d+$/.test(soloDigitos)) {
-      return {
-        valido: false,
-        mensaje: "Solo debe contener números después del +",
-      };
-    }
-
-    // Validación específica para México (+52)
-    if (numeroLimpio.startsWith("+52")) {
-      const digitosDespuesDe52 = soloDigitos.slice(2);
-
-      // SOLO aceptar 10 dígitos (sin el "1")
-      if (digitosDespuesDe52.length === 10) {
-        return { valido: true };
-      }
-
-      return {
-        valido: false,
-        mensaje: `Debe tener 10 dígitos después de +52. Tiene ${digitosDespuesDe52.length}`,
-      };
-    }
-
-    // Validación genérica para otros países
-    if (soloDigitos.length >= 10 && soloDigitos.length <= 15) {
-      return { valido: true };
-    }
-
-    return {
-      valido: false,
-      mensaje: "Formato inválido",
-    };
-  };
-
   const agregarNuevoContacto = () => {
     setContactos([
       ...contactos,
       {
         nombre: "",
         correo: "",
-        telefonoWhatsApp: "",
+        telefonoWhatsApp: "", // Se mantiene en el estado pero no se muestra en la UI
       },
     ]);
   };
@@ -96,20 +45,7 @@ function NotificacionesForm({
 
   const actualizarContacto = (index, campo, valor) => {
     const nuevos = [...contactos];
-
-    if (campo === "telefonoWhatsApp") {
-      const valorLimpio = valor.replace(/[\s-]/g, "");
-      nuevos[index][campo] = valorLimpio;
-
-      const validacion = validarWhatsApp(valorLimpio);
-      setWhatsappErrors({
-        ...whatsappErrors,
-        [index]: validacion.valido ? null : validacion.mensaje,
-      });
-    } else {
-      nuevos[index][campo] = valor;
-    }
-
+    nuevos[index][campo] = valor;
     setContactos(nuevos);
   };
 
@@ -143,7 +79,7 @@ function NotificacionesForm({
 
           <div>
             <label className="text-xs font-medium text-stone-700 mb-1 block">
-              Fecha de Seguimiento <span className="text-red-600">*</span>
+              Fecha de Seguimiento
             </label>
             <input
               type="date"
@@ -155,7 +91,6 @@ function NotificacionesForm({
                 })
               }
               className="w-full px-2 py-1.5 text-sm rounded-lg border border-stone-300 focus:border-stone-500 outline-none"
-              required
             />
           </div>
         </div>
@@ -219,75 +154,39 @@ function NotificacionesForm({
               </button>
             </div>
 
-            {/* CAMPOS DEL CONTACTO */}
-            <div className="space-y-2">
-              <div className="grid md:grid-cols-3 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-stone-700 mb-1 block">
-                    Nombre <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={contacto.nombre}
-                    onChange={(e) =>
-                      actualizarContacto(index, "nombre", e.target.value)
-                    }
-                    className="w-full px-2 py-1.5 text-sm rounded border border-stone-300 focus:border-stone-500 outline-none"
-                    placeholder="Nombre"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-stone-700 mb-1 block">
-                    Correo <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={contacto.correo}
-                    onChange={(e) =>
-                      actualizarContacto(index, "correo", e.target.value)
-                    }
-                    className="w-full px-2 py-1.5 text-sm rounded border border-stone-300 focus:border-stone-500 outline-none"
-                    placeholder="correo@ejemplo.com"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-stone-700 mb-1 block">
-                    WhatsApp <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={contacto.telefonoWhatsApp}
-                    onChange={(e) =>
-                      actualizarContacto(
-                        index,
-                        "telefonoWhatsApp",
-                        e.target.value
-                      )
-                    }
-                    className={`w-full px-2 py-1.5 text-sm rounded border outline-none ${
-                      whatsappErrors[index]
-                        ? "border-red-400"
-                        : "border-stone-300 focus:border-stone-500"
-                    }`}
-                    placeholder="+524771234567"
-                    required
-                  />
-                </div>
+            {/* CAMPOS DEL CONTACTO - SOLO NOMBRE Y CORREO */}
+            <div className="grid md:grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-medium text-stone-700 mb-1 block">
+                  Nombre <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={contacto.nombre}
+                  onChange={(e) =>
+                    actualizarContacto(index, "nombre", e.target.value)
+                  }
+                  className="w-full px-2 py-1.5 text-sm rounded border border-stone-300 focus:border-stone-500 outline-none"
+                  placeholder="Nombre completo"
+                  required
+                />
               </div>
 
-              {/* Error específico de WhatsApp */}
-              {whatsappErrors[index] && (
-                <div className="bg-red-50 border border-red-200 rounded p-2 flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                  <p className="text-xs text-red-700">
-                    {whatsappErrors[index]}
-                  </p>
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-medium text-stone-700 mb-1 block">
+                  Correo <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={contacto.correo}
+                  onChange={(e) =>
+                    actualizarContacto(index, "correo", e.target.value)
+                  }
+                  className="w-full px-2 py-1.5 text-sm rounded border border-stone-300 focus:border-stone-500 outline-none"
+                  placeholder="correo@ejemplo.com"
+                  required
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -295,9 +194,11 @@ function NotificacionesForm({
 
       <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-800">
         <p className="font-medium mb-1">
-          📱 Formato WhatsApp: +52 + 10 dígitos
+          📧 Los contactos recibirán notificaciones por correo electrónico
         </p>
-        <p className="text-blue-700">Ejemplo: +524771234567</p>
+        <p className="text-blue-700">
+          Se enviarán alertas 30, 15 y 1 día antes de la fecha de aviso
+        </p>
       </div>
     </div>
   );
