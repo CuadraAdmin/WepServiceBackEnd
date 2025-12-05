@@ -380,7 +380,6 @@ function MarcasImport({
     setResults({ success: 0, errors: [] });
     setMostrarValidador(false);
 
-    // 🔧 FUNCIÓN PARA LIMPIAR MENSAJES DE ERROR
     const limpiarMensajeError = (mensaje) => {
       if (!mensaje) return "Error desconocido";
 
@@ -413,7 +412,6 @@ function MarcasImport({
           const fechaRenovacion = convertirFechaExcel(
             mappedRow.Marc_Renovacion
           );
-          // ✅ Marc_FechaAviso toma el mismo valor que Renovación
           const fechaAviso = fechaRenovacion;
 
           // 1. CREAR LA MARCA
@@ -469,7 +467,6 @@ function MarcasImport({
                   correo: mappedRow.Contacto_Correo,
                 });
               } catch (contactoError) {
-                // 🔧 LIMPIAR MENSAJE DE ERROR DE CONTACTO
                 const mensajeLimpio = limpiarMensajeError(
                   contactoError.message || "Error al crear contacto"
                 );
@@ -481,7 +478,6 @@ function MarcasImport({
           } else {
             const errorData = await response.json();
 
-            // 🔧 LIMPIAR MENSAJE DE ERROR DE MARCA
             const mensajeError = limpiarMensajeError(
               errorData.mensaje ||
                 errorData.message ||
@@ -499,7 +495,6 @@ function MarcasImport({
             });
           }
         } catch (error) {
-          // 🔧 LIMPIAR MENSAJE DE ERROR GENERAL
           const mensajeError = limpiarMensajeError(
             error.message || "Error al procesar registro"
           );
@@ -525,7 +520,6 @@ function MarcasImport({
         onSuccess?.();
       }
     } catch (error) {
-      // 🔧 LIMPIAR MENSAJE DE ERROR GENERAL DE IMPORTACIÓN
       const mensajeError = limpiarMensajeError(
         error.message || "Error general en la importación"
       );
