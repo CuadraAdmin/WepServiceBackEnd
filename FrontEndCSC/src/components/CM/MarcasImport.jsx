@@ -135,9 +135,6 @@ function MarcasImport({
       }
     }
 
-    console.warn(
-      `⚠️ Fecha no reconocida: "${valor}" - se establecerá como null`
-    );
     return null;
   };
 
@@ -238,11 +235,6 @@ function MarcasImport({
         defval: null,
       });
 
-      console.log("\n════════════════════════════════════════");
-      console.log(`📊 PROCESANDO: ${nombreHoja}`);
-      console.log(`📝 Registros: ${jsonData.length}`);
-      console.log("════════════════════════════════════════");
-
       const processedData = jsonData.map((row) => {
         const mappedRow = {};
 
@@ -315,7 +307,6 @@ function MarcasImport({
       setPreview(processedData.slice(0, 5));
     } catch (err) {
       setError("Error al procesar la hoja: " + err.message);
-      console.error("Error completo:", err);
     }
   };
 
@@ -351,8 +342,6 @@ function MarcasImport({
         marcNoti_CreadoPor: nombreUsuario,
       };
 
-      console.log("📞 Creando contacto para marca:", marcaId, contactoData);
-
       const response = await ApiService.post(
         `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/crear`,
         contactoData,
@@ -361,17 +350,14 @@ function MarcasImport({
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("❌ Error al crear contacto:", errorData);
         throw new Error(
           errorData.mensaje || "Error al crear contacto de notificación"
         );
       }
 
       const resultado = await response.json();
-      console.log("✅ Contacto creado exitosamente:", resultado);
       return true;
     } catch (error) {
-      console.error("❌ Excepción al crear contacto:", error);
       throw error;
     }
   };
@@ -393,6 +379,25 @@ function MarcasImport({
     setError("");
     setResults({ success: 0, errors: [] });
     setMostrarValidador(false);
+
+    // 🔧 FUNCIÓN PARA LIMPIAR MENSAJES DE ERROR
+    const limpiarMensajeError = (mensaje) => {
+      if (!mensaje) return "Error desconocido";
+
+      // Si el mensaje contiene "SQLError:", extraer solo el mensaje principal
+      if (mensaje.includes("SQLError:")) {
+        const lineas = mensaje.split("\n");
+        const lineaPrincipal = lineas[0].replace("SQLError: ", "").trim();
+        return lineaPrincipal;
+      }
+
+      // Si contiene "#SP:", "#LI:", etc., tomar solo la primera línea
+      if (mensaje.includes("#SP:") || mensaje.includes("#LI:")) {
+        return mensaje.split("\n")[0].replace("SQLError: ", "").trim();
+      }
+
+      return mensaje;
+    };
 
     try {
       setProgress({ current: 0, total: datosAImportar.length });
@@ -422,7 +427,7 @@ function MarcasImport({
             Marc_Clase: mappedRow.Marc_Clase || null,
             Marc_Titular: mappedRow.Marc_Titular,
             Marc_Renovacion: fechaRenovacion,
-            Marc_FechaAviso: fechaAviso, // ✅ Usa el mismo valor de Renovación
+            Marc_FechaAviso: fechaAviso,
             Marc_Diseno: null,
             Marc_Figura: mappedRow.Marc_Figura || null,
             Marc_Titulo: mappedRow.Marc_Titulo || null,
@@ -445,8 +450,6 @@ function MarcasImport({
             Marc_CreadoPor: nombreUsuario,
           };
 
-          console.log("🏷️ Creando marca:", marca.Marc_Marca);
-
           const response = await ApiService.post(
             `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear`,
             marca,
@@ -458,65 +461,56 @@ function MarcasImport({
             const marcaId =
               marcaCreada.id || marcaCreada.marcaId || marcaCreada.Marc_Id;
 
-            console.log("✅ Marca creada con ID:", marcaId);
-
             // 2. CREAR EL CONTACTO SI EXISTE
             if (mappedRow.Contacto_Nombre && mappedRow.Contacto_Correo) {
-              console.log("📋 Intentando crear contacto para marca:", marcaId, {
-                nombre: mappedRow.Contacto_Nombre,
-                correo: mappedRow.Contacto_Correo,
-              });
-
               try {
                 await crearContactoNotificacion(marcaId, {
                   nombre: mappedRow.Contacto_Nombre,
                   correo: mappedRow.Contacto_Correo,
                 });
-                console.log(
-                  "✅ Contacto creado exitosamente para marca:",
-                  marcaId
-                );
               } catch (contactoError) {
-                console.error(
-                  "❌ Error al crear contacto:",
-                  contactoError.message
+                // 🔧 LIMPIAR MENSAJE DE ERROR DE CONTACTO
+                const mensajeLimpio = limpiarMensajeError(
+                  contactoError.message || "Error al crear contacto"
                 );
-                console.warn(
-                  `Marca creada pero falló al crear contacto: ${contactoError.message}`
-                );
-                // La marca se creó exitosamente aunque falló el contacto
               }
             } else {
-              console.log(
-                "ℹ️ No se proporcionaron datos de contacto para la marca:",
-                marcaId
-              );
             }
 
             successCount++;
           } else {
             const errorData = await response.json();
+
+            // 🔧 LIMPIAR MENSAJE DE ERROR DE MARCA
+            const mensajeError = limpiarMensajeError(
+              errorData.mensaje ||
+                errorData.message ||
+                "Error desconocido al crear marca"
+            );
+
             errors.push({
               fila: filaExcelActual,
               marca:
                 marca.Marc_Marca ||
                 marca.Marc_Consecutivo ||
                 "Sin identificador",
-              error:
-                errorData.mensaje ||
-                errorData.message ||
-                "Error desconocido al crear marca",
+              error: mensajeError,
               detalles: errorData,
             });
           }
         } catch (error) {
+          // 🔧 LIMPIAR MENSAJE DE ERROR GENERAL
+          const mensajeError = limpiarMensajeError(
+            error.message || "Error al procesar registro"
+          );
+
           errors.push({
             fila: filaExcelActual,
             marca:
               mappedRow.Marc_Marca ||
               mappedRow.Marc_Consecutivo ||
               "Desconocida",
-            error: error.message || "Error al procesar registro",
+            error: mensajeError,
             detalles: error,
           });
         }
@@ -531,7 +525,11 @@ function MarcasImport({
         onSuccess?.();
       }
     } catch (error) {
-      setError("Error general en la importación: " + error.message);
+      // 🔧 LIMPIAR MENSAJE DE ERROR GENERAL DE IMPORTACIÓN
+      const mensajeError = limpiarMensajeError(
+        error.message || "Error general en la importación"
+      );
+      setError("Error general en la importación: " + mensajeError);
     } finally {
       setLoading(false);
     }
