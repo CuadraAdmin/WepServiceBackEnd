@@ -143,6 +143,7 @@ namespace WebServiceBackEnd.Services
                         AND MarcNoti_Id = @MarcNoti_Id 
                         AND MarcNotiLog_TipoPeriodo = @TipoPeriodo
                         AND MarcNotiLog_Exitoso = 1
+                        AND MarcNotiLog_Estatus = 1  
                         AND CAST(MarcNotiLog_FechaEnvio AS DATE) = CAST(GETDATE() AS DATE)", conn);
 
                 cmd.Parameters.AddWithValue("@Marc_Id", marcaId);
@@ -160,8 +161,8 @@ namespace WebServiceBackEnd.Services
             {
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(@"
-                    INSERT INTO cm.MarcaNotificacionLog (Marc_Id, MarcNoti_Id, MarcNotiLog_TipoNotificacion, MarcNotiLog_TipoPeriodo, MarcNotiLog_FechaEnvio, MarcNotiLog_Exitoso, MarcNotiLog_MensajeError)
-                    VALUES (@Marc_Id, @MarcNoti_Id, @TipoNotificacion, @TipoPeriodo, GETDATE(), @Exitoso, @MensajeError)", conn);
+                    INSERT INTO cm.MarcaNotificacionLog (Marc_Id, MarcNoti_Id, MarcNotiLog_TipoNotificacion, MarcNotiLog_TipoPeriodo, MarcNotiLog_FechaEnvio, MarcNotiLog_Exitoso, MarcNotiLog_MensajeError, MarcNotiLog_Estatus)
+                    VALUES (@Marc_Id, @MarcNoti_Id, @TipoNotificacion, @TipoPeriodo, GETDATE(), @Exitoso, @MensajeError, 1)", conn);
 
                 cmd.Parameters.AddWithValue("@Marc_Id", marcaId);
                 cmd.Parameters.AddWithValue("@MarcNoti_Id", contactoId);

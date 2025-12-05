@@ -143,7 +143,6 @@ namespace WebServiceBackEnd.Services
                         <p><strong>🏷️ Marca:</strong> {marca.Marc_Marca}</p>
                         <p><strong>📄 Registro:</strong> {marca.Marc_Registro}</p>
                         <p><strong>📅 Fecha de Renovación:</strong> {fechaRenovacion}</p>
-                        <p><strong>🔔 Fecha de Aviso:</strong> {fechaAviso}</p>
                         <p><strong>⏳ Días restantes:</strong> {marca.DiasRestantes} días</p>
                     </div>
                     
