@@ -359,5 +359,36 @@ namespace WebServiceBackEnd.Controllers.CM
                 return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
             }
         }
+
+        /// <summary>
+        /// Crea múltiples marcas de forma masiva
+        /// </summary>
+        [HttpPost("crear-masivo")]
+        public async Task<IActionResult> CrearMasivo([FromBody] List<MarcasBE> marcas)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var (totalInsertados, totalErrores, resultados) = await _marcasBP.CrearMasivo(marcas);
+
+                return Ok(new
+                {
+                    mensaje = $"Proceso completado. Insertados: {totalInsertados}, Errores: {totalErrores}",
+                    totalInsertados,
+                    totalErrores,
+                    detalles = resultados
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
+            }
+        }
     }
 }

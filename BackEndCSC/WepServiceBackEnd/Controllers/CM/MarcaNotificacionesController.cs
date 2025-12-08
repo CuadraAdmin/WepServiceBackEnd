@@ -122,5 +122,33 @@ namespace WebServiceBackEnd.Controllers.CM
                 return StatusCode(500, new { mensaje = "Error interno del servidor", detalle = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Crear múltiples contactos de notificación en una sola operación
+        /// </summary>
+        [HttpPost("crear-masivo")]
+        public async Task<IActionResult> CrearMasivo([FromBody] List<MarcaNotificacionBE> contactos)
+        {
+            try
+            {
+                var (totalInsertados, totalErrores, resultados) = await _marcaNotificacionBP.CrearMasivo(contactos);
+
+                return Ok(new
+                {
+                    mensaje = $"Proceso completado: {totalInsertados} contactos insertados, {totalErrores} errores",
+                    totalInsertados = totalInsertados,
+                    totalErrores = totalErrores,
+                    detalles = resultados
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = ex.Message });
+            }
+        }
     }
 }

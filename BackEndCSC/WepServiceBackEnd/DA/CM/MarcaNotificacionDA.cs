@@ -140,5 +140,84 @@ namespace WebServiceBackEnd.DA.CM
                 throw new Exception($"Error al eliminar notificación: {ex.Message}");
             }
         }
+
+        public async Task<(int TotalInsertados, int TotalErrores, List<dynamic> Resultados)> CrearMasivo(List<MarcaNotificacionBE> contactos)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    // Crear DataTable con estructura del UTT
+                    DataTable dt = new DataTable();
+                    dt.Columns.Add("Marc_Id", typeof(int));
+                    dt.Columns.Add("MarcNoti_Nombre", typeof(string));
+                    dt.Columns.Add("MarcNoti_Correo", typeof(string));
+                    dt.Columns.Add("MarcNoti_TelefonoWhatsApp", typeof(string));
+                    dt.Columns.Add("MarcNoti_Estatus", typeof(bool));
+                    dt.Columns.Add("MarcNoti_CreadoPor", typeof(string));
+
+                    // Llenar DataTable
+                    foreach (var contacto in contactos)
+                    {
+                        dt.Rows.Add(
+                            contacto.Marc_Id,
+                            string.IsNullOrEmpty(contacto.MarcNoti_Nombre) ? DBNull.Value : contacto.MarcNoti_Nombre,
+                            string.IsNullOrEmpty(contacto.MarcNoti_Correo) ? DBNull.Value : contacto.MarcNoti_Correo,
+                            string.IsNullOrEmpty(contacto.MarcNoti_TelefonoWhatsApp) ? DBNull.Value : contacto.MarcNoti_TelefonoWhatsApp,
+                            contacto.MarcNoti_Estatus,
+                            string.IsNullOrEmpty(contacto.MarcNoti_CreadoPor) ? DBNull.Value : contacto.MarcNoti_CreadoPor
+                        );
+                    }
+
+                    SqlCommand cmd = new SqlCommand("cm.usp_MarcaNotificacion_InsertarMasivo", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = 300; // 5 minutos para grandes lotes
+
+                    // Parámetro tipo tabla
+                    SqlParameter tvpParam = cmd.Parameters.AddWithValue("@Contactos", dt);
+                    tvpParam.SqlDbType = SqlDbType.Structured;
+                    tvpParam.TypeName = "cm.utt_MarcaNotificacion";
+
+                    // Parámetros de salida
+                    SqlParameter totalInsertadosParam = new SqlParameter("@TotalInsertados", SqlDbType.Int)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(totalInsertadosParam);
+
+                    SqlParameter totalErroresParam = new SqlParameter("@TotalErrores", SqlDbType.Int)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(totalErroresParam);
+
+                    // Ejecutar y leer resultados
+                    List<dynamic> resultados = new List<dynamic>();
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new System.Dynamic.ExpandoObject() as IDictionary<string, object>;
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                            }
+                            resultados.Add(row);
+                        }
+                    }
+
+                    int totalInsertados = Convert.ToInt32(totalInsertadosParam.Value);
+                    int totalErrores = Convert.ToInt32(totalErroresParam.Value);
+
+                    return (totalInsertados, totalErrores, resultados);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al crear contactos masivamente: {ex.Message}");
+            }
+        }
     }
 }

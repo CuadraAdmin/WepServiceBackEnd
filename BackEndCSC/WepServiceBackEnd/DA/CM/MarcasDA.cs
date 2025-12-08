@@ -484,5 +484,110 @@ namespace WebServiceBackEnd.DA.CM
                 throw new Exception($"Error al obtener marcas para notificación: {ex.Message}");
             }
         }
+
+        public async Task<(int TotalInsertados, int TotalErrores, List<dynamic> Resultados)> CrearMasivo(List<MarcasBE> marcas)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    SqlCommand cmd = new SqlCommand("cm.usp_Marcas_InsertarMasivo", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = 300;
+
+                    DataTable dtMarcas = new DataTable();
+                    dtMarcas.Columns.Add("Empr_Id", typeof(int));
+                    dtMarcas.Columns.Add("Marc_Consecutivo", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Pais", typeof(string));
+                    dtMarcas.Columns.Add("Marc_SolicitudNacional", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Registro", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Marca", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Diseno", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Clase", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Titular", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Figura", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Titulo", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Tipo", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Rama", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Autor", typeof(string));
+                    dtMarcas.Columns.Add("Marc_Observaciones", typeof(string));
+                    dtMarcas.Columns.Add("Marc_FechaSolicitud", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_FechaRegistro", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_Dure", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_Renovacion", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_Oposicion", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_ProximaTarea", typeof(string));
+                    dtMarcas.Columns.Add("Marc_FechaSeguimiento", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_FechaAviso", typeof(DateTime));
+                    dtMarcas.Columns.Add("Marc_Estatus", typeof(bool));
+                    dtMarcas.Columns.Add("Marc_CreadoPor", typeof(string));
+
+                    foreach (var marca in marcas)
+                    {
+                        dtMarcas.Rows.Add(
+                            marca.Empr_Id,
+                            string.IsNullOrEmpty(marca.Marc_Consecutivo) ? DBNull.Value : marca.Marc_Consecutivo,
+                            string.IsNullOrEmpty(marca.Marc_Pais) ? DBNull.Value : marca.Marc_Pais,
+                            string.IsNullOrEmpty(marca.Marc_SolicitudNacional) ? DBNull.Value : marca.Marc_SolicitudNacional,
+                            string.IsNullOrEmpty(marca.Marc_Registro) ? DBNull.Value : marca.Marc_Registro,
+                            string.IsNullOrEmpty(marca.Marc_Marca) ? DBNull.Value : marca.Marc_Marca,
+                            string.IsNullOrEmpty(marca.Marc_Diseno) ? DBNull.Value : marca.Marc_Diseno,
+                            string.IsNullOrEmpty(marca.Marc_Clase) ? DBNull.Value : marca.Marc_Clase,
+                            string.IsNullOrEmpty(marca.Marc_Titular) ? DBNull.Value : marca.Marc_Titular,
+                            string.IsNullOrEmpty(marca.Marc_Figura) ? DBNull.Value : marca.Marc_Figura,
+                            string.IsNullOrEmpty(marca.Marc_Titulo) ? DBNull.Value : marca.Marc_Titulo,
+                            string.IsNullOrEmpty(marca.Marc_Tipo) ? DBNull.Value : marca.Marc_Tipo,
+                            string.IsNullOrEmpty(marca.Marc_Rama) ? DBNull.Value : marca.Marc_Rama,
+                            string.IsNullOrEmpty(marca.Marc_Autor) ? DBNull.Value : marca.Marc_Autor,
+                            string.IsNullOrEmpty(marca.Marc_Observaciones) ? DBNull.Value : marca.Marc_Observaciones,
+                            marca.Marc_FechaSolicitud ?? (object)DBNull.Value,
+                            marca.Marc_FechaRegistro ?? (object)DBNull.Value,
+                            marca.Marc_Dure ?? (object)DBNull.Value,
+                            marca.Marc_Renovacion ?? (object)DBNull.Value,
+                            marca.Marc_Oposicion ?? (object)DBNull.Value,
+                            string.IsNullOrEmpty(marca.Marc_ProximaTarea) ? DBNull.Value : marca.Marc_ProximaTarea,
+                            marca.Marc_FechaSeguimiento ?? (object)DBNull.Value,
+                            marca.Marc_FechaAviso ?? (object)DBNull.Value,
+                            marca.Marc_Estatus,
+                            string.IsNullOrEmpty(marca.Marc_CreadoPor) ? DBNull.Value : marca.Marc_CreadoPor
+                        );
+                    }
+
+                    SqlParameter paramMarcas = cmd.Parameters.AddWithValue("@Marcas", dtMarcas);
+                    paramMarcas.SqlDbType = SqlDbType.Structured;
+                    paramMarcas.TypeName = "cm.utt_Marcas";
+
+                    SqlParameter paramInsertados = new SqlParameter("@TotalInsertados", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    SqlParameter paramErrores = new SqlParameter("@TotalErrores", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    cmd.Parameters.Add(paramInsertados);
+                    cmd.Parameters.Add(paramErrores);
+
+                    List<dynamic> resultados = new List<dynamic>();
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new System.Dynamic.ExpandoObject() as IDictionary<string, object>;
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                            }
+                            resultados.Add(row);
+                        }
+                    }
+
+                    int totalInsertados = Convert.ToInt32(paramInsertados.Value);
+                    int totalErrores = Convert.ToInt32(paramErrores.Value);
+
+                    return (totalInsertados, totalErrores, resultados);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al crear marcas masivamente: {ex.Message}");
+            }
+        }
     }
 }

@@ -130,5 +130,27 @@ namespace WebServiceBackEnd.BP.CM
                 return false;
             }
         }
+
+        public async Task<(int TotalInsertados, int TotalErrores, List<dynamic> Resultados)> CrearMasivo(List<MarcaNotificacionBE> contactos)
+        {
+            try
+            {
+                if (contactos == null || contactos.Count == 0)
+                    throw new ArgumentException("La lista de contactos no puede estar vacía");
+
+                if (contactos.Count > 1000)
+                    throw new ArgumentException("No se pueden insertar más de 1000 contactos a la vez");
+
+                return await _marcaNotificacionDA.CrearMasivo(contactos);
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error en BP al crear contactos masivamente: {ex.Message}");
+            }
+        }
     }
 }

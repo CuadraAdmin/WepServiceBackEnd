@@ -391,5 +391,27 @@ namespace WebServiceBackEnd.BP.CM
                 throw new Exception($"Error al obtener marcas inactivas: {ex.Message}");
             }
         }
+
+        public async Task<(int TotalInsertados, int TotalErrores, List<dynamic> Resultados)> CrearMasivo(List<MarcasBE> marcas)
+        {
+            try
+            {
+                if (marcas == null || !marcas.Any())
+                    throw new ArgumentException("La lista de marcas no puede estar vacía");
+
+                if (marcas.Count > 1000)
+                    throw new ArgumentException("No se pueden insertar más de 1000 marcas a la vez");
+
+                return await _marcasDA.CrearMasivo(marcas);
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al crear marcas masivamente: {ex.Message}");
+            }
+        }
     }
 }
