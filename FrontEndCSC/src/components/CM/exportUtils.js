@@ -6,7 +6,7 @@ export const exportToExcel = (marcas) => {
   const worksheet = XLSX.utils.json_to_sheet(
     marcas.map((marca) => ({
       // ID: marca.Marc_Id,
-      Empresa: marca.Empr_Nombre || "",
+      //Empresa: marca.Empr_Nombre || "",
       "Clave Empresa": marca.Empr_Clave || "",
       Consecutivo: marca.Marc_Consecutivo || "",
       País: marca.Marc_Pais || "",
