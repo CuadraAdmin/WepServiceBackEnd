@@ -232,48 +232,69 @@ function ModalFormulario({
   const validateForm = () => {
     const errors = [];
 
-    // Validar campos obligatorios básicos
-    if (!formData.Empr_Id) errors.push("Debe seleccionar una empresa");
-    if (!formData.Marc_Consecutivo?.trim())
-      errors.push("El consecutivo es obligatorio");
-    if (!formData.Marc_Pais?.trim()) errors.push("El país es obligatorio");
-    if (!formData.Marc_SolicitudNacional?.trim())
-      errors.push("La solicitud nacional es obligatoria");
-    if (!formData.Marc_Registro?.trim())
-      errors.push("El registro es obligatorio");
-    if (!formData.Marc_Marca?.trim())
-      errors.push("El nombre de la marca es obligatorio");
-    if (!formData.Marc_Clase?.trim()) errors.push("La clase es obligatoria");
-    if (!formData.Marc_Titular?.trim())
-      errors.push("El titular es obligatorio");
-    if (!formData.Marc_Renovacion)
+    if (!formData.Empr_Id) {
+      errors.push("Debe seleccionar una empresa");
+    }
+
+    //  PAÍS - OBLIGATORIO SIN N/A (debe tener texto real)
+    if (!formData.Marc_Pais?.trim()) {
+      errors.push("El país es obligatorio");
+    }
+
+    // Función auxiliar para validar campos que aceptan N/A
+    const esValorValido = (valor) => {
+      if (!valor) return false;
+      const valorTrim = String(valor).trim();
+      if (valorTrim === "") return false;
+      return true; // Acepta cualquier texto, incluyendo "N/A"
+    };
+
+    //  CAMPOS OBLIGATORIOS QUE ACEPTAN N/A
+    if (!esValorValido(formData.Marc_SolicitudNacional)) {
+      errors.push(
+        "La solicitud nacional es obligatoria (puede usar N/A si no aplica)"
+      );
+    }
+
+    if (!esValorValido(formData.Marc_Registro)) {
+      errors.push("El registro es obligatorio (puede usar N/A si no aplica)");
+    }
+
+    if (!esValorValido(formData.Marc_Marca)) {
+      errors.push(
+        "El nombre de la marca es obligatorio (puede usar N/A si no aplica)"
+      );
+    }
+
+    if (!esValorValido(formData.Marc_Clase)) {
+      errors.push("La clase es obligatoria (puede usar N/A si no aplica)");
+    }
+
+    if (!esValorValido(formData.Marc_Titular)) {
+      errors.push("El titular es obligatorio (puede usar N/A si no aplica)");
+    }
+
+    // RENOVACIÓN - OBLIGATORIO (fecha)
+    if (!formData.Marc_Renovacion) {
       errors.push("La fecha de renovación es obligatoria");
+    }
 
-    // ✅ IMAGEN YA NO ES OBLIGATORIA
-    // if (!previewImage && !editingMarca) {
-    //   errors.push("Debe subir una imagen de diseño");
-    // }
+    // IMAGEN DE DISEÑO - YA NO ES OBLIGATORIA
+    // (se removió la validación)
 
-    // Validar fechas de notificación - SOLO FECHA DE AVISO ES OBLIGATORIA
+    // FECHA DE AVISO - OBLIGATORIA
     if (!formData.Marc_FechaAviso) {
       errors.push(
         "La fecha de aviso es obligatoria para el sistema de notificaciones"
       );
     }
 
-    // ✅ FECHA DE SEGUIMIENTO YA NO ES OBLIGATORIA
-    // if (!formData.Marc_FechaSeguimiento) {
-    //   errors.push(
-    //     "La fecha de seguimiento es obligatoria para el sistema de notificaciones"
-    //   );
-    // }
-
-    // ✅ VALIDAR QUE HAYA AL MENOS 1 CONTACTO (ESTO SE MANTIENE)
+    //  VALIDAR QUE HAYA AL MENOS 1 CONTACTO
     if (contactos.length === 0) {
       errors.push("Debe agregar al menos 1 contacto de notificación");
     }
 
-    // ✅ VALIDAR CAMPOS DE CADA CONTACTO
+    // VALIDAR CAMPOS DE CADA CONTACTO
     contactos.forEach((contacto, index) => {
       if (!contacto.nombre?.trim()) {
         errors.push(`Contacto #${index + 1}: El nombre es obligatorio`);
@@ -281,10 +302,6 @@ function ModalFormulario({
       if (!contacto.correo?.trim()) {
         errors.push(`Contacto #${index + 1}: El correo es obligatorio`);
       }
-      // ✅ WHATSAPP YA NO ES OBLIGATORIO
-      // if (!contacto.telefonoWhatsApp?.trim()) {
-      //   errors.push(`Contacto #${index + 1}: El WhatsApp es obligatorio`);
-      // }
     });
 
     return errors;
@@ -387,7 +404,7 @@ function ModalFormulario({
           {/* IMAGEN DE DISEÑO */}
           <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-6 border-2 border-stone-200">
             <label className="text-sm font-bold text-stone-700 mb-3 block">
-              Imagen de Diseño <span className="text-red-600">*</span>
+              Imagen de Diseño
             </label>
 
             <div className="flex flex-col md:flex-row gap-4 items-start">
@@ -472,7 +489,7 @@ function ModalFormulario({
             {/* CONSECUTIVO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Consecutivo <span className="text-red-600">*</span>
+                Consecutivo
               </label>
               <input
                 type="text"
@@ -491,7 +508,6 @@ function ModalFormulario({
                 }
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
                 placeholder="Consecutivo"
-                required
               />
             </div>
 
@@ -540,6 +556,10 @@ function ModalFormulario({
                 placeholder="Expediente"
                 required
               />
+              <p className="text-xs text-stone-600">
+                Puede usar <span className="font-semibold">N/A</span> si no
+                aplica
+              </p>
             </div>
 
             {/* REGISTRO - OBLIGATORIO */}
@@ -566,6 +586,10 @@ function ModalFormulario({
                 placeholder="Registro"
                 required
               />
+              <p className="text-xs text-stone-600">
+                Puede usar <span className="font-semibold">N/A</span> si no
+                aplica
+              </p>
             </div>
 
             {/* MARCA - OBLIGATORIO */}
@@ -592,6 +616,10 @@ function ModalFormulario({
                 placeholder="Nombre de la marca"
                 required
               />
+              <p className="text-xs text-stone-600">
+                Puede usar <span className="font-semibold">N/A</span> si no
+                aplica
+              </p>
             </div>
 
             <input type="hidden" value={formData.Marc_Diseno} />
@@ -620,10 +648,10 @@ function ModalFormulario({
                 placeholder="25, 35, 45"
                 required
               />
-              {/* ✅ MENSAJE DE AYUDA */}
-              <p className="text-xs text-stone-600 mt-1">
+              <p className="text-xs text-stone-600">
                 Si son varias clases, sepárelas con comas:{" "}
-                <span className="font-semibold">12, 14, 32</span>
+                <span className="font-semibold">12, 14, 32</span>. Puede usar{" "}
+                <span className="font-semibold">N/A</span> si no aplica
               </p>
             </div>
 
@@ -651,8 +679,35 @@ function ModalFormulario({
                 placeholder="Titular"
                 required
               />
+              <p className="text-xs text-stone-600">
+                Puede usar <span className="font-semibold">N/A</span> si no
+                aplica
+              </p>
             </div>
-
+            {/* LICENCIAMIENTO - NUEVO CAMPO */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-bold text-stone-700">
+                Licenciamiento
+              </label>
+              <textarea
+                value={formData.Marc_licenciamiento || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_licenciamiento: e.target.value,
+                  })
+                }
+                onBlur={(e) =>
+                  setFormData({
+                    ...formData,
+                    Marc_licenciamiento: e.target.value.trim(),
+                  })
+                }
+                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white resize-none"
+                rows="3"
+                placeholder="Licenciamiento"
+              />
+            </div>
             {/* FIGURA */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">Figura</label>

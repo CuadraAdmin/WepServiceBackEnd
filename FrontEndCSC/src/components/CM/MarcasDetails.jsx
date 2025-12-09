@@ -276,6 +276,14 @@ function MarcasDetails({ marca, onClose, token }) {
                   </div>
                   <div className="pt-3 border-t border-stone-200">
                     <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                      Licenciamiento
+                    </label>
+                    <p className="text-stone-900 font-medium break-words whitespace-pre-wrap">
+                      {marca.Marc_licenciamiento || "Licenciamiento"}
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-stone-200">
+                    <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
                       Observaciones
                     </label>
                     <p className="text-stone-900 font-medium break-words">
