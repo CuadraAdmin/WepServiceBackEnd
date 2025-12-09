@@ -279,7 +279,7 @@ function MarcasDetails({ marca, onClose, token }) {
                       Licenciamiento
                     </label>
                     <p className="text-stone-900 font-medium break-words whitespace-pre-wrap">
-                      {marca.Marc_licenciamiento || "Licenciamiento"}
+                      {marca.Marc_licenciamiento || "N/A"}
                     </p>
                   </div>
                   <div className="pt-3 border-t border-stone-200">
