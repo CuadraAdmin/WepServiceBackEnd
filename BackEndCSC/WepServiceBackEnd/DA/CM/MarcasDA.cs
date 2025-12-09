@@ -90,6 +90,7 @@ namespace WebServiceBackEnd.DA.CM
                                 Marc_Diseno = reader.IsDBNull(reader.GetOrdinal("Marc_Diseno"))? null : reader.GetString(reader.GetOrdinal("Marc_Diseno")),
                                 Marc_Clase = reader.IsDBNull(reader.GetOrdinal("Marc_Clase"))? null : reader.GetString(reader.GetOrdinal("Marc_Clase")),
                                 Marc_Titular = reader.IsDBNull(reader.GetOrdinal("Marc_Titular"))? null : reader.GetString(reader.GetOrdinal("Marc_Titular")),
+                                Marc_licenciamiento = reader.IsDBNull(reader.GetOrdinal("Marc_licenciamiento")) ? null : reader.GetString(reader.GetOrdinal("Marc_licenciamiento")),
                                 Marc_Figura = reader.IsDBNull(reader.GetOrdinal("Marc_Figura"))? null : reader.GetString(reader.GetOrdinal("Marc_Figura")),
                                 Marc_Titulo = reader.IsDBNull(reader.GetOrdinal("Marc_Titulo"))? null : reader.GetString(reader.GetOrdinal("Marc_Titulo")),
                                 Marc_Tipo = reader.IsDBNull(reader.GetOrdinal("Marc_Tipo"))? null : reader.GetString(reader.GetOrdinal("Marc_Tipo")),
@@ -141,6 +142,7 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_Diseno",string.IsNullOrEmpty(marca.Marc_Diseno) ? DBNull.Value : marca.Marc_Diseno);
                     cmd.Parameters.AddWithValue("@Marc_Clase",string.IsNullOrEmpty(marca.Marc_Clase) ? DBNull.Value : marca.Marc_Clase);
                     cmd.Parameters.AddWithValue("@Marc_Titular",string.IsNullOrEmpty(marca.Marc_Titular) ? DBNull.Value : marca.Marc_Titular);
+                    cmd.Parameters.AddWithValue("@Marc_licenciamiento", string.IsNullOrEmpty(marca.Marc_licenciamiento) ? DBNull.Value : marca.Marc_licenciamiento);
                     cmd.Parameters.AddWithValue("@Marc_Figura",string.IsNullOrEmpty(marca.Marc_Figura) ? DBNull.Value : marca.Marc_Figura);
                     cmd.Parameters.AddWithValue("@Marc_Titulo",string.IsNullOrEmpty(marca.Marc_Titulo) ? DBNull.Value : marca.Marc_Titulo);
                     cmd.Parameters.AddWithValue("@Marc_Tipo",string.IsNullOrEmpty(marca.Marc_Tipo) ? DBNull.Value : marca.Marc_Tipo);
@@ -196,6 +198,7 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_Diseno",string.IsNullOrEmpty(marca.Marc_Diseno) ? DBNull.Value : marca.Marc_Diseno);
                     cmd.Parameters.AddWithValue("@Marc_Clase",string.IsNullOrEmpty(marca.Marc_Clase) ? DBNull.Value : marca.Marc_Clase);
                     cmd.Parameters.AddWithValue("@Marc_Titular",string.IsNullOrEmpty(marca.Marc_Titular) ? DBNull.Value : marca.Marc_Titular);
+                    cmd.Parameters.AddWithValue("@Marc_licenciamiento", string.IsNullOrEmpty(marca.Marc_licenciamiento) ? DBNull.Value : marca.Marc_licenciamiento);
                     cmd.Parameters.AddWithValue("@Marc_Figura",string.IsNullOrEmpty(marca.Marc_Figura) ? DBNull.Value : marca.Marc_Figura);
                     cmd.Parameters.AddWithValue("@Marc_Titulo",string.IsNullOrEmpty(marca.Marc_Titulo) ? DBNull.Value : marca.Marc_Titulo);
                     cmd.Parameters.AddWithValue("@Marc_Tipo",string.IsNullOrEmpty(marca.Marc_Tipo) ? DBNull.Value : marca.Marc_Tipo);
@@ -344,6 +347,7 @@ namespace WebServiceBackEnd.DA.CM
                             row["Marc_Diseno"] = reader.IsDBNull(reader.GetOrdinal("Marc_Diseno"))? null : reader.GetString(reader.GetOrdinal("Marc_Diseno"));
                             row["Marc_Clase"] = reader.IsDBNull(reader.GetOrdinal("Marc_Clase"))? null : reader.GetString(reader.GetOrdinal("Marc_Clase"));
                             row["Marc_Titular"] = reader.IsDBNull(reader.GetOrdinal("Marc_Titular"))? null : reader.GetString(reader.GetOrdinal("Marc_Titular"));
+                            row["Marc_licenciamiento"] = reader.IsDBNull(reader.GetOrdinal("Marc_licenciamiento")) ? null : reader.GetString(reader.GetOrdinal("Marc_licenciamiento"));
                             row["Marc_Figura"] = reader.IsDBNull(reader.GetOrdinal("Marc_Figura"))? null : reader.GetString(reader.GetOrdinal("Marc_Figura"));
                             row["Marc_Titulo"] = reader.IsDBNull(reader.GetOrdinal("Marc_Titulo"))? null : reader.GetString(reader.GetOrdinal("Marc_Titulo"));
                             row["Marc_Tipo"] = reader.IsDBNull(reader.GetOrdinal("Marc_Tipo"))? null : reader.GetString(reader.GetOrdinal("Marc_Tipo"));
@@ -507,6 +511,7 @@ namespace WebServiceBackEnd.DA.CM
                     dtMarcas.Columns.Add("Marc_Diseno", typeof(string));
                     dtMarcas.Columns.Add("Marc_Clase", typeof(string));
                     dtMarcas.Columns.Add("Marc_Titular", typeof(string));
+                    dtMarcas.Columns.Add("Marc_licenciamiento", typeof(string));
                     dtMarcas.Columns.Add("Marc_Figura", typeof(string));
                     dtMarcas.Columns.Add("Marc_Titulo", typeof(string));
                     dtMarcas.Columns.Add("Marc_Tipo", typeof(string));
@@ -536,6 +541,7 @@ namespace WebServiceBackEnd.DA.CM
                             string.IsNullOrEmpty(marca.Marc_Diseno) ? DBNull.Value : marca.Marc_Diseno,
                             string.IsNullOrEmpty(marca.Marc_Clase) ? DBNull.Value : marca.Marc_Clase,
                             string.IsNullOrEmpty(marca.Marc_Titular) ? DBNull.Value : marca.Marc_Titular,
+                            string.IsNullOrEmpty(marca.Marc_licenciamiento) ? DBNull.Value : marca.Marc_licenciamiento,
                             string.IsNullOrEmpty(marca.Marc_Figura) ? DBNull.Value : marca.Marc_Figura,
                             string.IsNullOrEmpty(marca.Marc_Titulo) ? DBNull.Value : marca.Marc_Titulo,
                             string.IsNullOrEmpty(marca.Marc_Tipo) ? DBNull.Value : marca.Marc_Tipo,

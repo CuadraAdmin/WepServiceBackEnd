@@ -12,6 +12,7 @@
         public string? Marc_Diseno { get; set; }
         public string? Marc_Clase { get; set; }
         public string? Marc_Titular { get; set; }
+        public string? Marc_licenciamiento { get; set; }
         public string? Marc_Figura { get; set; }
         public string? Marc_Titulo { get; set; }
         public string? Marc_Tipo { get; set; }
