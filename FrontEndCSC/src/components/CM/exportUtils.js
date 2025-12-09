@@ -7,7 +7,7 @@ export const exportToExcel = (marcas) => {
     marcas.map((marca) => ({
       // ID: marca.Marc_Id,
       //Empresa: marca.Empr_Nombre || "",
-      "Clave Empresa": marca.Empr_Clave || "",
+      Empresa: marca.Empr_Clave || "",
       Consecutivo: marca.Marc_Consecutivo || "",
       País: marca.Marc_Pais || "",
       "Solicitud Nacional": marca.Marc_SolicitudNacional || "",
