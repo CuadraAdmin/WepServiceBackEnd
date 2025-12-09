@@ -4,6 +4,35 @@ import { AlertCircle, CheckCircle, XCircle, Eye } from "lucide-react";
 function MarcasValidator({ data, onValidationComplete, onCancel }) {
   const [showDetails, setShowDetails] = useState(false);
 
+  // Agregar esta función al inicio del componente, después de estaVacioCompleto
+  const normalizarFecha = (valor) => {
+    if (!valor) return null;
+
+    const valorStr = String(valor).trim().toUpperCase();
+
+    const valoresNA = [
+      "N/A",
+      "NA",
+      "N.A.",
+      "N.A",
+      "-",
+      "--",
+      "SIN FECHA",
+      "PENDIENTE",
+      "NO APLICA",
+      "NULL",
+      "VACIO",
+      "VACÍO",
+    ];
+
+    if (valoresNA.includes(valorStr)) {
+      return null;
+    }
+
+    // Si es una fecha válida, retornarla
+    return valor;
+  };
+
   const estaVacioCompleto = (valor) => {
     if (!valor) return true;
 
@@ -22,19 +51,17 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
     return valoresNA.includes(valorStr);
   };
 
-  // NUEVA FUNCIÓN: Verifica si un campo tiene contenido válido (texto real o N/A)
   const tieneContenidoValido = (valor) => {
-    if (estaVacioCompleto(valor)) return false; // Completamente vacío = inválido
-    return true; // Tiene algo (texto o N/A) = válido
+    if (estaVacioCompleto(valor)) return false;
+    return true;
   };
 
   const validarFormatoFecha = (fecha) => {
-    if (!fecha) return true; // Opcional
+    if (!fecha) return true;
 
     const fechaStr = String(fecha).trim().toUpperCase();
 
-    // Valores explícitamente inválidos después de sanitización
-    const valoresInvalidos = [
+    const valoresNA = [
       "N/A",
       "NA",
       "N.A.",
@@ -45,16 +72,17 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
       "PENDIENTE",
       "NO APLICA",
       "NULL",
+      "VACIO",
+      "VACÍO",
     ];
 
-    if (valoresInvalidos.includes(fechaStr)) {
-      return false;
+    if (valoresNA.includes(fechaStr)) {
+      return true;
     }
 
     // Formato AAAA-MM-DD
     const regex = /^\d{4}-\d{2}-\d{2}$/;
     if (regex.test(fechaStr)) {
-      // Validar que sea una fecha real
       const [anio, mes, dia] = fechaStr.split("-").map(Number);
       const fecha = new Date(anio, mes - 1, dia);
       return (
@@ -64,7 +92,6 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
       );
     }
 
-    // Número de serie de Excel (número positivo)
     if (!isNaN(fechaStr) && Number(fechaStr) > 0) {
       return true;
     }
@@ -82,10 +109,6 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
       const fila = index + 2; // Fila en Excel (índice 0 = fila 2)
 
       // Validar campos obligatorios BÁSICOS (NO aceptan N/A, deben tener texto real)
-      if (estaVacioCompleto(row.Marc_Consecutivo)) {
-        erroresFila.push("Consecutivo vacío");
-      }
-
       if (estaVacioCompleto(row.Marc_Pais)) {
         erroresFila.push("País vacío");
       }
@@ -199,7 +222,23 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
     if (validos.length === 0) {
       return;
     }
-    onValidationComplete(validos.map((v) => v.datos));
+
+    const datosNormalizados = validos.map((v) => {
+      const datos = { ...v.datos };
+
+      datos.Marc_FechaSolicitud = normalizarFecha(datos.Marc_FechaSolicitud);
+      datos.Marc_FechaRegistro = normalizarFecha(datos.Marc_FechaRegistro);
+      datos.Marc_Dure = normalizarFecha(datos.Marc_Dure);
+      datos.Marc_Renovacion = normalizarFecha(datos.Marc_Renovacion);
+      datos.Marc_Oposicion = normalizarFecha(datos.Marc_Oposicion);
+      datos.Marc_FechaSeguimiento = normalizarFecha(
+        datos.Marc_FechaSeguimiento
+      );
+
+      return datos;
+    });
+
+    onValidationComplete(datosNormalizados);
   };
 
   return (

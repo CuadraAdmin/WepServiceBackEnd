@@ -126,15 +126,6 @@ function MarcasImport({
       return `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
     }
 
-    const formatoMMDDAAAA = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/;
-    const matchMMDDAAAA = valorStr.match(formatoMMDDAAAA);
-    if (matchMMDDAAAA) {
-      const [, mes, dia, anio] = matchMMDDAAAA;
-      if (parseInt(mes) <= 12) {
-        return `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
-      }
-    }
-
     return null;
   };
 
@@ -229,7 +220,6 @@ function MarcasImport({
   const procesarHoja = async (wb, nombreHoja) => {
     try {
       const worksheet = wb.Sheets[nombreHoja];
-
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         raw: false,
         defval: null,
@@ -258,42 +248,31 @@ function MarcasImport({
             valor = sanitizarClase(valor);
           }
 
-          // --- BLOQUE A: Campos OBLIGATORIOS que aceptan N/A o guiones (-) ---
-          // Para estos campos, NO usamos sanitizarTexto() que convierte 'N/A' a null.
-          // Solo convertimos a null si están REALMENTE vacíos.
-          const camposQueAceptanNA = [
-            "Marc_Marca",
-            "Marc_Registro",
-            "Marc_SolicitudNacional",
+          const camposQueAceptanNAYVacios = [
+            "Marc_Consecutivo",
+            "Marc_Figura",
+            "Marc_Titulo",
+            "Marc_Tipo",
+            "Marc_Rama",
+            "Marc_Autor",
+            "Marc_Observaciones",
+            "Contacto_Nombre",
+            "Contacto_Correo",
           ];
 
-          if (camposQueAceptanNA.includes(systemField)) {
+          if (camposQueAceptanNAYVacios.includes(systemField)) {
+            valor = sanitizarTexto(valor);
+          } else if (
+            ["Marc_Marca", "Marc_Registro", "Marc_SolicitudNacional"].includes(
+              systemField
+            )
+          ) {
             if (valor === null || String(valor).trim() === "") {
               valor = null;
             } else {
               valor = String(valor).trim();
             }
-          }
-          // --- FIN BLOQUE A ---
-
-          // --- BLOQUE B: Otros campos que NO deben aceptar N/A (debe ser null si está vacío o tiene N/A) ---
-          else if (
-            [
-              "Marc_Consecutivo",
-              "Marc_Pais",
-              "Marc_Titular",
-              "Marc_Figura",
-              "Marc_Titulo",
-              "Marc_Tipo",
-              "Marc_Rama",
-              "Marc_Autor",
-              "Marc_Observaciones",
-              "Contacto_Nombre",
-              "Contacto_Correo",
-            ].includes(systemField)
-          ) {
-            // Estos campos usan sanitizarTexto para convertir 'N/A' o '-' a null
-            // (que es el comportamiento deseado para la mayoría de los campos opcionales o los obligatorios que no aceptan N/A).
+          } else if (["Marc_Pais", "Marc_Titular"].includes(systemField)) {
             valor = sanitizarTexto(valor);
           }
 
@@ -733,8 +712,8 @@ function MarcasImport({
                           <strong>
                             OBLIGATORIOS (no pueden estar vacíos):
                           </strong>{" "}
-                          Consecutivo, País, Solicitud Nacional, Marca, Clase,
-                          Registro, Titular
+                          País, Solicitud Nacional, Marca, Clase, Registro,
+                          Titular
                         </li>
                         <li>
                           <strong>Nota:</strong> Solicitud Nacional, Marca,
@@ -742,15 +721,12 @@ function MarcasImport({
                           pero NO pueden estar vacíos
                         </li>
                         <li>
-                          <strong>OPCIONALES:</strong> Renovación, Figura,
-                          Título, Tipo, Rama, Autor, Observaciones, todas las
-                          fechas
+                          <strong>OPCIONALES:</strong> Consecutivo,
+                          Renovación,Figura, Título, Tipo, Rama, Autor,
+                          Observaciones, todas las fechas
                         </li>
                         <li>
-                          <strong>CONTACTO (opcional):</strong> Si incluyes
-                          Nombre Contacto y Correo Contacto, se creará
-                          automáticamente (el teléfono se puede agregar después
-                          editando la marca)
+                          <strong>CONTACTO:</strong> (opcional)
                         </li>
                         <li>Fechas en formato: AAAA-MM-DD</li>
                         <li>
