@@ -16,6 +16,7 @@ export const exportToExcel = (marcas) => {
       Diseño: marca.Marc_Diseno || "",
       Clase: marca.Marc_Clase || "",
       Titular: marca.Marc_Titular || "",
+      Licenciamiento: marca.Marc_licenciamiento || "",
       Figura: marca.Marc_Figura || "",
       Título: marca.Marc_Titulo || "",
       Tipo: marca.Marc_Tipo || "",
