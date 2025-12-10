@@ -126,7 +126,7 @@ function Paises({ token, userData }) {
 
     try {
       const response = await ApiService.delete(
-        `${ApiConfig.ENDPOINTSPAISES.PAISES}/eliminar/${paisToDelete.Pais_Id}`,
+        `${ApiConfig.ENDPOINTSPAISES.PAISES}/eliminar/${paisToDelete.Pais_Id}?modificadoPor=${nombreUsuario}`,
         token
       );
 
@@ -159,8 +159,8 @@ function Paises({ token, userData }) {
 
     try {
       const response = await ApiService.patch(
-        `${ApiConfig.ENDPOINTSPAISES.PAISES}/activar/${paisToActivate.Pais_Id}`,
-        {},
+        `${ApiConfig.ENDPOINTSPAISES.PAISES}/activar/${paisToActivate.Pais_Id}?modificadoPor=${nombreUsuario}`,
+        null,
         token
       );
 

@@ -29,17 +29,17 @@ export const exportToExcel = (marcas) => {
       "Fecha Registro": marca.Marc_FechaRegistro
         ? new Date(marca.Marc_FechaRegistro).toLocaleDateString("es-MX")
         : "",
-      Duración: marca.Marc_Dure || "",
+      DURE: marca.Marc_Dure
+        ? new Date(marca.Marc_Dure).toLocaleDateString("es-MX")
+        : "",
       Renovación: marca.Marc_Renovacion
         ? new Date(marca.Marc_Renovacion).toLocaleDateString("es-MX")
         : "",
-      Oposición: marca.Marc_Oposicion || "",
-      "Próxima Tarea": marca.Marc_ProximaTarea || "",
+      Oposición: marca.Marc_Oposicion
+        ? new Date(marca.Marc_Oposicion).toLocaleDateString("es-MX")
+        : "",
       "Fecha Seguimiento": marca.Marc_FechaSeguimiento
         ? new Date(marca.Marc_FechaSeguimiento).toLocaleDateString("es-MX")
-        : "",
-      "Fecha Aviso": marca.Marc_FechaAviso
-        ? new Date(marca.Marc_FechaAviso).toLocaleDateString("es-MX")
         : "",
       Estado: marca.Marc_Estatus ? "ACTIVA" : "INACTIVA",
     }))
