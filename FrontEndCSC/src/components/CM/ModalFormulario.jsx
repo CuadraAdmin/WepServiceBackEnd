@@ -35,7 +35,8 @@ function ModalFormulario({
   const [validationErrors, setValidationErrors] = useState([]);
   const [contactos, setContactos] = useState([]);
   const [contactosOriginales, setContactosOriginales] = useState([]);
-
+  const [paises, setPaises] = useState([]);
+  const [loadingPaises, setLoadingPaises] = useState(true);
   useEffect(() => {
     setPreviewImage(formData.Marc_Diseno || null);
     setImageFile(null);
@@ -105,6 +106,49 @@ function ModalFormulario({
       cargarContactosExistentes();
     }
   }, [editingMarca, show, token]);
+
+  useEffect(() => {
+    const cargarPaises = async () => {
+      setLoadingPaises(true);
+      try {
+        const response = await fetch(
+          ApiConfig.getUrl(
+            `${ApiConfig.ENDPOINTSPAISES.PAISES}/listarConFiltros`
+          ),
+          {
+            method: "POST",
+            headers: ApiConfig.getHeaders(token),
+            body: JSON.stringify({
+              Accion: 1,
+              Pais_FiltroEstatus: true,
+              Pais_Id: 0,
+              Pais_Clave: null,
+              Pais_Nombre: null,
+              Pais_Estatus: true,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPaises(data);
+        }
+      } catch (error) {
+        console.error("Error al cargar países:", error);
+      } finally {
+        setLoadingPaises(false);
+      }
+    };
+
+    if (show) {
+      cargarPaises();
+    }
+  }, [show, token]);
+
+  const paisesOptions = paises.map((pais) => ({
+    value: pais.Pais_Nombre,
+    label: `${pais.Pais_Nombre} (${pais.Pais_Clave})`,
+  }));
 
   if (!show) return null;
 
@@ -513,21 +557,18 @@ function ModalFormulario({
 
             {/* PAÍS - OBLIGATORIO */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">
-                País <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
+              <Select
+                label="País"
+                options={paisesOptions}
                 value={formData.Marc_Pais}
-                onChange={(e) =>
-                  setFormData({ ...formData, Marc_Pais: e.target.value })
+                onChange={(value) =>
+                  setFormData({ ...formData, Marc_Pais: value })
                 }
-                onBlur={(e) =>
-                  setFormData({ ...formData, Marc_Pais: e.target.value.trim() })
+                placeholder={
+                  loadingPaises ? "Cargando países..." : "Seleccione un país"
                 }
-                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                placeholder="País"
-                required
+                required={true}
+                disabled={loadingPaises}
               />
             </div>
 
@@ -923,33 +964,8 @@ function ModalFormulario({
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
               />
             </div>
-            {/* PRÓXIMA TAREA
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-stone-700">
-                Próxima Tarea
-              </label>
-              <input
-                type="text"
-                value={formData.Marc_ProximaTarea}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    Marc_ProximaTarea: e.target.value,
-                  })
-                }
-                onBlur={(e) =>
-                  setFormData({
-                    ...formData,
-                    Marc_ProximaTarea: e.target.value.trim(),
-                  })
-                }
-                className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                placeholder="Próxima tarea"
-              />
-            </div>
-            */}
           </div>
-          {/* SECCIÓN DE NOTIFICACIONES - SIN COLORES LLAMATIVOS */}
+          {/* SECCIÓN DE NOTIFICACIONES*/}
           <div className="md:col-span-2 space-y-4">
             <div className="border rounded-xl p-4 bg-stone-50 border-stone-300">
               <div className="flex items-center justify-between">

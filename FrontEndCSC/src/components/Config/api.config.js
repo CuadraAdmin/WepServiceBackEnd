@@ -63,6 +63,11 @@ class ApiConfig {
     EMPRESAS: "/api/Empresas",
   };
 
+  // Endpoints de Paises
+  static ENDPOINTSPAISES = {
+    PAISES: "/api/Pais",
+  };
+
   static getUrl(endpoint) {
     return `${this.BASE_URL}${endpoint}`;
   }

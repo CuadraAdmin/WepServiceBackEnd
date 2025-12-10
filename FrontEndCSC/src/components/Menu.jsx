@@ -7,6 +7,7 @@ import {
   Layout,
   Tag,
   Building2,
+  Globe,
 } from "lucide-react";
 import Navbar from "./Navbar";
 import Permisos from "./CU/Permisos/Permisos";
@@ -15,6 +16,7 @@ import Perfil from "./CU/Perfiles/Perfil";
 import Marcas from "./CM/Marcas";
 import { usePermissions } from "../hooks/usePermissions";
 import Empresas from "./Empresas/Empresas";
+import Paises from "./Paises/Paises";
 
 function Menu({ userData, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -66,6 +68,12 @@ function Menu({ userData, onLogout }) {
       path: "empresas",
       visible: hasPermission("Empresas.Ver"),
     },
+    {
+      icon: Globe,
+      label: "Países",
+      path: "paises",
+      visible: hasPermission("Paises.Ver"),
+    },
   ];
 
   const visibleMenuItems = menuItems.filter((item) => item.visible);
@@ -89,6 +97,8 @@ function Menu({ userData, onLogout }) {
         return <Marcas token={userData?.token} userData={userData} />;
       case "empresas":
         return <Empresas token={userData?.token} userData={userData} />;
+      case "paises":
+        return <Paises token={userData?.token} userData={userData} />;
 
       case "inicio":
       default:
