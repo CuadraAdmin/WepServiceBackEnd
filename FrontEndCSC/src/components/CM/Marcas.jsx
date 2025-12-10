@@ -543,6 +543,25 @@ function Marcas({ token, userData }) {
   };
 
   const applyAdvancedFilters = (marca, filters) => {
+    const normalize = (text) => {
+      if (!text) return "";
+      return text
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/^\w/, (c) => c.toUpperCase());
+    };
+
+    // Filtro de Figuras (normalizado)
+    if (
+      filters.figuras.length > 0 &&
+      !filters.figuras.includes(normalize(marca.Marc_Figura))
+    ) {
+      return false;
+    }
+
+    // Filtro de Empresas (sin normalizar, se mantiene igual)
     if (
       filters.empresas.length > 0 &&
       !filters.empresas.includes(marca.Empr_Nombre)
@@ -552,7 +571,7 @@ function Marcas({ token, userData }) {
 
     if (
       filters.marcas.length > 0 &&
-      !filters.marcas.includes(marca.Marc_Marca)
+      !filters.marcas.includes(normalize(marca.Marc_Marca))
     ) {
       return false;
     }
@@ -632,7 +651,7 @@ function Marcas({ token, userData }) {
       }
     }
 
-    // Filtro por estatus
+    // Filtro por Estado de Renovación
     if (filters.estadoRenovacion.length > 0) {
       const estadoActual = calcularEstadoRenovacion(marca.Marc_Renovacion);
       if (!filters.estadoRenovacion.includes(estadoActual.texto)) {

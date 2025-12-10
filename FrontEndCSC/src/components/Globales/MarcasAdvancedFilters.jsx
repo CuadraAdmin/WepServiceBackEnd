@@ -52,6 +52,7 @@ function MarcasAdvancedFilters({
     empresas: [],
     marcas: [],
     registros: [],
+    figuras: [],
     fechaAno: "",
     fechaMes: "",
     fechaDia: "",
@@ -60,6 +61,23 @@ function MarcasAdvancedFilters({
     estadoRenovacion: [],
   });
 
+  const figurasOptions = [
+    ...new Set(
+      marcas
+        .map((m) => m.Marc_Figura)
+        .filter(Boolean)
+        .map((fig) =>
+          fig
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/^\w/, (c) => c.toUpperCase())
+        )
+    ),
+  ]
+    .sort()
+    .map((fig) => ({ value: fig, label: fig }));
+
   const empresasOptions = [
     ...new Set(marcas.map((m) => m.Empr_Nombre).filter(Boolean)),
   ]
@@ -67,7 +85,17 @@ function MarcasAdvancedFilters({
     .map((emp) => ({ value: emp, label: emp }));
 
   const marcasOptions = [
-    ...new Set(marcas.map((m) => m.Marc_Marca).filter(Boolean)),
+    ...new Set(
+      marcas
+        .map((m) => m.Marc_Marca)
+        .filter(Boolean)
+        .map((marca) =>
+          marca
+            .trim()
+            .toLowerCase()
+            .replace(/^\w/, (c) => c.toUpperCase())
+        )
+    ),
   ]
     .sort()
     .map((marca) => ({ value: marca, label: marca }));
@@ -117,6 +145,7 @@ function MarcasAdvancedFilters({
       empresas: [],
       marcas: [],
       registros: [],
+      figuras: [],
       fechaAno: "",
       fechaMes: "",
       fechaDia: "",
@@ -131,6 +160,7 @@ function MarcasAdvancedFilters({
     filters.empresas.length > 0 ||
     filters.marcas.length > 0 ||
     filters.registros.length > 0 ||
+    filters.figuras.length > 0 ||
     filters.fechaAno !== "" ||
     filters.fechaMes !== "" ||
     filters.fechaDia !== "" ||
@@ -144,8 +174,8 @@ function MarcasAdvancedFilters({
   return (
     <div className="mb-6 bg-white rounded-2xl shadow-xl border-2 border-stone-200 p-6">
       <div className="space-y-4">
-        {/* Fila 1: Multiselects */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Fila 1: Multiselects - CAMBIAR A 4 COLUMNAS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Filtro de Empresas */}
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
@@ -195,6 +225,22 @@ function MarcasAdvancedFilters({
               searchPlaceholder="Buscar registro..."
               color="#6b5345"
               showSearch={true}
+            />
+          </div>
+
+          {/* Filtro de Figuras */}
+          <div>
+            <label className="text-xs font-bold text-stone-700 mb-1.5 block">
+              Figura
+            </label>
+            <MultiSelectConBusqueda
+              options={figurasOptions}
+              selected={filters.figuras}
+              onChange={(values) => setFilters({ ...filters, figuras: values })}
+              placeholder="Seleccionar..."
+              searchPlaceholder="Buscar figura..."
+              color="#6b5345"
+              showSearch={false}
             />
           </div>
         </div>
