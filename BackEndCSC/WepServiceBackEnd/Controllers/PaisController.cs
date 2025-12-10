@@ -70,8 +70,7 @@ namespace WebServiceBackEnd.Controllers
         {
             try
             {
-                var usuarioClaim = User.FindFirst("usuario")?.Value;
-                pais.Pais_CreadoPor = usuarioClaim ?? "Sistema";
+                
                 pais.Pais_Estatus = true;
 
                 var paisId = await _paisBP.Crear(pais);
@@ -88,9 +87,7 @@ namespace WebServiceBackEnd.Controllers
         {
             try
             {
-                var usuarioClaim = User.FindFirst("usuario")?.Value;
                 pais.Pais_Id = id;
-                pais.Pais_ModificadoPor = usuarioClaim ?? "Sistema";
 
                 await _paisBP.Actualizar(pais);
                 return Ok(new { mensaje = "País actualizado exitosamente" });
@@ -102,12 +99,11 @@ namespace WebServiceBackEnd.Controllers
         }
 
         [HttpDelete("eliminar/{id}")]
-        public async Task<IActionResult> Eliminar(int id)
+        public async Task<IActionResult> Eliminar(int id, [FromQuery] string modificadoPor)
         {
             try
             {
-                var usuarioClaim = User.FindFirst("usuario")?.Value;
-                await _paisBP.Eliminar(id, usuarioClaim ?? "Sistema");
+                await _paisBP.Eliminar(id, modificadoPor);
                 return Ok(new { mensaje = "País desactivado exitosamente" });
             }
             catch (Exception ex)
@@ -117,12 +113,11 @@ namespace WebServiceBackEnd.Controllers
         }
 
         [HttpPatch("activar/{id}")]
-        public async Task<IActionResult> Activar(int id)
+        public async Task<IActionResult> Activar(int id, [FromQuery] string modificadoPor)
         {
             try
             {
-                var usuarioClaim = User.FindFirst("usuario")?.Value;
-                await _paisBP.Activar(id, usuarioClaim ?? "Sistema");
+                await _paisBP.Activar(id, modificadoPor);
                 return Ok(new { mensaje = "País activado exitosamente" });
             }
             catch (Exception ex)
