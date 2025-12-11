@@ -200,6 +200,28 @@ function Marcas({ token, userData }) {
       let marcaId;
 
       if (editingMarca) {
+        if (imageHandlers && imageHandlers.hasImageChanges) {
+          try {
+            if (imageHandlers.deleteImage && !imageHandlers.uploadImage) {
+              await imageHandlers.deleteImage();
+              dataToSend.Marc_Diseno = null;
+            } else if (imageHandlers.deleteImage && imageHandlers.uploadImage) {
+              await imageHandlers.deleteImage();
+              const imageUrl = await imageHandlers.uploadImage(
+                formData.Marc_Id
+              );
+              dataToSend.Marc_Diseno = imageUrl;
+            } else if (imageHandlers.uploadImage) {
+              const imageUrl = await imageHandlers.uploadImage(
+                formData.Marc_Id
+              );
+              dataToSend.Marc_Diseno = imageUrl;
+            }
+          } catch (imageError) {
+            console.error("Error al procesar imagen:", imageError);
+          }
+        }
+
         response = await ApiService.put(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${formData.Marc_Id}`,
           dataToSend,
@@ -216,33 +238,20 @@ function Marcas({ token, userData }) {
         if (response.ok) {
           const result = await response.json();
           marcaId = result.id || result.marcaId || result.Marc_Id;
+          if (imageHandlers && imageHandlers.uploadImage) {
+            const imageUrl = await imageHandlers.uploadImage(marcaId);
+            if (imageUrl) {
+              await ApiService.put(
+                `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${marcaId}`,
+                { ...dataToSend, Marc_Id: marcaId, Marc_Diseno: imageUrl },
+                token
+              );
+            }
+          }
         }
       }
 
       if (response.ok) {
-        // Procesar imagen
-        if (imageHandlers && imageHandlers.hasImageChanges) {
-          try {
-            if (imageHandlers.deleteImage) {
-              await imageHandlers.deleteImage();
-            }
-
-            if (imageHandlers.uploadImage) {
-              const imageUrl = await imageHandlers.uploadImage(marcaId);
-              if (imageUrl) {
-                await ApiService.put(
-                  `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${marcaId}`,
-                  { ...dataToSend, Marc_Id: marcaId, Marc_Diseno: imageUrl },
-                  token
-                );
-              }
-            }
-          } catch (imageError) {
-            console.error("Error al procesar imagen:", imageError);
-          }
-        }
-
-        // ELIMINAR CONTACTOS QUE YA NO ESTÁN (NUEVO)
         if (editingMarca && contactosOriginalesParam.length > 0) {
           try {
             const idsActuales = contactosParam
@@ -264,10 +273,8 @@ function Marcas({ token, userData }) {
           }
         }
 
-        // GUARDAR/ACTUALIZAR CONTACTOS
         if (contactosParam && contactosParam.length > 0) {
           for (const contacto of contactosParam) {
-            // Formatear teléfono: agregar "1" si es +52 con 10 dígitos
             let telefonoFormateado = contacto.telefonoWhatsApp;
             if (telefonoFormateado.startsWith("+52")) {
               const digitosDespuesDe52 = telefonoFormateado.slice(3);
@@ -277,28 +284,26 @@ function Marcas({ token, userData }) {
             }
 
             if (contacto.id && editingMarca) {
-              // ACTUALIZAR existente
               await ApiService.put(
                 `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/actualizar/${contacto.id}`,
                 {
                   marc_Id: marcaId,
                   marcNoti_Nombre: contacto.nombre,
                   marcNoti_Correo: contacto.correo,
-                  marcNoti_TelefonoWhatsApp: telefonoFormateado, // Usar formateado
+                  marcNoti_TelefonoWhatsApp: telefonoFormateado,
                   marcNoti_Estatus: true,
                   marcNoti_ModificadoPor: nombreUsuario,
                 },
                 token
               );
             } else {
-              // CREAR nuevo
               await ApiService.post(
                 `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/crear`,
                 {
                   marc_Id: marcaId,
                   marcNoti_Nombre: contacto.nombre,
                   marcNoti_Correo: contacto.correo,
-                  marcNoti_TelefonoWhatsApp: telefonoFormateado, // Usar formateado
+                  marcNoti_TelefonoWhatsApp: telefonoFormateado,
                   marcNoti_Estatus: true,
                   marcNoti_CreadoPor: nombreUsuario,
                 },
