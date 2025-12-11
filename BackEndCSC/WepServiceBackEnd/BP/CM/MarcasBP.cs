@@ -23,18 +23,7 @@ namespace WebServiceBackEnd.BP.CM
             try
             {
                 var marcas = await _marcasDA.Listar();
-
-                foreach (dynamic marca in marcas)
-                {
-                    var marcaDict = marca as IDictionary<string, object>;
-                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
-                    {
-                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
-                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
-                        marcaDict["Marc_Diseno"] = imagenUrl;
-                    }
-                }
-
+               
                 return marcas;
             }
             catch (Exception ex)
@@ -55,10 +44,6 @@ namespace WebServiceBackEnd.BP.CM
 
                 var marca = await _marcasDA.ObtenerPorId(id);
 
-                if (marca != null)
-                {
-                    marca.Marc_Diseno = await _blobStorageService.ObtenerImagenDisenoAsync(id);
-                }
 
                 return marca;
             }
@@ -204,16 +189,7 @@ namespace WebServiceBackEnd.BP.CM
 
                 var marcas = await _marcasDA.ListarConFiltros(filtros);
 
-                foreach (dynamic marca in marcas)
-                {
-                    var marcaDict = marca as IDictionary<string, object>;
-                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
-                    {
-                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
-                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
-                        marcaDict["Marc_Diseno"] = imagenUrl;
-                    }
-                }
+               
 
                 return marcas;
             }
@@ -234,18 +210,6 @@ namespace WebServiceBackEnd.BP.CM
                     throw new ArgumentException("El ID del usuario debe ser mayor a 0");
 
                 var marcas = await _marcasDA.ObtenerPorEmpresasConPermisos(usuarioId);
-
-                foreach (dynamic marca in marcas)
-                {
-                    var marcaDict = marca as IDictionary<string, object>;
-                    if (marcaDict != null && marcaDict.ContainsKey("Marc_Id"))
-                    {
-                        int marcaId = Convert.ToInt32(marcaDict["Marc_Id"]);
-                        var imagenUrl = await _blobStorageService.ObtenerImagenDisenoAsync(marcaId);
-                        marcaDict["Marc_Diseno"] = imagenUrl;
-                    }
-                }
-
                 return marcas;
             }
             catch (ArgumentException)
