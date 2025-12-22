@@ -38,13 +38,16 @@ namespace WebServiceBackEnd.Services
             if (datos == null)
                 throw new Exception("Marca o empresa no encontrada");
 
-            return $"{datos.Value.EmpresaClave}/{datos.Value.MarcaNombre}_{marcaId}";
+            var empresaSanitizada = SanitizarNombreParaBlob(datos.Value.EmpresaClave);
+            var marcaSanitizada = SanitizarNombreParaBlob(datos.Value.MarcaNombre);
+
+            return $"{empresaSanitizada}/{marcaSanitizada}_{marcaId}";
         }
 
         /// <summary>
         /// Renombrar carpeta de marca si cambió el nombre
         /// </summary>
-        public async Task RenombrarCarpetaMarcaAsync(int marcaId, string nombreAnterior)
+        public async Task<string?> RenombrarCarpetaMarcaAsync(int marcaId, string nombreAnterior)
         {
             try
             {
@@ -53,18 +56,22 @@ namespace WebServiceBackEnd.Services
                 if (datos == null)
                     throw new Exception("Marca no encontrada");
 
-                string rutaAnterior = $"{datos.Value.EmpresaClave}/{nombreAnterior}_{marcaId}";
-                string rutaNueva = $"{datos.Value.EmpresaClave}/{datos.Value.MarcaNombre}_{marcaId}";
+                var empresaSanitizada = SanitizarNombreParaBlob(datos.Value.EmpresaClave);
+                var nombreAnteriorSanitizado = SanitizarNombreParaBlob(nombreAnterior);
+                var nombreNuevoSanitizado = SanitizarNombreParaBlob(datos.Value.MarcaNombre);
+
+                string rutaAnterior = $"{empresaSanitizada}/{nombreAnteriorSanitizado}_{marcaId}";
+                string rutaNueva = $"{empresaSanitizada}/{nombreNuevoSanitizado}_{marcaId}";
 
                 if (rutaAnterior == rutaNueva)
-                    return;
+                    return null;
 
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                string? nuevaUrlDiseno = null;
 
                 await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: $"{rutaAnterior}/"))
                 {
                     var blobAnterior = containerClient.GetBlobClient(blobItem.Name);
-
                     var nuevaRuta = blobItem.Name.Replace(rutaAnterior, rutaNueva);
                     var blobNuevo = containerClient.GetBlobClient(nuevaRuta);
 
@@ -76,8 +83,16 @@ namespace WebServiceBackEnd.Services
                         await Task.Delay(100);
                         propiedades = await blobNuevo.GetPropertiesAsync();
                     }
+
                     await blobAnterior.DeleteIfExistsAsync();
+
+                    if (blobItem.Name.Contains("/diseno/"))
+                    {
+                        nuevaUrlDiseno = GenerateSasUrl(blobNuevo);
+                    }
                 }
+
+                return nuevaUrlDiseno;
             }
             catch (Exception ex)
             {
@@ -102,10 +117,14 @@ namespace WebServiceBackEnd.Services
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(fileName);
 
+                // Sanitizar el nombre original del archivo para los metadatos
+                var nombreOriginalSanitizado = SanitizarNombreParaBlob(Path.GetFileNameWithoutExtension(file.FileName))
+                    + Path.GetExtension(file.FileName);
+
                 var metadata = new Dictionary<string, string>
-                {
-                    { "nombreoriginal", file.FileName }
-                };
+        {
+            { "nombreoriginal", nombreOriginalSanitizado }
+        };
 
                 using (var stream = file.OpenReadStream())
                 {
@@ -140,10 +159,14 @@ namespace WebServiceBackEnd.Services
                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(fileName);
 
+                // Sanitizar el nombre original del archivo para los metadatos
+                var nombreOriginalSanitizado = SanitizarNombreParaBlob(Path.GetFileNameWithoutExtension(file.FileName))
+                    + Path.GetExtension(file.FileName);
+
                 var metadata = new Dictionary<string, string>
-                {
-                    { "nombreoriginal", file.FileName }
-                };
+        {
+            { "nombreoriginal", nombreOriginalSanitizado }
+        };
 
                 using (var stream = file.OpenReadStream())
                 {
@@ -343,6 +366,35 @@ namespace WebServiceBackEnd.Services
 
             var sasUri = blobClient.GenerateSasUri(sasBuilder);
             return sasUri.ToString();
+        }
+
+        /// <summary>
+        /// Sanitiza el nombre para uso en Azure Blob Storage (solo ASCII)
+        /// </summary>
+        private string SanitizarNombreParaBlob(string nombre)
+        {
+            if (string.IsNullOrEmpty(nombre))
+                return "sin_nombre";
+
+            // Reemplazar caracteres especiales
+            var sinAcentos = nombre
+                .Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u")
+                .Replace("Á", "A").Replace("É", "E").Replace("Í", "I").Replace("Ó", "O").Replace("Ú", "U")
+                .Replace("ñ", "n").Replace("Ñ", "N")
+                .Replace("ü", "u").Replace("Ü", "U");
+
+            // Remover caracteres no permitidos
+            var caracteresPermitidos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+            var resultado = new string(sinAcentos.Where(c => caracteresPermitidos.Contains(c) || c == ' ').ToArray());
+
+            // Reemplazar espacios por guiones bajos
+            resultado = resultado.Replace(" ", "_");
+
+            // Limitar longitud
+            if (resultado.Length > 50)
+                resultado = resultado.Substring(0, 50);
+
+            return string.IsNullOrEmpty(resultado) ? "marca" : resultado;
         }
     }
 }

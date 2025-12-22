@@ -110,6 +110,7 @@ namespace WebServiceBackEnd.Controllers.CM
                     return NotFound(new { mensaje = "Marca no encontrada" });
 
                 string nombreAnterior = marcaAnterior.Marc_Marca;
+                bool cambioNombre = nombreAnterior != marca.Marc_Marca;
 
                 var resultado = await _marcasBP.Actualizar(marca);
 
@@ -118,9 +119,16 @@ namespace WebServiceBackEnd.Controllers.CM
                     return NotFound(new { mensaje = "Marca no encontrada" });
                 }
 
-                if (nombreAnterior != marca.Marc_Marca)
+                // Si cambió el nombre, renombrar carpeta y actualizar URL
+                if (cambioNombre)
                 {
-                    await _blobStorageService.RenombrarCarpetaMarcaAsync(id, nombreAnterior);
+                    string urlActualizada = await _blobStorageService.RenombrarCarpetaMarcaAsync(id, nombreAnterior);
+
+                    if (!string.IsNullOrEmpty(urlActualizada))
+                    {
+                        marca.Marc_Diseno = urlActualizada;
+                        await _marcasBP.Actualizar(marca);
+                    }
                 }
 
                 return Ok(new { mensaje = "Marca actualizada exitosamente" });
