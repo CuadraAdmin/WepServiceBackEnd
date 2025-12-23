@@ -60,7 +60,8 @@ function NotificacionesForm({
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium text-stone-700 mb-1 block">
-              Fecha de Aviso <span className="text-red-600">*</span>
+              Fecha de Aviso
+              {/* <span className="text-red-600">*</span> */}
             </label>
             <input
               type="date"
@@ -72,7 +73,7 @@ function NotificacionesForm({
                 })
               }
               className="w-full px-2 py-1.5 text-sm rounded-lg border border-stone-300 focus:border-stone-500 outline-none"
-              required
+              // required
             />
             <p className="text-xs text-stone-600 mt-1">30, 15 y 1 día antes</p>
           </div>

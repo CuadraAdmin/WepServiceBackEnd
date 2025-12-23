@@ -319,19 +319,19 @@ function ModalFormulario({
     }
 
     // RENOVACIÓN - OBLIGATORIO (fecha)
-    if (!formData.Marc_Renovacion) {
-      errors.push("La fecha de renovación es obligatoria");
-    }
+    // if (!formData.Marc_Renovacion) {
+    //   errors.push("La fecha de renovación es obligatoria");
+    // }
 
     // IMAGEN DE DISEÑO - YA NO ES OBLIGATORIA
     // (se removió la validación)
 
     // FECHA DE AVISO - OBLIGATORIA
-    if (!formData.Marc_FechaAviso) {
-      errors.push(
-        "La fecha de aviso es obligatoria para el sistema de notificaciones"
-      );
-    }
+    // if (!formData.Marc_FechaAviso) {
+    //   errors.push(
+    //     "La fecha de aviso es obligatoria para el sistema de notificaciones"
+    //   );
+    // }
 
     //  VALIDAR QUE HAYA AL MENOS 1 CONTACTO
     if (contactos.length === 0) {
@@ -929,7 +929,8 @@ function ModalFormulario({
             {/* RENOVACION - OBLIGATORIO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-stone-700">
-                Renovación <span className="text-red-600">*</span>
+                Renovación
+                {/* <span className="text-red-600">*</span> */}
               </label>
               <input
                 type="date"
@@ -943,7 +944,7 @@ function ModalFormulario({
                   });
                 }}
                 className="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-stone-400 outline-none transition-all bg-stone-50 focus:bg-white"
-                required
+                // required
               />
             </div>
 
@@ -986,14 +987,6 @@ function ModalFormulario({
                     Se enviarán notificaciones 30, 15 y 1 día antes de la fecha
                     de aviso
                   </p>
-                  {(!formData.Marc_FechaAviso ||
-                    !formData.Marc_FechaSeguimiento) && (
-                    <p className="text-xs text-stone-700 font-medium mt-1.5 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      Debes configurar las fechas de notificación antes de
-                      guardar
-                    </p>
-                  )}
                 </div>
                 <button
                   type="button"
