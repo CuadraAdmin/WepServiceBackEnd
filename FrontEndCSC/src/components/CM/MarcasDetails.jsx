@@ -31,7 +31,7 @@ function MarcasDetails({ marca, onClose, token }) {
     try {
       const response = await ApiService.get(
         `${ApiConfig.ENDPOINTSMARCA.TAREAS}/listar/activosPorMarca/${marca.Marc_Id}`,
-        token
+        token,
       );
       if (response.ok) {
         const data = await response.json();
@@ -116,6 +116,14 @@ function MarcasDetails({ marca, onClose, token }) {
                   </label>
                   <p className="text-stone-900 font-medium">
                     {marca.Marc_Pais || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-stone-600 uppercase block mb-1.5">
+                    Tipo de Marca
+                  </label>
+                  <p className="text-stone-900 font-medium">
+                    {marca.TipoMar_Nombre || "N/A"}
                   </p>
                 </div>
               </div>

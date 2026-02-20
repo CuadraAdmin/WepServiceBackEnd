@@ -10,6 +10,7 @@ export const exportToExcel = (marcas) => {
       Empresa: marca.Empr_Clave || "",
       Consecutivo: marca.Marc_Consecutivo || "",
       País: marca.Marc_Pais || "",
+      "Tipo de Marca": marca.TipoMar_Nombre || "",
       "Solicitud Nacional": marca.Marc_SolicitudNacional || "",
       Registro: marca.Marc_Registro || "",
       Marca: marca.Marc_Marca || "",
@@ -42,7 +43,7 @@ export const exportToExcel = (marcas) => {
         ? new Date(marca.Marc_FechaSeguimiento).toLocaleDateString("es-MX")
         : "",
       Estado: marca.Marc_Estatus ? "ACTIVA" : "INACTIVA",
-    }))
+    })),
   );
 
   const workbook = XLSX.utils.book_new();
@@ -50,6 +51,6 @@ export const exportToExcel = (marcas) => {
 
   XLSX.writeFile(
     workbook,
-    `marcas_${new Date().toISOString().split("T")[0]}.xlsx`
+    `marcas_${new Date().toISOString().split("T")[0]}.xlsx`,
   );
 };

@@ -8,6 +8,7 @@ import {
   Tag,
   Building2,
   Globe,
+  Tags,
 } from "lucide-react";
 import Navbar from "./Navbar";
 import Permisos from "./CU/Permisos/Permisos";
@@ -17,6 +18,7 @@ import Marcas from "./CM/Marcas";
 import { usePermissions } from "../hooks/usePermissions";
 import Empresas from "./Empresas/Empresas";
 import Paises from "./Paises/Paises";
+import TipoMarca from "./CM/CM_TIPOMARCA/TipoMarca";
 
 function Menu({ userData, onLogout }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -74,6 +76,12 @@ function Menu({ userData, onLogout }) {
       path: "paises",
       visible: hasPermission("Paises.Ver"),
     },
+    {
+      icon: Tags,
+      label: "Tipos Marca",
+      path: "tiposMarca",
+      visible: hasPermission("TiposMarca.Ver"),
+    },
   ];
 
   const visibleMenuItems = menuItems.filter((item) => item.visible);
@@ -99,6 +107,8 @@ function Menu({ userData, onLogout }) {
         return <Empresas token={userData?.token} userData={userData} />;
       case "paises":
         return <Paises token={userData?.token} userData={userData} />;
+      case "tiposMarca":
+        return <TipoMarca token={userData?.token} userData={userData} />;
 
       case "inicio":
       default:

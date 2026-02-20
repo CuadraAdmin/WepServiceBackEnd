@@ -68,6 +68,17 @@ class ApiConfig {
     PAISES: "/api/Pais",
   };
 
+  // Endpoints de Tipos de Marca
+  static ENDPOINTSTIPOSMARCA = {
+    LISTAR: "/api/TiposMarca/Listar",
+    OBTENER: (id) => `/api/TiposMarca/Obtener/${id}`,
+    CREAR: "/api/TiposMarca/Agregar",
+    ACTUALIZAR: (id) => `/api/TiposMarca/actualizar/${id}`,
+    ELIMINAR: (id) => `/api/TiposMarca/eliminar/${id}`,
+    ACTIVAR: (id) => `/api/TiposMarca/activar/${id}`,
+    FILTROS: "/api/TiposMarca/ListarConFiltros",
+  };
+
   static getUrl(endpoint) {
     return `${this.BASE_URL}${endpoint}`;
   }

@@ -21,6 +21,7 @@ function ModalFormulario({
   formData,
   setFormData,
   empresasOptions,
+  tiposMarcaOptions,
   loading,
   error,
   setError,
@@ -57,12 +58,12 @@ function ModalFormulario({
         try {
           const response = await fetch(
             ApiConfig.getUrl(
-              `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/listar/${editingMarca.Marc_Id}`
+              `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/listar/${editingMarca.Marc_Id}`,
             ),
             {
               method: "GET",
               headers: ApiConfig.getHeaders(token),
-            }
+            },
           );
 
           if (response.ok) {
@@ -113,7 +114,7 @@ function ModalFormulario({
       try {
         const response = await fetch(
           ApiConfig.getUrl(
-            `${ApiConfig.ENDPOINTSPAISES.PAISES}/listarConFiltros`
+            `${ApiConfig.ENDPOINTSPAISES.PAISES}/listarConFiltros`,
           ),
           {
             method: "POST",
@@ -126,7 +127,7 @@ function ModalFormulario({
               Pais_Nombre: null,
               Pais_Estatus: true,
             }),
-          }
+          },
         );
 
         if (response.ok) {
@@ -193,7 +194,7 @@ function ModalFormulario({
 
       const response = await fetch(
         ApiConfig.getUrl(
-          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload-diseno/${marcaId}`
+          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload-diseno/${marcaId}`,
         ),
         {
           method: "POST",
@@ -201,7 +202,7 @@ function ModalFormulario({
             Authorization: `Bearer ${token}`,
           },
           body: formDataImg,
-        }
+        },
       );
 
       if (response.ok) {
@@ -220,7 +221,7 @@ function ModalFormulario({
       const downloadUrl = ApiConfig.getUrl(
         `${
           ApiConfig.ENDPOINTSMARCA.ARCHIVOS
-        }/descargar-imagen?url=${encodeURIComponent(previewImage)}`
+        }/descargar-imagen?url=${encodeURIComponent(previewImage)}`,
       );
 
       const response = await fetch(downloadUrl, {
@@ -262,7 +263,7 @@ function ModalFormulario({
             ...ApiConfig.getHeaders(token),
           },
           body: JSON.stringify({ url: formData.Marc_Diseno }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -296,7 +297,7 @@ function ModalFormulario({
     //  CAMPOS OBLIGATORIOS QUE ACEPTAN N/A
     if (!esValorValido(formData.Marc_SolicitudNacional)) {
       errors.push(
-        "La solicitud nacional es obligatoria (puede usar N/A si no aplica)"
+        "La solicitud nacional es obligatoria (puede usar N/A si no aplica)",
       );
     }
 
@@ -306,7 +307,7 @@ function ModalFormulario({
 
     if (!esValorValido(formData.Marc_Marca)) {
       errors.push(
-        "El nombre de la marca es obligatorio (puede usar N/A si no aplica)"
+        "El nombre de la marca es obligatorio (puede usar N/A si no aplica)",
       );
     }
 
@@ -383,7 +384,7 @@ function ModalFormulario({
         hasImageChanges: imageFile !== null || imageToDelete,
       },
       contactos, // Contactos actuales
-      contactosOriginales // NUEVO: Contactos originales
+      contactosOriginales, // NUEVO: Contactos originales
     );
   };
 
@@ -569,6 +570,25 @@ function ModalFormulario({
                 }
                 required={true}
                 disabled={loadingPaises}
+              />
+            </div>
+
+            {/* TIPO DE MARCA */}
+            <div className="md:col-span-2">
+              <Select
+                label="Tipo de Marca"
+                options={tiposMarcaOptions}
+                value={
+                  formData.TipoMar_Id ? formData.TipoMar_Id.toString() : ""
+                }
+                onChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    TipoMar_Id: value ? parseInt(value) : null,
+                  })
+                }
+                placeholder="Seleccione un tipo de marca"
+                required={false}
               />
             </div>
 

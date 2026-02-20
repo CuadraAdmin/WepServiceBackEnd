@@ -15,8 +15,9 @@ import ApiConfig from "../Config/api.config";
 import { usePermissions } from "../../hooks/usePermissions";
 import ApiService from "../../Services/ApiService";
 import MarcaTareasModal from "./MarcaTareasModal";
-import { FileUp } from "lucide-react"; // Agregar FileUp a los imports de lucide-react
-import MarcasImport from "./MarcasImport"; // Agregar este import
+import { FileUp } from "lucide-react";
+import MarcasImport from "./MarcasImport";
+import ModalMarcarEnRenovacion from "./ModalMarcarEnRenovacion";
 
 function Marcas({ token, userData }) {
   const [marcas, setMarcas] = useState([]);
@@ -38,6 +39,9 @@ function Marcas({ token, userData }) {
   const [filterEstatus, setFilterEstatus] = useState("all");
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [tiposMarca, setTiposMarca] = useState([]);
+  const [showRenovacionModal, setShowRenovacionModal] = useState(false);
+  const [marcaToRenovar, setMarcaToRenovar] = useState(null);
   // Estado para filtros avanzados
   const [advancedFilters, setAdvancedFilters] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -48,7 +52,7 @@ function Marcas({ token, userData }) {
 
   const { hasPermission, loading: permissionsLoading } = usePermissions(
     token,
-    Usua_Id
+    Usua_Id,
   );
   const handleViewTasks = (marca) => {
     setSelectedMarca(marca);
@@ -79,6 +83,26 @@ function Marcas({ token, userData }) {
     }
 
     return errorMessage;
+  };
+
+  const cargarTiposMarca = async () => {
+    try {
+      const endpoint = ApiConfig.ENDPOINTSTIPOSMARCA.LISTAR;
+      const response = await ApiService.get(endpoint, token);
+
+      if (response.ok) {
+        const data = await response.json();
+        const tiposActivos = data.filter(
+          (tipo) => tipo.tipoMar_Estatus === true,
+        );
+        setTiposMarca(tiposActivos);
+      } else {
+        const errorText = await response.text();
+      }
+    } catch (error) {
+      setError("Error al cargar tipos de marca: " + error.message);
+      setTimeout(() => setError(""), 4000);
+    }
   };
 
   const handleImportSuccess = async () => {
@@ -115,12 +139,15 @@ function Marcas({ token, userData }) {
     Marc_FechaSeguimiento: null,
     Marc_FechaAviso: null,
     Marc_Estatus: true,
+    TipoMar_Id: null,
+    Marc_EnRenovacion: false,
   });
 
   useEffect(() => {
     if (Usua_Id && !permissionsLoading && !initialLoadDone.current) {
       cargarMarcas();
       cargarEmpresas();
+      cargarTiposMarca();
       initialLoadDone.current = true;
     }
   }, [Usua_Id, permissionsLoading]);
@@ -129,7 +156,7 @@ function Marcas({ token, userData }) {
     try {
       const response = await ApiService.get(
         `${ApiConfig.ENDPOINTSEMPRESAS.EMPRESAS}/obtenerPorPermiso/${Usua_Id}`,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -147,7 +174,7 @@ function Marcas({ token, userData }) {
     try {
       const response = await ApiService.get(
         `${ApiConfig.ENDPOINTSMARCA.MARCAS}/obtenerPorPermisos/${Usua_Id}`,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -168,7 +195,7 @@ function Marcas({ token, userData }) {
     e,
     imageHandlers,
     contactosParam,
-    contactosOriginalesParam = []
+    contactosOriginalesParam = [],
   ) => {
     e.preventDefault();
     setLoading(true);
@@ -185,6 +212,7 @@ function Marcas({ token, userData }) {
       const dataToSend = {
         ...formData,
         Empr_Id: parseInt(formData.Empr_Id),
+        TipoMar_Id: formData.TipoMar_Id ? parseInt(formData.TipoMar_Id) : null,
         Marc_FechaSolicitud: formData.Marc_FechaSolicitud || null,
         Marc_FechaRegistro: formData.Marc_FechaRegistro || null,
         Marc_Dure: formData.Marc_Dure || null,
@@ -208,12 +236,12 @@ function Marcas({ token, userData }) {
             } else if (imageHandlers.deleteImage && imageHandlers.uploadImage) {
               await imageHandlers.deleteImage();
               const imageUrl = await imageHandlers.uploadImage(
-                formData.Marc_Id
+                formData.Marc_Id,
               );
               dataToSend.Marc_Diseno = imageUrl;
             } else if (imageHandlers.uploadImage) {
               const imageUrl = await imageHandlers.uploadImage(
-                formData.Marc_Id
+                formData.Marc_Id,
               );
               dataToSend.Marc_Diseno = imageUrl;
             }
@@ -225,14 +253,14 @@ function Marcas({ token, userData }) {
         response = await ApiService.put(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${formData.Marc_Id}`,
           dataToSend,
-          token
+          token,
         );
         marcaId = formData.Marc_Id;
       } else {
         response = await ApiService.post(
           `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear`,
           dataToSend,
-          token
+          token,
         );
 
         if (response.ok) {
@@ -244,7 +272,7 @@ function Marcas({ token, userData }) {
               await ApiService.put(
                 `${ApiConfig.ENDPOINTSMARCA.MARCAS}/actualizar/${marcaId}`,
                 { ...dataToSend, Marc_Id: marcaId, Marc_Diseno: imageUrl },
-                token
+                token,
               );
             }
           }
@@ -259,13 +287,13 @@ function Marcas({ token, userData }) {
               .map((c) => c.id);
 
             const contactosAEliminar = contactosOriginalesParam.filter(
-              (original) => !idsActuales.includes(original.id)
+              (original) => !idsActuales.includes(original.id),
             );
 
             for (const contacto of contactosAEliminar) {
               await ApiService.delete(
                 `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/eliminar/${contacto.id}?modificadoPor=${nombreUsuario}`,
-                token
+                token,
               );
             }
           } catch (deleteError) {
@@ -294,7 +322,7 @@ function Marcas({ token, userData }) {
                   marcNoti_Estatus: true,
                   marcNoti_ModificadoPor: nombreUsuario,
                 },
-                token
+                token,
               );
             } else {
               await ApiService.post(
@@ -307,7 +335,7 @@ function Marcas({ token, userData }) {
                   marcNoti_Estatus: true,
                   marcNoti_CreadoPor: nombreUsuario,
                 },
-                token
+                token,
               );
             }
           }
@@ -316,7 +344,7 @@ function Marcas({ token, userData }) {
         setSuccess(
           editingMarca
             ? "MARCA ACTUALIZADA EXITOSAMENTE"
-            : "MARCA CREADA EXITOSAMENTE"
+            : "MARCA CREADA EXITOSAMENTE",
         );
         setShowModal(false);
         resetForm();
@@ -340,6 +368,11 @@ function Marcas({ token, userData }) {
     }
   };
 
+  const tiposMarcaOptions = tiposMarca.map((tipo) => ({
+    value: tipo.tipoMar_Id.toString(),
+    label: tipo.tipoMar_Nombre,
+  }));
+
   const handleDelete = async () => {
     if (!marcaToDelete) return;
     setLoading(true);
@@ -349,7 +382,7 @@ function Marcas({ token, userData }) {
     try {
       const response = await ApiService.delete(
         `${ApiConfig.ENDPOINTSMARCA.MARCAS}/eliminar/${marcaToDelete.Marc_Id}`,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -383,7 +416,7 @@ function Marcas({ token, userData }) {
       const response = await ApiService.patch(
         `${ApiConfig.ENDPOINTSMARCA.MARCAS}/activar/${marcaToActivate.Marc_Id}`,
         null,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -450,11 +483,21 @@ function Marcas({ token, userData }) {
         ? new Date(marca.Marc_FechaAviso).toISOString().split("T")[0]
         : "",
       Marc_Estatus: marca.Marc_Estatus,
+      TipoMar_Id: marca.TipoMar_Id || null,
+      Marc_EnRenovacion: marca.Marc_EnRenovacion || false,
     });
     setShowModal(true);
   };
-  // Agregar esta función en Marcas.jsx
-  const calcularEstadoRenovacion = (fechaRenovacion) => {
+
+  const calcularEstadoRenovacion = (fechaRenovacion, enRenovacion) => {
+    if (enRenovacion === true) {
+      return {
+        texto: "En Renovación",
+        color: "bg-orange-600 text-white",
+        border: "border-orange-600",
+      };
+    }
+
     if (!fechaRenovacion)
       return {
         texto: "Sin fecha",
@@ -469,7 +512,7 @@ function Marcas({ token, userData }) {
     fechaRenov.setHours(0, 0, 0, 0);
 
     const diasDiferencia = Math.ceil(
-      (fechaRenov - hoy) / (1000 * 60 * 60 * 24)
+      (fechaRenov - hoy) / (1000 * 60 * 60 * 24),
     );
 
     if (diasDiferencia < 0) {
@@ -531,6 +574,8 @@ function Marcas({ token, userData }) {
       Marc_FechaSeguimiento: "",
       Marc_FechaAviso: "",
       Marc_Estatus: true,
+      TipoMar_Id: null,
+      Marc_EnRenovacion: false,
     });
     setEditingMarca(null);
   };
@@ -582,12 +627,31 @@ function Marcas({ token, userData }) {
     }
 
     if (
+      filters.tiposMarca.length > 0 &&
+      !filters.tiposMarca.includes(marca.TipoMar_Nombre)
+    ) {
+      return false;
+    }
+
+    if (
       filters.registros.length > 0 &&
       !filters.registros.includes(marca.Marc_Registro)
     ) {
       return false;
     }
+    if (filters.clases.length > 0) {
+      if (!marca.Marc_Clase) return false;
 
+      const clasesDelaMarca = marca.Marc_Clase.split(",")
+        .map((c) => c.trim())
+        .filter((c) => c !== "");
+
+      const tieneAlgunaClase = filters.clases.some((claseFilter) =>
+        clasesDelaMarca.includes(claseFilter),
+      );
+
+      if (!tieneAlgunaClase) return false;
+    }
     if (filters.fechaAno || filters.fechaMes || filters.fechaDia) {
       if (!marca.Marc_Renovacion) return false;
 
@@ -624,7 +688,7 @@ function Marcas({ token, userData }) {
       const fechaRenovacion = new Date(
         parseInt(year),
         parseInt(month) - 1,
-        parseInt(day)
+        parseInt(day),
       );
 
       if (filters.fechaRangoDesde) {
@@ -633,7 +697,7 @@ function Marcas({ token, userData }) {
         const fechaDesde = new Date(
           parseInt(desdeYear),
           parseInt(desdeMonth) - 1,
-          parseInt(desdeDay)
+          parseInt(desdeDay),
         );
 
         if (fechaRenovacion < fechaDesde) {
@@ -647,7 +711,7 @@ function Marcas({ token, userData }) {
         const fechaHasta = new Date(
           parseInt(hastaYear),
           parseInt(hastaMonth) - 1,
-          parseInt(hastaDay)
+          parseInt(hastaDay),
         );
 
         if (fechaRenovacion > fechaHasta) {
@@ -658,13 +722,53 @@ function Marcas({ token, userData }) {
 
     // Filtro por Estado de Renovación
     if (filters.estadoRenovacion.length > 0) {
-      const estadoActual = calcularEstadoRenovacion(marca.Marc_Renovacion);
+      const estadoActual = calcularEstadoRenovacion(
+        marca.Marc_Renovacion,
+        marca.Marc_EnRenovacion,
+      );
       if (!filters.estadoRenovacion.includes(estadoActual.texto)) {
         return false;
       }
     }
 
     return true;
+  };
+
+  const handleMarcarEnRenovacion = (marca) => {
+    setMarcaToRenovar(marca);
+    setShowRenovacionModal(true);
+  };
+
+  const confirmarMarcarEnRenovacion = async () => {
+    if (!marcaToRenovar) return;
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await ApiService.post(
+        `${ApiConfig.ENDPOINTSMARCA.MARCAS}/marcarEnRenovacion/${marcaToRenovar.Marc_Id}?modificadoPor=${nombreUsuario}`,
+        null,
+        token,
+      );
+
+      if (response.ok) {
+        setSuccess("MARCA MARCADA COMO EN RENOVACIÓN");
+        await cargarMarcas();
+        setTimeout(() => setSuccess(""), 4000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.mensaje || "Error al marcar en renovación");
+        setTimeout(() => setError(""), 4000);
+      }
+    } catch (error) {
+      setError("Error de conexión: " + error.message);
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setLoading(false);
+      setShowRenovacionModal(false);
+      setMarcaToRenovar(null);
+    }
   };
 
   const filteredMarcas = marcas.filter((marca) => {
@@ -678,13 +782,18 @@ function Marcas({ token, userData }) {
     const matchesStatus =
       filterStatus === "all" ||
       (() => {
-        const estado = calcularEstadoRenovacion(marca.Marc_Renovacion);
+        const estado = calcularEstadoRenovacion(
+          marca.Marc_Renovacion,
+          marca.Marc_EnRenovacion,
+        );
         if (filterStatus === "vencida") return estado.texto === "Vencida";
         if (filterStatus === "urgente") return estado.texto === "Urgente";
         if (filterStatus === "proximo") return estado.texto === "Próximo";
         if (filterStatus === "atencion") return estado.texto === "Atención";
         if (filterStatus === "normal") return estado.texto === "Normal";
         if (filterStatus === "sinfecha") return estado.texto === "Sin fecha";
+        if (filterStatus === "enrenovacion")
+          return estado.texto === "En Renovación";
         return true;
       })();
 
@@ -808,6 +917,7 @@ function Marcas({ token, userData }) {
                 <option value="proximo">Próximo</option>
                 <option value="atencion">Atención</option>
                 <option value="normal">Normal</option>
+                <option value="enrenovacion">En Renovación</option>
                 <option value="sinfecha">Sin fecha</option>
               </select>
 
@@ -876,6 +986,7 @@ function Marcas({ token, userData }) {
               setSelectedMarca(marca);
               setShowDetailsModal(true);
             }}
+            onMarcarEnRenovacion={handleMarcarEnRenovacion}
             hasPermission={hasPermission}
             onViewTasks={handleViewTasks}
             token={token}
@@ -891,6 +1002,7 @@ function Marcas({ token, userData }) {
         formData={formData}
         setFormData={setFormData}
         empresasOptions={empresasOptions}
+        tiposMarcaOptions={tiposMarcaOptions}
         loading={loading}
         error={error}
         setError={setError}
@@ -970,6 +1082,16 @@ function Marcas({ token, userData }) {
           empresasOptions={empresasOptions}
         />
       )}
+      <ModalMarcarEnRenovacion
+        show={showRenovacionModal}
+        onClose={() => {
+          setShowRenovacionModal(false);
+          setMarcaToRenovar(null);
+        }}
+        onConfirm={confirmarMarcarEnRenovacion}
+        marca={marcaToRenovar}
+        loading={loading}
+      />
     </div>
   );
 }

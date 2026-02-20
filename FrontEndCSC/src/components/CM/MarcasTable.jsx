@@ -8,6 +8,7 @@ import {
   Filter,
   X,
   Info,
+  RefreshCw,
 } from "lucide-react";
 import Badge from "../Globales/Badge";
 import ImageZoomModal from "./ImageZoomModal";
@@ -21,6 +22,7 @@ function MarcasTable({
   onActivate,
   onViewFiles,
   onViewDetails,
+  onMarcarEnRenovacion,
   hasPermission,
   onViewTasks,
   token,
@@ -36,17 +38,17 @@ function MarcasTable({
     Marc_EstadoRenovacion: "",
     Marc_Renovacion_Min: "",
     Marc_Renovacion_Max: "",
+    TipoMar_Nombre: "",
   });
   const dropdownRefs = useRef({});
   const [selectedClase, setSelectedClase] = useState(null);
 
-  // Estado para el modal de zoom de imagen (solo guardamos la imagen)
   const [zoomImage, setZoomImage] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       const clickedOutside = Object.values(dropdownRefs.current).every(
-        (ref) => !ref || !ref.contains(event.target)
+        (ref) => !ref || !ref.contains(event.target),
       );
       if (clickedOutside) {
         setShowFilters({});
@@ -88,8 +90,10 @@ function MarcasTable({
     const titulares = [
       ...new Set(marcas.map((m) => m.Marc_Titular).filter(Boolean)),
     ].sort();
-
-    return { empresas, paises, marcasNames, clases, titulares };
+    const tiposMarca = [
+      ...new Set(marcas.map((m) => m.TipoMar_Nombre).filter(Boolean)),
+    ].sort();
+    return { empresas, paises, marcasNames, clases, titulares, tiposMarca };
   }, [marcas]);
 
   const toggleFilter = (column) => {
@@ -119,11 +123,20 @@ function MarcasTable({
       Marc_EstadoRenovacion: "",
       Marc_Renovacion_Min: "",
       Marc_Renovacion_Max: "",
+      TipoMar_Nombre: "",
     });
     setShowFilters({});
   };
-  // Agregar al inicio del componente, después de los imports
-  const calcularEstadoRenovacion = (fechaRenovacion) => {
+
+  const calcularEstadoRenovacion = (fechaRenovacion, enRenovacion) => {
+    if (enRenovacion === true) {
+      return {
+        texto: "En Renovación",
+        color: "bg-orange-600 text-white",
+        border: "border-orange-600",
+      };
+    }
+
     if (!fechaRenovacion)
       return {
         texto: "Sin fecha",
@@ -138,7 +151,7 @@ function MarcasTable({
     fechaRenov.setHours(0, 0, 0, 0);
 
     const diasDiferencia = Math.ceil(
-      (fechaRenov - hoy) / (1000 * 60 * 60 * 24)
+      (fechaRenov - hoy) / (1000 * 60 * 60 * 24),
     );
 
     if (diasDiferencia < 0) {
@@ -194,6 +207,13 @@ function MarcasTable({
       return false;
     }
 
+    if (
+      filters.TipoMar_Nombre &&
+      marca.TipoMar_Nombre !== filters.TipoMar_Nombre
+    ) {
+      return false;
+    }
+
     if (filters.Marc_Estatus !== "") {
       const isActive = filters.Marc_Estatus === "true";
       if (marca.Marc_Estatus !== isActive) {
@@ -201,7 +221,10 @@ function MarcasTable({
       }
     }
     if (filters.Marc_EstadoRenovacion !== "") {
-      const estadoActual = calcularEstadoRenovacion(marca.Marc_Renovacion);
+      const estadoActual = calcularEstadoRenovacion(
+        marca.Marc_Renovacion,
+        marca.Marc_EnRenovacion,
+      );
       if (estadoActual.texto !== filters.Marc_EstadoRenovacion) {
         return false;
       }
@@ -217,7 +240,7 @@ function MarcasTable({
       const fechaRenovacion = new Date(
         parseInt(year),
         parseInt(month) - 1,
-        parseInt(day)
+        parseInt(day),
       );
 
       if (filters.Marc_Renovacion_Min) {
@@ -226,7 +249,7 @@ function MarcasTable({
         const fechaMin = new Date(
           parseInt(minYear),
           parseInt(minMonth) - 1,
-          parseInt(minDay)
+          parseInt(minDay),
         );
 
         if (fechaRenovacion < fechaMin) {
@@ -240,7 +263,7 @@ function MarcasTable({
         const fechaMax = new Date(
           parseInt(maxYear),
           parseInt(maxMonth) - 1,
-          parseInt(maxDay)
+          parseInt(maxDay),
         );
 
         if (fechaRenovacion > fechaMax) {
@@ -407,6 +430,58 @@ function MarcasTable({
                                 }`}
                               >
                                 {pais}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </th>
+
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white">
+                    <div className="flex items-center">
+                      <span className="py-1 px-2.5 text-sm text-white">
+                        Tipo de Marca
+                      </span>
+                      <div
+                        className="relative"
+                        ref={(el) => (dropdownRefs.current.TipoMar_Nombre = el)}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFilter("TipoMar_Nombre");
+                          }}
+                          className="size-7.5 inline-flex justify-center items-center rounded-lg text-white border border-transparent hover:border-white/20 transition-colors ml-2"
+                        >
+                          <Filter className="w-3.5 h-3.5" />
+                        </button>
+                        {showFilters.TipoMar_Nombre && (
+                          <div
+                            className="absolute top-full left-0 mt-2 z-50 w-56 max-h-72 bg-white border border-stone-200 shadow-lg rounded-lg overflow-hidden overflow-y-auto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleFilterChange("TipoMar_Nombre", "");
+                                setTimeout(() => setShowFilters({}), 0);
+                              }}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${filters.TipoMar_Nombre === "" ? "bg-blue-50 text-blue-600 font-semibold" : "text-stone-900 hover:bg-stone-50"}`}
+                            >
+                              Todos los tipos
+                            </div>
+                            {filterOptions.tiposMarca.map((tipo) => (
+                              <div
+                                key={tipo}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleFilterChange("TipoMar_Nombre", tipo);
+                                  setTimeout(() => setShowFilters({}), 0);
+                                }}
+                                className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${filters.TipoMar_Nombre === tipo ? "bg-blue-50 text-blue-600 font-semibold" : "text-stone-900 hover:bg-stone-50"}`}
+                              >
+                                {tipo}
                               </div>
                             ))}
                           </div>
@@ -644,6 +719,7 @@ function MarcasTable({
                               "Próximo",
                               "Atención",
                               "Normal",
+                              "En Renovación",
                               "Sin fecha",
                             ].map((estado) => (
                               <div
@@ -652,7 +728,7 @@ function MarcasTable({
                                   e.preventDefault();
                                   handleFilterChange(
                                     "Marc_EstadoRenovacion",
-                                    estado
+                                    estado,
                                   );
                                   setTimeout(() => setShowFilters({}), 0);
                                 }}
@@ -703,7 +779,7 @@ function MarcasTable({
                                 onChange={(e) =>
                                   handleFilterChange(
                                     "Marc_Renovacion_Min",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 placeholder="Mín"
@@ -715,7 +791,7 @@ function MarcasTable({
                                 onChange={(e) =>
                                   handleFilterChange(
                                     "Marc_Renovacion_Max",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 placeholder="Máx"
@@ -854,12 +930,20 @@ function MarcasTable({
                         </span>
                       </td>
                       <td className="px-6 py-4">
+                        <span className="text-stone-700 font-medium">
+                          {marca.TipoMar_Nombre || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="font-bold text-stone-900 text-lg">
                           {marca.Marc_Marca || "N/A"}
                         </div>
                         {marca.Marc_Registro && (
-                          <div className="text-xs text-stone-500 mt-1">
-                            Registro: {marca.Marc_Registro}
+                          <div className="text-sm text-stone-600 mt-1 font-semibold">
+                            Registro:{" "}
+                            <span className="text-stone-800">
+                              {marca.Marc_Registro}
+                            </span>
                           </div>
                         )}
                       </td>
@@ -949,7 +1033,8 @@ function MarcasTable({
                       <td className="px-6 py-4">
                         {(() => {
                           const estado = calcularEstadoRenovacion(
-                            marca.Marc_Renovacion
+                            marca.Marc_Renovacion,
+                            marca.Marc_EnRenovacion,
                           );
                           return (
                             <span
@@ -990,6 +1075,20 @@ function MarcasTable({
                       )}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          {!marca.Marc_EnRenovacion &&
+                            calcularEstadoRenovacion(
+                              marca.Marc_Renovacion,
+                              marca.Marc_EnRenovacion,
+                            ).texto === "Vencida" &&
+                            hasPermission("Marcas.MarcarEnRenovacion") && (
+                              <button
+                                onClick={() => onMarcarEnRenovacion(marca)}
+                                className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 transition-colors"
+                                title="Marcar como En Renovación"
+                              >
+                                <RefreshCw className="w-5 h-5" />
+                              </button>
+                            )}
                           {hasPermission("Marcas.GestionAcciones") && (
                             <button
                               onClick={() => onViewTasks(marca)}

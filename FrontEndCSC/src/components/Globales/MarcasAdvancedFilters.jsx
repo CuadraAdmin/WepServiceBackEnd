@@ -51,8 +51,10 @@ function MarcasAdvancedFilters({
   const [filters, setFilters] = useState({
     empresas: [],
     marcas: [],
+    tiposMarca: [],
     registros: [],
     figuras: [],
+    clases: [],
     fechaAno: "",
     fechaMes: "",
     fechaDia: "",
@@ -71,8 +73,8 @@ function MarcasAdvancedFilters({
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toLowerCase()
-            .replace(/^\w/, (c) => c.toUpperCase())
-        )
+            .replace(/^\w/, (c) => c.toUpperCase()),
+        ),
     ),
   ]
     .sort()
@@ -93,8 +95,8 @@ function MarcasAdvancedFilters({
           marca
             .trim()
             .toLowerCase()
-            .replace(/^\w/, (c) => c.toUpperCase())
-        )
+            .replace(/^\w/, (c) => c.toUpperCase()),
+        ),
     ),
   ]
     .sort()
@@ -106,12 +108,36 @@ function MarcasAdvancedFilters({
     .sort()
     .map((reg) => ({ value: reg, label: reg }));
 
+  const clasesOptions = [
+    ...new Set(
+      marcas
+        .map((m) => m.Marc_Clase)
+        .filter(Boolean)
+        .flatMap((clases) =>
+          clases
+            .split(",")
+            .map((c) => c.trim())
+            .filter((c) => c !== ""),
+        ),
+    ),
+  ]
+    .sort((a, b) => {
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      return a.localeCompare(b);
+    })
+    .map((clase) => ({ value: clase, label: clase }));
+
   const estatusOptions = [
     { value: "Vencida", label: "Vencida" },
     { value: "Urgente", label: "Urgente" },
     { value: "Próximo", label: "Próximo" },
     { value: "Atención", label: "Atención" },
     { value: "Normal", label: "Normal" },
+    { value: "En Renovación", label: "En Renovación" },
     { value: "Sin fecha", label: "Sin fecha" },
   ];
 
@@ -136,6 +162,12 @@ function MarcasAdvancedFilters({
     label: String(i + 1),
   }));
 
+  const tiposMarcaOptions = [
+    ...new Set(marcas.map((m) => m.TipoMar_Nombre).filter(Boolean)),
+  ]
+    .sort()
+    .map((tipo) => ({ value: tipo, label: tipo }));
+
   const handleApplyFilters = () => {
     onApplyFilters(filters);
   };
@@ -144,8 +176,10 @@ function MarcasAdvancedFilters({
     setFilters({
       empresas: [],
       marcas: [],
+      tiposMarca: [],
       registros: [],
       figuras: [],
+      clases: [],
       fechaAno: "",
       fechaMes: "",
       fechaDia: "",
@@ -159,8 +193,10 @@ function MarcasAdvancedFilters({
   const hasActiveFilters =
     filters.empresas.length > 0 ||
     filters.marcas.length > 0 ||
+    filters.tiposMarca.length > 0 ||
     filters.registros.length > 0 ||
     filters.figuras.length > 0 ||
+    filters.clases.length > 0 ||
     filters.fechaAno !== "" ||
     filters.fechaMes !== "" ||
     filters.fechaDia !== "" ||
@@ -210,6 +246,24 @@ function MarcasAdvancedFilters({
             />
           </div>
 
+          {/* Filtro de Tipos de Marca */}
+          <div>
+            <label className="text-xs font-bold text-stone-700 mb-1.5 block">
+              Tipo de Marca
+            </label>
+            <MultiSelectConBusqueda
+              options={tiposMarcaOptions}
+              selected={filters.tiposMarca}
+              onChange={(values) =>
+                setFilters({ ...filters, tiposMarca: values })
+              }
+              placeholder="Seleccionar..."
+              searchPlaceholder="Buscar tipo..."
+              color="#6b5345"
+              showSearch={false}
+            />
+          </div>
+
           {/* Filtro de Registros */}
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
@@ -227,7 +281,10 @@ function MarcasAdvancedFilters({
               showSearch={true}
             />
           </div>
+        </div>
 
+        {/* FILA 2: Figura y Clase (2 columnas - 50/50) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Filtro de Figuras */}
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
@@ -243,10 +300,26 @@ function MarcasAdvancedFilters({
               showSearch={false}
             />
           </div>
+
+          {/* Filtro de Clases */}
+          <div>
+            <label className="text-xs font-bold text-stone-700 mb-1.5 block">
+              Clase
+            </label>
+            <MultiSelectConBusqueda
+              options={clasesOptions}
+              selected={filters.clases}
+              onChange={(values) => setFilters({ ...filters, clases: values })}
+              placeholder="Seleccionar..."
+              searchPlaceholder="Buscar clase..."
+              color="#6b5345"
+              showSearch={true}
+            />
+          </div>
         </div>
 
-        {/* Fila 2: Fecha Específica + Estatus */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* FILA 3: Año, Mes, Día, Estado Renovación (4 columnas) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-stone-200">
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
               Año
@@ -321,7 +394,7 @@ function MarcasAdvancedFilters({
           </div>
         </div>
 
-        {/* Fila 3: Rango de Fechas */}
+        {/* FILA 4: Rango de Fechas (2 columnas) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-stone-200">
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
