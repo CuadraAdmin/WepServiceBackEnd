@@ -106,10 +106,13 @@ namespace WebServiceBackEnd.DA.CM
                                 Marc_FechaSeguimiento = reader.IsDBNull(reader.GetOrdinal("Marc_FechaSeguimiento"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaSeguimiento")),
                                 Marc_FechaAviso = reader.IsDBNull(reader.GetOrdinal("Marc_FechaAviso"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_FechaAviso")),
                                 Marc_Estatus = reader.GetBoolean(reader.GetOrdinal("Marc_Estatus")),
+                                Marc_EnRenovacion = reader.IsDBNull(reader.GetOrdinal("Marc_EnRenovacion")) ? false : reader.GetBoolean(reader.GetOrdinal("Marc_EnRenovacion")),
                                 Marc_CreadoPor = reader.IsDBNull(reader.GetOrdinal("Marc_CreadoPor"))? null : reader.GetString(reader.GetOrdinal("Marc_CreadoPor")),
                                 Marc_CreadoFecha = reader.IsDBNull(reader.GetOrdinal("Marc_CreadoFecha"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_CreadoFecha")),
                                 Marc_ModificadoPor = reader.IsDBNull(reader.GetOrdinal("Marc_ModificadoPor"))? null : reader.GetString(reader.GetOrdinal("Marc_ModificadoPor")),
-                                Marc_ModificadoFecha = reader.IsDBNull(reader.GetOrdinal("Marc_ModificadoFecha"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_ModificadoFecha"))
+                                Marc_ModificadoFecha = reader.IsDBNull(reader.GetOrdinal("Marc_ModificadoFecha"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_ModificadoFecha")),
+                                TipoMar_Id = reader.IsDBNull(reader.GetOrdinal("TipoMar_Id")) ? null : reader.GetInt32(reader.GetOrdinal("TipoMar_Id")),
+                                TipoMar_Nombre = reader.IsDBNull(reader.GetOrdinal("TipoMar_Nombre")) ? null : reader.GetString(reader.GetOrdinal("TipoMar_Nombre"))
                             };
                         }
                     }
@@ -159,6 +162,7 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_FechaAviso",marca.Marc_FechaAviso.HasValue ? marca.Marc_FechaAviso.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_Estatus", marca.Marc_Estatus);
                     cmd.Parameters.AddWithValue("@Marc_CreadoPor",string.IsNullOrEmpty(marca.Marc_CreadoPor) ? DBNull.Value : marca.Marc_CreadoPor);
+                    cmd.Parameters.AddWithValue("@TipoMar_Id", marca.TipoMar_Id.HasValue ? marca.TipoMar_Id.Value : DBNull.Value);
 
                     SqlParameter outputParam = new SqlParameter("@Marc_IdGenerado", SqlDbType.Int)
                     {
@@ -215,6 +219,7 @@ namespace WebServiceBackEnd.DA.CM
                     cmd.Parameters.AddWithValue("@Marc_FechaAviso",marca.Marc_FechaAviso.HasValue ? marca.Marc_FechaAviso.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Marc_Estatus", marca.Marc_Estatus);
                     cmd.Parameters.AddWithValue("@Marc_ModificadoPor",string.IsNullOrEmpty(marca.Marc_ModificadoPor) ? DBNull.Value : marca.Marc_ModificadoPor);
+                    cmd.Parameters.AddWithValue("@TipoMar_Id", marca.TipoMar_Id.HasValue ? marca.TipoMar_Id.Value : DBNull.Value);
 
                     int filasAfectadas = await cmd.ExecuteNonQueryAsync();
                     return filasAfectadas > 0;
@@ -367,6 +372,10 @@ namespace WebServiceBackEnd.DA.CM
                             row["Marc_CreadoFecha"] = reader.IsDBNull(reader.GetOrdinal("Marc_CreadoFecha"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_CreadoFecha"));
                             row["Marc_ModificadoPor"] = reader.IsDBNull(reader.GetOrdinal("Marc_ModificadoPor"))? null : reader.GetString(reader.GetOrdinal("Marc_ModificadoPor"));
                             row["Marc_ModificadoFecha"] = reader.IsDBNull(reader.GetOrdinal("Marc_ModificadoFecha"))? null : reader.GetDateTime(reader.GetOrdinal("Marc_ModificadoFecha"));
+                            row["Marc_EnRenovacion"] = reader.IsDBNull(reader.GetOrdinal("Marc_EnRenovacion")) ? false : reader.GetBoolean(reader.GetOrdinal("Marc_EnRenovacion"));
+
+                            row["TipoMar_Id"] = reader.IsDBNull(reader.GetOrdinal("TipoMar_Id")) ? null : reader.GetInt32(reader.GetOrdinal("TipoMar_Id"));
+                            row["TipoMar_Nombre"] = reader.IsDBNull(reader.GetOrdinal("TipoMar_Nombre")) ? null : reader.GetString(reader.GetOrdinal("TipoMar_Nombre"));
 
                             // Datos de Empresa
                             row["Empr_Clave"] = reader.IsDBNull(reader.GetOrdinal("Empr_Clave"))? null : reader.GetString(reader.GetOrdinal("Empr_Clave"));
@@ -593,6 +602,30 @@ namespace WebServiceBackEnd.DA.CM
             catch (Exception ex)
             {
                 throw new Exception($"Error al crear marcas masivamente: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> MarcarEnRenovacion(int id, string? modificadoPor = null)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    SqlCommand cmd = new SqlCommand("cm.usp_Marcas_MarcarEnRenovacion", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Marc_Id", id);
+                    cmd.Parameters.AddWithValue("@Marc_ModificadoPor",
+                        string.IsNullOrEmpty(modificadoPor) ? DBNull.Value : modificadoPor);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

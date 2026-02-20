@@ -398,5 +398,32 @@ namespace WebServiceBackEnd.Controllers.CM
                 return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
             }
         }
+
+        /// <summary>
+        /// Marca una marca como "En Renovacion" (quita fechas de renovación y aviso)
+        /// </summary>
+        [HttpPost("marcarEnRenovacion/{id}")]
+        public async Task<IActionResult> MarcarEnRenovacion(int id, [FromQuery] string modificadoPor)
+        {
+            try
+            {
+                var resultado = await _marcasBP.MarcarEnRenovacion(id, modificadoPor);
+
+                if (!resultado)
+                {
+                    return NotFound(new { mensaje = "Marca no encontrada" });
+                }
+
+                return Ok(new { mensaje = "Marca marcada como En Renovación exitosamente" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = $"Error: {ex.Message}" });
+            }
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace WebServiceBackEnd.BE.CM
+﻿using WebServiceBackEnd.BE.CM.CM_TipoMarca;
+
+namespace WebServiceBackEnd.BE.CM
 {
     public class MarcasBE
     {
@@ -43,7 +45,13 @@
         //para notificacion
         public int DiasRestantes { get; set; }
         public string? TipoPeriodo { get; set; }
-        public List<string> Tareas { get; set; } = new List<string>(); 
+        public List<string> Tareas { get; set; } = new List<string>();
+
+        public int? TipoMar_Id { get; set; }
+        public string? TipoMar_Nombre { get; set; }
+        public bool Marc_EnRenovacion { get; set; }
+
+        public TipoMarcaBE? objTipoMarcaBE { get; set; }
 
     }
 }

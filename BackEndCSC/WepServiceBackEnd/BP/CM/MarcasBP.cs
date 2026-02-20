@@ -377,5 +377,33 @@ namespace WebServiceBackEnd.BP.CM
                 throw new Exception($"Error al crear marcas masivamente: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Marca una marca como "En Renovación" (quita fechas de renovación y aviso)
+        /// </summary>
+        public async Task<bool> MarcarEnRenovacion(int id, string? modificadoPor = null)
+        {
+            try
+            {
+                if (id <= 0)
+                    throw new ArgumentException("El ID de la marca debe ser mayor a 0");
+
+                var marca = await _marcasDA.ObtenerPorId(id);
+                if (marca == null)
+                    throw new ArgumentException("La marca no existe en el sistema");
+
+               
+
+                return await _marcasDA.MarcarEnRenovacion(id, modificadoPor);
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al marcar marca en renovación: {ex.Message}");
+            }
+        }
     }
 }
