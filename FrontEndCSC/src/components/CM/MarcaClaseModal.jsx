@@ -20,8 +20,8 @@ function MarcaClaseModal({ claves, onClose, token }) {
             .map((c) => c.trim())
             .filter((c) => c)
         : Array.isArray(claves)
-        ? claves
-        : [claves];
+          ? claves
+          : [claves];
 
     if (clavesArray.length === 0) {
       setError("No hay clases para cargar");
@@ -37,7 +37,7 @@ function MarcaClaseModal({ claves, onClose, token }) {
         try {
           const response = await ApiService.get(
             `${ApiConfig.ENDPOINTSMARCA.CLASES}/obtenerPorClave/${clave}`,
-            token
+            token,
           );
 
           if (response.ok) {
@@ -65,7 +65,7 @@ function MarcaClaseModal({ claves, onClose, token }) {
     } finally {
       setLoading(false);
     }
-  }, [claves, token]); // Ahora claves y token están en las dependencias
+  }, [claves, token]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -86,9 +86,8 @@ function MarcaClaseModal({ claves, onClose, token }) {
       document.body.style.overflow = "unset";
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [claves, token, cargarClases, onClose]); // Incluir cargarClases y onClose
+  }, [claves, token, cargarClases, onClose]);
 
-  // Calcular clavesArray para el render
   const clavesArray =
     typeof claves === "string"
       ? claves
@@ -96,8 +95,8 @@ function MarcaClaseModal({ claves, onClose, token }) {
           .map((c) => c.trim())
           .filter((c) => c)
       : Array.isArray(claves)
-      ? claves
-      : [claves];
+        ? claves
+        : [claves];
 
   return (
     <div

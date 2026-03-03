@@ -64,7 +64,6 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     cargarDatos();
   }, []);
 
-  //funcion para normalizar propiedades
   const normalizarPermiso = (p) => ({
     Perm_Id: p.Perm_Id || p.perm_Id,
     Perm_Nombre: p.Perm_Nombre || p.perm_Nombre,
@@ -81,7 +80,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     try {
       const responsePermisos = await ApiService.get(
         ApiConfig.ENDPOINTSPERMISOS.LISTAR,
-        token
+        token,
       );
 
       if (!responsePermisos.ok) {
@@ -90,17 +89,16 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
 
       const permisos = await responsePermisos.json();
 
-      // Normalizar y filtrar permisos activos
       const permisosNormalizados = permisos.map(normalizarPermiso);
       setTodosPermisos(
-        permisosNormalizados.filter((p) => p.Perm_Estatus === true)
+        permisosNormalizados.filter((p) => p.Perm_Estatus === true),
       );
 
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
       const responseAsignados = await ApiService.get(
         ApiConfig.ENDPOINTSPERFILES.PERMISOS(perfilId),
-        token
+        token,
       );
 
       if (!responseAsignados.ok) {
@@ -109,10 +107,9 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
 
       const asignados = await responseAsignados.json();
 
-      // Normalizar permisos asignados
       const asignadosNormalizados = asignados.map(normalizarPermiso);
       const permisosValidos = asignadosNormalizados.filter(
-        (p) => p && p.Perm_Nombre
+        (p) => p && p.Perm_Nombre,
       );
 
       setPermisosAsignados(permisosValidos);
@@ -136,13 +133,12 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     setSuccess("");
 
     try {
-      // Soporte para ambas capitalizaciones
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
       const response = await ApiService.post(
         ApiConfig.ENDPOINTSPERFILES.ASIGNAR_PERMISO(perfilId, permisoId),
         null,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -179,17 +175,16 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     setSuccess("");
 
     try {
-      // Soporte para ambas capitalizaciones
       const perfilId = perfil.Perf_Id || perfil.perf_Id;
 
       const response = await ApiService.delete(
         ApiConfig.ENDPOINTSPERFILES.QUITAR_PERMISO(perfilId, permisoId),
-        token
+        token,
       );
 
       if (response.ok) {
         setPermisosAsignados((prev) =>
-          prev.filter((p) => p.Perm_Id !== permisoId)
+          prev.filter((p) => p.Perm_Id !== permisoId),
         );
         setSuccess(`"${permiso.Perm_Nombre}" removido`);
         setTimeout(() => setSuccess(""), 2000);
@@ -210,24 +205,21 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
     }
   };
 
-  // Permisos disponibles (los que NO tiene)
   const permisosDisponibles = todosPermisos.filter(
     (permiso) =>
       permiso.Perm_Nombre &&
       !permisosAsignados.some((p) => p.Perm_Id === permiso.Perm_Id) &&
       permiso.Perm_Nombre.toLowerCase().includes(
-        searchDisponibles.toLowerCase()
-      )
+        searchDisponibles.toLowerCase(),
+      ),
   );
 
-  // permisos asignados filtrados por busqueda
   const permisosAsignadosFiltrados = permisosAsignados.filter(
     (permiso) =>
       permiso.Perm_Nombre &&
-      permiso.Perm_Nombre.toLowerCase().includes(searchAsignados.toLowerCase())
+      permiso.Perm_Nombre.toLowerCase().includes(searchAsignados.toLowerCase()),
   );
 
-  // agrupar permisos por modulo
   const agruparPorModulo = (permisos) => {
     return permisos.reduce((acc, permiso) => {
       if (!permiso.Perm_Nombre) return acc;
@@ -381,7 +373,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                           <div className="space-y-2">
                             {permisos.map((permiso) => {
                               const estaProcesando = permisosProcesando.has(
-                                permiso.Perm_Id
+                                permiso.Perm_Id,
                               );
                               return (
                                 <div
@@ -413,7 +405,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                             })}
                           </div>
                         </div>
-                      )
+                      ),
                     )
                   )}
                 </div>
@@ -465,7 +457,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                           <div className="space-y-2">
                             {permisos.map((permiso) => {
                               const estaProcesando = permisosProcesando.has(
-                                permiso.Perm_Id
+                                permiso.Perm_Id,
                               );
                               return (
                                 <div
@@ -497,7 +489,7 @@ function AsignarPermisos({ perfil, token, nombreUsuario, onClose }) {
                             })}
                           </div>
                         </div>
-                      )
+                      ),
                     )
                   )}
                 </div>

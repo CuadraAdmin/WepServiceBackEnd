@@ -36,7 +36,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
 
   const { hasPermission, loading: permissionsLoading } = usePermissions(
     token,
-    Usua_Id
+    Usua_Id,
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     try {
       const response = await ApiService.get(
         `${ApiConfig.ENDPOINTSMARCA.TAREAS}/listar/activosPorMarca/${marca.Marc_Id}`,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -111,13 +111,13 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
         response = await ApiService.put(
           `${ApiConfig.ENDPOINTSMARCA.TAREAS}/actualizar/${editingTarea.MarcTare_Id}`,
           dataToSend,
-          token
+          token,
         );
       } else {
         response = await ApiService.post(
           `${ApiConfig.ENDPOINTSMARCA.TAREAS}/crear`,
           dataToSend,
-          token
+          token,
         );
       }
 
@@ -125,7 +125,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
         setSuccess(
           editingTarea
             ? "Tarea actualizada exitosamente"
-            : "Tarea creada exitosamente"
+            : "Tarea creada exitosamente",
         );
         resetForm();
         await cargarTareas();
@@ -151,7 +151,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
     try {
       const response = await ApiService.delete(
         `${ApiConfig.ENDPOINTSMARCA.TAREAS}/eliminar/${tareaId}`,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -180,7 +180,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
       const response = await ApiService.patch(
         `${ApiConfig.ENDPOINTSMARCA.TAREAS}/finalizarTarea/${tareaId}`,
         null,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -295,7 +295,6 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
             </div>
           )}
 
-          {/* Boton Agregar Nueva Acción - STICKY */}
           {!showForm &&
             hasPermission("Marcas.GestionAcciones.CrearAcciones") && (
               <div className="sticky top-0 bg-white z-10 pb-4 -mx-4 md:-mx-6 px-4 md:px-6">
@@ -313,7 +312,6 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
               </div>
             )}
 
-          {/* Formulario de Tarea - STICKY */}
           {showForm && (
             <div className="sticky top-0 bg-white z-10 pb-4 -mx-4 md:-mx-6 px-4 md:px-6">
               <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl p-4 md:p-6 border-2 border-stone-200">
@@ -379,8 +377,8 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                       {loading
                         ? "Guardando..."
                         : editingTarea
-                        ? "Actualizar"
-                        : "Crear"}
+                          ? "Actualizar"
+                          : "Crear"}
                     </button>
                   </div>
                 </form>
@@ -388,7 +386,6 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
             </div>
           )}
 
-          {/* Lista de Tareas con SCROLL */}
           <div className="flex-1 overflow-y-auto">
             <div className="space-y-3">
               <h3 className="text-base md:text-lg font-bold text-stone-900 flex items-center gap-2 sticky top-0 bg-white py-2 z-10">
@@ -450,7 +447,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                     </span>
                                     <span className="whitespace-nowrap">
                                       {formatDateOnly(
-                                        tarea.MarcTare_FechaIniciacion
+                                        tarea.MarcTare_FechaIniciacion,
                                       )}
                                     </span>
                                   </div>
@@ -487,7 +484,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                       <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                                       <span className="whitespace-nowrap">
                                         {formatDate(
-                                          tarea.MarcTare_ModificadoFecha
+                                          tarea.MarcTare_ModificadoFecha,
                                         )}
                                       </span>
                                     </div>
@@ -508,7 +505,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                     <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                                     <span className="whitespace-nowrap">
                                       {formatDate(
-                                        tarea.MarcTare_FechaFinalizacion
+                                        tarea.MarcTare_FechaFinalizacion,
                                       )}
                                     </span>
                                   </div>
@@ -521,7 +518,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                           {!tarea.MarcTare_FechaFinalizacion && (
                             <div className="flex flex-col md:flex-row items-center gap-1 flex-shrink-0">
                               {hasPermission(
-                                "Marcas.GestionAcciones.FinalizarAcciones"
+                                "Marcas.GestionAcciones.FinalizarAcciones",
                               ) && (
                                 <button
                                   onClick={() =>
@@ -534,7 +531,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                 </button>
                               )}
                               {hasPermission(
-                                "Marcas.GestionAcciones.EditarAcciones"
+                                "Marcas.GestionAcciones.EditarAcciones",
                               ) && (
                                 <button
                                   onClick={() => openEditForm(tarea)}
@@ -545,7 +542,7 @@ function MarcaTareasModal({ marca, onClose, token, userData }) {
                                 </button>
                               )}
                               {hasPermission(
-                                "Marcas.GestionAcciones.EliminarAcciones"
+                                "Marcas.GestionAcciones.EliminarAcciones",
                               ) && (
                                 <button
                                   onClick={() =>

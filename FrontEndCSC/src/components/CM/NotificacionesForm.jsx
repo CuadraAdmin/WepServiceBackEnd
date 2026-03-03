@@ -22,7 +22,7 @@ function NotificacionesForm({
       {
         nombre: "",
         correo: "",
-        telefonoWhatsApp: "", // Se mantiene en el estado pero no se muestra en la UI
+        telefonoWhatsApp: "",
       },
     ]);
   };
@@ -33,7 +33,7 @@ function NotificacionesForm({
     if (contacto.id) {
       if (
         !window.confirm(
-          "¿Eliminar este contacto? Esta acción no se puede deshacer."
+          "¿Eliminar este contacto? Esta acción no se puede deshacer.",
         )
       ) {
         return;

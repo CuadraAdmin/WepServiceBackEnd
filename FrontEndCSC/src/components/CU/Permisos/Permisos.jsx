@@ -190,7 +190,7 @@ function Permisos({ token, userData }) {
     try {
       const response = await ApiService.get(
         ApiConfig.ENDPOINTSPERMISOS.LISTAR,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -228,7 +228,7 @@ function Permisos({ token, userData }) {
         response = await ApiService.put(
           ApiConfig.ENDPOINTSPERMISOS.ACTUALIZAR(editingPermiso.Perm_Id),
           body,
-          token
+          token,
         );
       } else {
         const body = {
@@ -242,7 +242,7 @@ function Permisos({ token, userData }) {
         response = await ApiService.post(
           ApiConfig.ENDPOINTSPERMISOS.CREAR,
           body,
-          token
+          token,
         );
       }
 
@@ -252,7 +252,7 @@ function Permisos({ token, userData }) {
         setSuccess(
           editingPermiso
             ? "PERMISO ACTUALIZADO EXITOSAMENTE"
-            : "PERMISO CREADO EXITOSAMENTE"
+            : "PERMISO CREADO EXITOSAMENTE",
         );
         setShowModal(false);
         resetForm();
@@ -288,7 +288,7 @@ function Permisos({ token, userData }) {
     try {
       const response = await ApiService.delete(
         ApiConfig.ENDPOINTSPERMISOS.ELIMINAR(permisoToDelete.Perm_Id),
-        token
+        token,
       );
 
       if (response.ok) {
@@ -318,7 +318,7 @@ function Permisos({ token, userData }) {
       const response = await ApiService.patch(
         ApiConfig.ENDPOINTSPERMISOS.ACTIVAR(permisoToActivate.Perm_Id),
         null,
-        token
+        token,
       );
 
       if (response.ok) {
@@ -587,7 +587,6 @@ function Permisos({ token, userData }) {
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
                 <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-180px)]">
                   {" "}
-                  {/* 👈 CAMBIAR AQUÍ */}
                   <table className="w-full">
                     <thead
                       className="text-white sticky top-0 z-20"

@@ -59,14 +59,14 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
     try {
       const response = await fetch(
         ApiConfig.getUrl(
-          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/listar/${marca.Marc_Id}`
+          `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/listar/${marca.Marc_Id}`,
         ),
         {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -137,7 +137,6 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
       return;
     }
 
-    // Si es una imagen, abrir modal de zoom
     if (archivo.ContentType?.startsWith("image/")) {
       setZoomImage({
         url: archivo.Url,
@@ -146,7 +145,6 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
       return;
     }
 
-    // Para otros archivos (PDF, etc), usar el preview normal
     setPreviewLoading(true);
     setImageZoom(1);
     setImageRotation(0);
@@ -218,7 +216,7 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
 
         const response = await fetch(
           ApiConfig.getUrl(
-            `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload/${marca.Marc_Id}?tipoArchivo=${tipoArchivo}`
+            `${ApiConfig.ENDPOINTSMARCA.ARCHIVOS}/upload/${marca.Marc_Id}?tipoArchivo=${tipoArchivo}`,
           ),
           {
             method: "POST",
@@ -226,7 +224,7 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
               Authorization: `Bearer ${token}`,
             },
             body: formData,
-          }
+          },
         );
 
         if (!response.ok) {
@@ -264,7 +262,7 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
             ...ApiConfig.getHeaders(token),
           },
           body: JSON.stringify({ url }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -289,7 +287,7 @@ function MarcasFiles({ marca, onClose, token, hasPermission }) {
       const downloadUrl = ApiConfig.getUrl(
         `${
           ApiConfig.ENDPOINTSMARCA.ARCHIVOS
-        }/descargar-imagen?url=${encodeURIComponent(url)}`
+        }/descargar-imagen?url=${encodeURIComponent(url)}`,
       );
 
       const response = await fetch(downloadUrl, {

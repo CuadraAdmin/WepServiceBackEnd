@@ -4,7 +4,6 @@ import { AlertCircle, CheckCircle, XCircle, Eye } from "lucide-react";
 function MarcasValidator({ data, onValidationComplete, onCancel }) {
   const [showDetails, setShowDetails] = useState(false);
 
-  // Agregar esta función al inicio del componente, después de estaVacioCompleto
   const normalizarFecha = (valor) => {
     if (!valor) return null;
 
@@ -29,7 +28,6 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
       return null;
     }
 
-    // Si es una fecha válida, retornarla
     return valor;
   };
 
@@ -38,7 +36,6 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
 
     const valorStr = String(valor).trim();
 
-    // Solo considera vacío si está completamente vacío (sin texto)
     return valorStr === "";
   };
 
@@ -99,16 +96,14 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
     return false;
   };
 
-  // Validar todos los registros
   const validarRegistros = () => {
     const errores = [];
     const validos = [];
 
     data.forEach((row, index) => {
       const erroresFila = [];
-      const fila = index + 2; // Fila en Excel (índice 0 = fila 2)
+      const fila = index + 2;
 
-      // Validar campos obligatorios BÁSICOS (NO aceptan N/A, deben tener texto real)
       if (estaVacioCompleto(row.Marc_Pais)) {
         erroresFila.push("País vacío");
       }
@@ -117,10 +112,9 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
         erroresFila.push("Titular vacío");
       }
 
-      // CAMPOS QUE ACEPTAN N/A (solo valida que NO estén completamente vacíos)
       if (!tieneContenidoValido(row.Marc_SolicitudNacional)) {
         erroresFila.push(
-          "Solicitud Nacional vacía (puede usar N/A si no aplica)"
+          "Solicitud Nacional vacía (puede usar N/A si no aplica)",
         );
       }
 
@@ -136,18 +130,16 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
         erroresFila.push("Registro vacío (puede usar N/A si no aplica)");
       }
 
-      // Validar formato de Clase SOLO si NO es N/A y NO está vacío
       if (!estaVacioCompleto(row.Marc_Clase) && !esValorNA(row.Marc_Clase)) {
         const claseStr = String(row.Marc_Clase).trim();
         const formatoClaseValido = /^[\d\s,]+$/.test(claseStr);
         if (!formatoClaseValido) {
           erroresFila.push(
-            "Clase contiene caracteres inválidos (solo números, comas y espacios permitidos)"
+            "Clase contiene caracteres inválidos (solo números, comas y espacios permitidos)",
           );
         }
       }
 
-      // Validar formato de fechas opcionales (solo si tienen valor)
       if (
         row.Marc_FechaSolicitud &&
         String(row.Marc_FechaSolicitud).trim() !== "" &&
@@ -232,7 +224,7 @@ function MarcasValidator({ data, onValidationComplete, onCancel }) {
       datos.Marc_Renovacion = normalizarFecha(datos.Marc_Renovacion);
       datos.Marc_Oposicion = normalizarFecha(datos.Marc_Oposicion);
       datos.Marc_FechaSeguimiento = normalizarFecha(
-        datos.Marc_FechaSeguimiento
+        datos.Marc_FechaSeguimiento,
       );
 
       return datos;

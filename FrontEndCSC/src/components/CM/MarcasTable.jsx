@@ -234,7 +234,6 @@ function MarcasTable({
         return false;
       }
 
-      // Crear fecha normalizada desde el string ISO
       const fechaStr = marca.Marc_Renovacion.split("T")[0];
       const [year, month, day] = fechaStr.split("-");
       const fechaRenovacion = new Date(
@@ -277,7 +276,6 @@ function MarcasTable({
 
   const hasActiveFilters = Object.values(filters).some((value) => value !== "");
 
-  // Función para abrir modal de zoom
   const handleImageClick = (marca) => {
     if (marca.Marc_Diseno) {
       setZoomImage({
@@ -287,7 +285,6 @@ function MarcasTable({
     }
   };
 
-  // Función para cerrar modal de zoom
   const closeZoomModal = () => {
     setZoomImage(null);
   };
@@ -964,7 +961,6 @@ function MarcasTable({
                                   e.target.nextSibling.style.display = "flex";
                                 }}
                               />
-                              {/* Overlay con icono de zoom al hacer hover */}
                               <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/40 transition-all flex items-center justify-center">
                                 <Eye className="w-6 h-6 text-white opacity-0 group-hover/image:opacity-100 transition-opacity" />
                               </div>
@@ -1160,7 +1156,7 @@ function MarcasTable({
       {/* Modal de Clase */}
       {selectedClase && (
         <MarcaClaseModal
-          claves={selectedClase} // ✅ CORRECTO
+          claves={selectedClase}
           token={token}
           onClose={() => setSelectedClase(null)}
         />

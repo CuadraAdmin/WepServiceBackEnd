@@ -264,7 +264,7 @@ function MarcasImport({
             valor = sanitizarTexto(valor);
           } else if (
             ["Marc_Marca", "Marc_Registro", "Marc_SolicitudNacional"].includes(
-              systemField
+              systemField,
             )
           ) {
             if (valor === null || String(valor).trim() === "") {
@@ -296,7 +296,7 @@ function MarcasImport({
         const excelEpoch = new Date(1900, 0, 1);
         const days = parseInt(fechaStr) - 2;
         const date = new Date(
-          excelEpoch.getTime() + days * 24 * 60 * 60 * 1000
+          excelEpoch.getTime() + days * 24 * 60 * 60 * 1000,
         );
         return date.toISOString().split("T")[0];
       }
@@ -324,13 +324,13 @@ function MarcasImport({
       const response = await ApiService.post(
         `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/crear`,
         contactoData,
-        token
+        token,
       );
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.mensaje || "Error al crear contacto de notificación"
+          errorData.mensaje || "Error al crear contacto de notificación",
         );
       }
 
@@ -378,7 +378,6 @@ function MarcasImport({
     try {
       setProgress({ current: 0, total: datosAImportar.length });
 
-      // 1. PREPARAR TODAS LAS MARCAS PARA INSERCIÓN MASIVA
       const marcasParaInsertar = datosAImportar.map((mappedRow) => {
         const fechaRenovacion = convertirFechaExcel(mappedRow.Marc_Renovacion);
         const fechaAviso = fechaRenovacion;
@@ -402,23 +401,22 @@ function MarcasImport({
           Marc_Autor: mappedRow.Marc_Autor || null,
           Marc_Observaciones: mappedRow.Marc_Observaciones || null,
           Marc_FechaSolicitud: convertirFechaExcel(
-            mappedRow.Marc_FechaSolicitud
+            mappedRow.Marc_FechaSolicitud,
           ),
           Marc_FechaRegistro: convertirFechaExcel(mappedRow.Marc_FechaRegistro),
           Marc_Dure: convertirFechaExcel(mappedRow.Marc_Dure),
           Marc_Oposicion: convertirFechaExcel(mappedRow.Marc_Oposicion),
           Marc_FechaSeguimiento: convertirFechaExcel(
-            mappedRow.Marc_FechaSeguimiento
+            mappedRow.Marc_FechaSeguimiento,
           ),
           Marc_Estatus: true,
           Marc_CreadoPor: nombreUsuario,
         };
       });
 
-      // 2. INSERTAR TODAS LAS MARCAS EN MASA (LOTES DE 1000)
       let totalMarcasInsertadas = 0;
       const erroresMarcas = [];
-      const mapaMarcasExitosas = new Map(); // Mapear índice → Marc_Id
+      const mapaMarcasExitosas = new Map();
 
       for (let i = 0; i < marcasParaInsertar.length; i += 1000) {
         const loteMarcas = marcasParaInsertar.slice(i, i + 1000);
@@ -427,14 +425,13 @@ function MarcasImport({
           const responseMarcas = await ApiService.post(
             `${ApiConfig.ENDPOINTSMARCA.MARCAS}/crear-masivo`,
             loteMarcas,
-            token
+            token,
           );
 
           if (responseMarcas.ok) {
             const resultadoMarcas = await responseMarcas.json();
             totalMarcasInsertadas += resultadoMarcas.totalInsertados || 0;
 
-            // Procesar resultados individuales
             if (
               resultadoMarcas.detalles &&
               Array.isArray(resultadoMarcas.detalles)
@@ -444,12 +441,10 @@ function MarcasImport({
                 const filaExcel = indiceGlobal + 2;
 
                 if (detalle.Exitoso) {
-                  // Guardar mapeo: índice original → Marc_Id generado
                   mapaMarcasExitosas.set(indiceGlobal, detalle.Marc_Id);
                 } else {
-                  // Agregar a errores
                   const mensajeError = limpiarMensajeError(
-                    detalle.MensajeError || "Error desconocido"
+                    detalle.MensajeError || "Error desconocido",
                   );
                   erroresMarcas.push({
                     fila: filaExcel,
@@ -465,10 +460,9 @@ function MarcasImport({
           } else {
             const errorData = await responseMarcas.json();
             const mensajeError = limpiarMensajeError(
-              errorData.mensaje || "Error al insertar lote de marcas"
+              errorData.mensaje || "Error al insertar lote de marcas",
             );
 
-            // Marcar todo el lote como error
             for (let j = 0; j < loteMarcas.length; j++) {
               const indiceGlobal = i + j;
               const filaExcel = indiceGlobal + 2;
@@ -482,10 +476,9 @@ function MarcasImport({
           }
         } catch (error) {
           const mensajeError = limpiarMensajeError(
-            error.message || "Error al procesar lote de marcas"
+            error.message || "Error al procesar lote de marcas",
           );
 
-          // Marcar todo el lote como error
           for (let j = 0; j < loteMarcas.length; j++) {
             const indiceGlobal = i + j;
             const filaExcel = indiceGlobal + 2;
@@ -497,17 +490,12 @@ function MarcasImport({
           }
         }
 
-        // Actualizar progreso
         setProgress({
           current: Math.min(i + loteMarcas.length, marcasParaInsertar.length),
           total: marcasParaInsertar.length,
         });
       }
 
-      console.log(`✅ Marcas insertadas: ${totalMarcasInsertadas}`);
-      console.log(`❌ Marcas con error: ${erroresMarcas.length}`);
-
-      // 3. PREPARAR CONTACTOS PARA LAS MARCAS EXITOSAS
       const contactosParaInsertar = [];
 
       mapaMarcasExitosas.forEach((marcaId, indiceOriginal) => {
@@ -518,14 +506,13 @@ function MarcasImport({
             Marc_Id: marcaId,
             MarcNoti_Nombre: mappedRow.Contacto_Nombre,
             MarcNoti_Correo: mappedRow.Contacto_Correo,
-            MarcNoti_TelefonoWhatsApp: "", // ✅ Campo vacío como pediste
+            MarcNoti_TelefonoWhatsApp: "",
             MarcNoti_Estatus: true,
             MarcNoti_CreadoPor: nombreUsuario,
           });
         }
       });
 
-      // 4. INSERTAR TODOS LOS CONTACTOS EN MASA (LOTES DE 1000)
       let totalContactosInsertados = 0;
       let totalContactosErrores = 0;
 
@@ -537,7 +524,7 @@ function MarcasImport({
             const responseContactos = await ApiService.post(
               `${ApiConfig.ENDPOINTSMARCA.NOTIFICACIONES}/crear-masivo`,
               loteContactos,
-              token
+              token,
             );
 
             if (responseContactos.ok) {
@@ -552,17 +539,13 @@ function MarcasImport({
           } catch (contactoError) {
             console.error(
               "Error al insertar contactos en masa:",
-              contactoError
+              contactoError,
             );
             totalContactosErrores += loteContactos.length;
           }
         }
-
-        console.log(`✅ Contactos insertados: ${totalContactosInsertados}`);
-        console.log(`❌ Contactos con error: ${totalContactosErrores}`);
       }
 
-      // 5. MOSTRAR RESULTADOS FINALES
       setResults({
         success: totalMarcasInsertadas,
         errors: erroresMarcas,
@@ -574,7 +557,7 @@ function MarcasImport({
       }
     } catch (error) {
       const mensajeError = limpiarMensajeError(
-        error.message || "Error general en la importación"
+        error.message || "Error general en la importación",
       );
       setError("Error general en la importación: " + mensajeError);
     } finally {
@@ -596,7 +579,7 @@ function MarcasImport({
     XLSX.utils.book_append_sheet(workbook, worksheet, "Errores");
     XLSX.writeFile(
       workbook,
-      `errores_importacion_${new Date().getTime()}.xlsx`
+      `errores_importacion_${new Date().getTime()}.xlsx`,
     );
   };
 

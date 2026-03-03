@@ -302,7 +302,7 @@ function MarcasDetails({ marca, onClose, token }) {
               </div>
             </div>
 
-            {/* Fechas y Acciones - Ambas cards con altura fija igual */}
+            {/* Fechas y Acciones */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Fechas */}
               <div className="bg-white rounded-2xl p-5 shadow-md border border-stone-200 md:h-72">

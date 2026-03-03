@@ -43,7 +43,6 @@ function ModalFormulario({
     setImageFile(null);
     setImageToDelete(false);
 
-    // Bloquear scroll del body
     if (show) {
       document.body.style.overflow = "hidden";
     }

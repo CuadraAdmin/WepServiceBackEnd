@@ -204,13 +204,11 @@ function MarcasAdvancedFilters({
     filters.fechaRangoHasta !== "" ||
     filters.estadoRenovacion.length > 0;
 
-  // Solo hacer aparecer los filtros si showFilters es true
   if (!showFilters) return null;
 
   return (
     <div className="mb-6 bg-white rounded-2xl shadow-xl border-2 border-stone-200 p-6">
       <div className="space-y-4">
-        {/* Fila 1: Multiselects - CAMBIAR A 4 COLUMNAS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Filtro de Empresas */}
           <div>
@@ -318,7 +316,6 @@ function MarcasAdvancedFilters({
           </div>
         </div>
 
-        {/* FILA 3: Año, Mes, Día, Estado Renovación (4 columnas) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-stone-200">
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
@@ -394,7 +391,6 @@ function MarcasAdvancedFilters({
           </div>
         </div>
 
-        {/* FILA 4: Rango de Fechas (2 columnas) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-stone-200">
           <div>
             <label className="text-xs font-bold text-stone-700 mb-1.5 block">
@@ -426,7 +422,6 @@ function MarcasAdvancedFilters({
         </div>
       </div>
 
-      {/* Botones de Acción */}
       <div className="flex gap-3 mt-4 pt-4 border-t-2 border-stone-200">
         <button
           onClick={handleClearFilters}

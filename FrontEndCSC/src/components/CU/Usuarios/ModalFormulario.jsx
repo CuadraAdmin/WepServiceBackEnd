@@ -27,7 +27,6 @@ const ModalFormulario = ({
       setValidationError("El campo Nombre Completo es requerido");
       return false;
     }
-    // Validar correo solo si se proporciona
     if (formData.usua_Correo && formData.usua_Correo.trim() !== "") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.usua_Correo)) {
@@ -35,7 +34,6 @@ const ModalFormulario = ({
         return false;
       }
     }
-    // Validar teléfono solo si se proporciona
     if (formData.usua_Telefono && formData.usua_Telefono.trim() !== "") {
       if (formData.usua_Telefono.length < 10) {
         setValidationError("El teléfono debe tener 10 dígitos");

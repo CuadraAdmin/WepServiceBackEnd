@@ -42,7 +42,6 @@ function Marcas({ token, userData }) {
   const [tiposMarca, setTiposMarca] = useState([]);
   const [showRenovacionModal, setShowRenovacionModal] = useState(false);
   const [marcaToRenovar, setMarcaToRenovar] = useState(null);
-  // Estado para filtros avanzados
   const [advancedFilters, setAdvancedFilters] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const initialLoadDone = useRef(false);
@@ -603,7 +602,6 @@ function Marcas({ token, userData }) {
         .replace(/^\w/, (c) => c.toUpperCase());
     };
 
-    // Filtro de Figuras (normalizado)
     if (
       filters.figuras.length > 0 &&
       !filters.figuras.includes(normalize(marca.Marc_Figura))
@@ -611,7 +609,6 @@ function Marcas({ token, userData }) {
       return false;
     }
 
-    // Filtro de Empresas (sin normalizar, se mantiene igual)
     if (
       filters.empresas.length > 0 &&
       !filters.empresas.includes(marca.Empr_Nombre)
@@ -720,7 +717,6 @@ function Marcas({ token, userData }) {
       }
     }
 
-    // Filtro por Estado de Renovación
     if (filters.estadoRenovacion.length > 0) {
       const estadoActual = calcularEstadoRenovacion(
         marca.Marc_Renovacion,
@@ -772,13 +768,11 @@ function Marcas({ token, userData }) {
   };
 
   const filteredMarcas = marcas.filter((marca) => {
-    // Búsqueda por texto
     const matchesSearch =
       marca.Marc_Marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.Marc_Titular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       marca.Marc_Registro?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Filtro de estatus básico (estado de renovación)
     const matchesStatus =
       filterStatus === "all" ||
       (() => {
@@ -797,20 +791,17 @@ function Marcas({ token, userData }) {
         return true;
       })();
 
-    // Filtro de estatus activo/inactivo
     const matchesEstatus =
       filterEstatus === "all" ||
       (filterEstatus === "activas" && marca.Marc_Estatus === true) ||
       (filterEstatus === "inactivas" && marca.Marc_Estatus === false);
 
-    // Filtros avanzados
     const matchesAdvanced =
       !advancedFilters || applyAdvancedFilters(marca, advancedFilters);
 
     return matchesSearch && matchesStatus && matchesEstatus && matchesAdvanced;
   });
 
-  // Calcular si hay filtros activos para el botón
   const hasActiveFilters = advancedFilters !== null;
 
   const empresasOptions = empresas.map((empresa) => ({
