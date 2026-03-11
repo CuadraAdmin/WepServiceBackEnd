@@ -90,7 +90,9 @@ namespace WebServiceBackEnd.DA
                                 Empr_ModificadoPor = reader.IsDBNull(reader.GetOrdinal("Empr_ModificadoPor"))
                                     ? null : reader.GetString(reader.GetOrdinal("Empr_ModificadoPor")),
                                 Empr_ModificadoFecha = reader.IsDBNull(reader.GetOrdinal("Empr_ModificadoFecha"))
-                                    ? null : reader.GetDateTime(reader.GetOrdinal("Empr_ModificadoFecha"))
+                                    ? null : reader.GetDateTime(reader.GetOrdinal("Empr_ModificadoFecha")),
+                                Empr_PermisoGeneradoContratos = reader.IsDBNull(reader.GetOrdinal("Empr_PermisoGeneradoContratos"))
+                                    ? null : reader.GetString(reader.GetOrdinal("Empr_PermisoGeneradoContratos"))
                             };
                         }
                     }

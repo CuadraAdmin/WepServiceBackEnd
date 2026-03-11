@@ -13,6 +13,7 @@ namespace WebServiceBackEnd.BE
         public DateTime? Empr_CreadoFecha { get; set; }
         public string? Empr_ModificadoPor { get; set; }
         public DateTime? Empr_ModificadoFecha { get; set; }
+        public string? Empr_PermisoGeneradoContratos { get; set; }
 
         // Propiedades auxiliares para operaciones
         public int? Accion { get; set; }
