@@ -16,7 +16,7 @@ namespace WebServiceBackEnd.Services
         {
             var connectionString = configuration.GetConnectionString("AzureBlobStorages");
             _blobServiceClient = new BlobServiceClient(connectionString);
-            _containerName = configuration["CadenaContenedor:NombreContenedor"] ?? "marcas-archivos";
+            _containerName = configuration["CadenaContenedor:NombreContenedor"] ?? "marcas-archivos-desa";
             _marcasDA = marcasDA;
 
             CreateContainerIfNotExists().Wait();
