@@ -1071,20 +1071,26 @@ function MarcasTable({
                       )}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          {!marca.Marc_EnRenovacion &&
-                            calcularEstadoRenovacion(
+                          {(() => {
+                            const estado = calcularEstadoRenovacion(
                               marca.Marc_Renovacion,
                               marca.Marc_EnRenovacion,
-                            ).texto === "Vencida" &&
-                            hasPermission("Marcas.MarcarEnRenovacion") && (
-                              <button
-                                onClick={() => onMarcarEnRenovacion(marca)}
-                                className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 transition-colors"
-                                title="Marcar como En Renovación"
-                              >
-                                <RefreshCw className="w-5 h-5" />
-                              </button>
-                            )}
+                            );
+                            return (
+                              !marca.Marc_EnRenovacion &&
+                              (estado.texto === "Vencida" ||
+                                estado.texto === "Urgente") &&
+                              hasPermission("Marcas.MarcarEnRenovacion") && (
+                                <button
+                                  onClick={() => onMarcarEnRenovacion(marca)}
+                                  className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 transition-colors"
+                                  title="Marcar como En Renovación"
+                                >
+                                  <RefreshCw className="w-5 h-5" />
+                                </button>
+                              )
+                            );
+                          })()}
                           {hasPermission("Marcas.GestionAcciones") && (
                             <button
                               onClick={() => onViewTasks(marca)}
